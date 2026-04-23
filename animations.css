@@ -1,0 +1,495 @@
+/* =========================================================
+   ANIMATIONS — layered onto the existing portfolio
+   ========================================================= */
+
+/* ---------- Scroll progress bar ---------- */
+.scroll-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  width: 0%;
+  background: linear-gradient(90deg, var(--brand-bright), var(--accent, #d4ff4a));
+  z-index: 100;
+  transition: width 80ms linear;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--brand-bright) 60%, transparent);
+}
+
+/* ---------- Cursor spotlight ---------- */
+.cursor-spot {
+  position: fixed;
+  top: 0; left: 0;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle,
+    color-mix(in srgb, var(--brand-bright) 14%, transparent) 0%,
+    transparent 60%);
+  z-index: 1;
+  mix-blend-mode: screen;
+  opacity: 0;
+  transition: opacity 400ms;
+  will-change: transform;
+}
+.cursor-spot.on { opacity: 1; }
+[data-theme="light"] .cursor-spot { mix-blend-mode: multiply; }
+
+/* ---------- Scroll-reveal base ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 800ms cubic-bezier(.2,.7,.2,1), transform 800ms cubic-bezier(.2,.7,.2,1);
+  will-change: opacity, transform;
+}
+.reveal.in { opacity: 1; transform: translateY(0); }
+
+.reveal-left { transform: translateX(-32px); }
+.reveal-left.in { transform: translateX(0); }
+.reveal-right { transform: translateX(32px); }
+.reveal-right.in { transform: translateX(0); }
+.reveal-scale { transform: scale(0.96); }
+.reveal-scale.in { transform: scale(1); }
+
+/* stagger children (applied via data-stagger) */
+[data-stagger] > * {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 700ms cubic-bezier(.2,.7,.2,1), transform 700ms cubic-bezier(.2,.7,.2,1);
+}
+[data-stagger].in > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+[data-stagger].in > *:nth-child(1) { transition-delay: 0ms; }
+[data-stagger].in > *:nth-child(2) { transition-delay: 80ms; }
+[data-stagger].in > *:nth-child(3) { transition-delay: 160ms; }
+[data-stagger].in > *:nth-child(4) { transition-delay: 240ms; }
+[data-stagger].in > *:nth-child(5) { transition-delay: 320ms; }
+[data-stagger].in > *:nth-child(6) { transition-delay: 400ms; }
+[data-stagger].in > *:nth-child(7) { transition-delay: 480ms; }
+[data-stagger].in > *:nth-child(8) { transition-delay: 560ms; }
+
+/* ---------- Split-word hero headline ---------- */
+.hero h1 .word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  line-height: 0.95;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+.hero h1 .word > span {
+  display: inline-block;
+  transform: translateY(110%);
+  animation: word-up 900ms cubic-bezier(.2,.7,.2,1) forwards;
+}
+@keyframes word-up {
+  to { transform: translateY(0); }
+}
+
+/* ---------- Eyebrow shimmer ---------- */
+.eyebrow {
+  position: relative;
+  overflow: hidden;
+}
+.eyebrow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg,
+    transparent 30%,
+    color-mix(in srgb, var(--brand-bright) 22%, transparent) 50%,
+    transparent 70%);
+  transform: translateX(-100%);
+  animation: eyebrow-shimmer 4.5s ease-in-out infinite;
+}
+@keyframes eyebrow-shimmer {
+  0%, 40% { transform: translateX(-100%); }
+  70%, 100% { transform: translateX(100%); }
+}
+
+/* ---------- Brand dot pulse rings ---------- */
+.brand-dot {
+  position: relative;
+}
+.brand-dot::before,
+.brand-dot::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 1px solid var(--brand-bright);
+  animation: ring-out 2.4s ease-out infinite;
+  opacity: 0;
+}
+.brand-dot::after { animation-delay: 1.2s; }
+@keyframes ring-out {
+  0% { transform: scale(0.8); opacity: 0.8; }
+  100% { transform: scale(2.8); opacity: 0; }
+}
+
+/* ---------- Magnetic button ---------- */
+.btn, .nav-cta, .cal-slot.book {
+  position: relative;
+  will-change: transform;
+}
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+}
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  top: 0; left: -120%;
+  width: 100%; height: 100%;
+  background: linear-gradient(110deg,
+    transparent 30%,
+    color-mix(in srgb, #fff 28%, transparent) 50%,
+    transparent 70%);
+  transition: left 700ms cubic-bezier(.2,.7,.2,1);
+}
+.btn-primary:hover::before { left: 120%; }
+
+/* ---------- Nav links underline wipe ---------- */
+.nav-links a {
+  position: relative;
+  transition: color 160ms;
+}
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  left: 0; bottom: -6px;
+  width: 100%; height: 1px;
+  background: var(--brand-bright);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 300ms cubic-bezier(.2,.7,.2,1);
+}
+.nav-links a:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* ---------- Nav hide on scroll down ---------- */
+.nav {
+  transition: transform 300ms cubic-bezier(.2,.7,.2,1), background 200ms;
+}
+.nav.hidden { transform: translateY(-100%); }
+.nav.scrolled { background: color-mix(in srgb, var(--bg) 90%, transparent); }
+
+/* ---------- Hero side card parallax + hover ---------- */
+.hero-side {
+  will-change: transform;
+  transition: transform 300ms cubic-bezier(.2,.7,.2,1);
+}
+.hero-side-row {
+  transition: padding-left 240ms cubic-bezier(.2,.7,.2,1),
+              background 240ms;
+}
+.hero-side-row:hover {
+  padding-left: 8px;
+}
+.hero-side-row .v.big {
+  transition: color 300ms, transform 300ms;
+  display: inline-block;
+}
+.hero-side-row:hover .v.big {
+  color: var(--brand-bright);
+}
+
+/* ---------- Stat number count-up styling ---------- */
+.stat .num {
+  position: relative;
+  display: inline-block;
+}
+.stat {
+  position: relative;
+  overflow: hidden;
+}
+.stat::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  background: var(--brand-bright);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 900ms cubic-bezier(.2,.7,.2,1) 200ms;
+}
+.stat.in::before { transform: scaleX(1); }
+.stat {
+  transition: background 300ms;
+}
+.stat:hover { background: var(--bg-2); }
+.stat:hover .num { color: var(--fg); }
+
+/* ---------- Services tilt + shine ---------- */
+.service {
+  position: relative;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  transition: background 300ms, transform 300ms cubic-bezier(.2,.7,.2,1);
+}
+.service::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: radial-gradient(400px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--brand-bright) 10%, transparent),
+    transparent 60%);
+  opacity: 0;
+  transition: opacity 300ms;
+  pointer-events: none;
+}
+.service:hover::after { opacity: 1; }
+.service .idx {
+  transition: color 300ms, transform 300ms;
+  display: inline-block;
+}
+.service:hover .idx {
+  color: var(--brand-bright);
+  transform: translateX(6px);
+}
+.service h3 {
+  transition: color 300ms;
+}
+.service .tag {
+  transition: border-color 240ms, color 240ms, background 240ms, transform 240ms;
+}
+.service:hover .tag {
+  border-color: var(--brand-bright);
+  color: var(--fg);
+}
+
+/* ---------- Case card tilt + visual zoom ---------- */
+.case {
+  will-change: transform;
+}
+.case-visual {
+  transition: transform 800ms cubic-bezier(.2,.7,.2,1);
+  transform: scale(1);
+}
+.case:hover .case-visual {
+  transform: scale(1.03);
+}
+.case-visual::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(600px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--brand-bright) 22%, transparent),
+    transparent 55%);
+  opacity: 0;
+  transition: opacity 400ms;
+}
+.case:hover .case-visual::before { opacity: 1; }
+.case h3 {
+  transition: transform 500ms cubic-bezier(.2,.7,.2,1);
+}
+.case:hover h3 {
+  transform: translateX(4px);
+}
+.case-metric .num {
+  transition: color 300ms;
+}
+.case:hover .case-metric .num {
+  color: var(--fg);
+}
+
+/* ---------- Marquee hover pause ---------- */
+.marquee:hover .marquee-track { animation-play-state: paused; }
+.marquee-track span {
+  transition: color 300ms, transform 300ms;
+}
+.marquee-track span:hover {
+  color: var(--fg);
+  transform: scale(1.05);
+}
+
+/* ---------- Platform logo bloom ---------- */
+.platform {
+  overflow: hidden;
+  position: relative;
+}
+.platform::before {
+  content: "";
+  position: absolute;
+  top: -40%; left: -40%;
+  width: 180%; height: 180%;
+  background: radial-gradient(circle at center,
+    color-mix(in srgb, var(--brand-bright) 22%, transparent),
+    transparent 60%);
+  opacity: 0;
+  transition: opacity 400ms;
+}
+.platform:hover::before { opacity: 1; }
+.platform .p-logo {
+  transition: transform 400ms cubic-bezier(.2,.7,.2,1);
+  position: relative;
+  z-index: 1;
+}
+.platform:hover .p-logo { transform: translateY(-4px) scale(1.05); }
+.platform .p-tag {
+  transition: color 300ms;
+  position: relative;
+  z-index: 1;
+}
+.platform:hover .p-tag { color: var(--fg); }
+
+/* ---------- Logo cell hover ---------- */
+.logo-cell {
+  position: relative;
+}
+.logo-cell img {
+  transition: transform 500ms cubic-bezier(.2,.7,.2,1), filter 500ms;
+  filter: grayscale(0.4) brightness(0.95);
+}
+.logo-cell:hover img {
+  transform: scale(1.08);
+  filter: grayscale(0) brightness(1.1);
+}
+
+/* ---------- Calendar cells ---------- */
+.cal-grid .day.avail {
+  transition: background 200ms, border-color 200ms, transform 200ms;
+}
+.cal-grid .day.avail:hover {
+  transform: scale(1.08);
+  background: color-mix(in srgb, var(--brand-bright) 20%, var(--bg-3));
+}
+.cal-slot {
+  position: relative;
+  overflow: hidden;
+}
+.cal-slot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--brand);
+  transform: translateY(100%);
+  transition: transform 300ms cubic-bezier(.2,.7,.2,1);
+  z-index: 0;
+}
+.cal-slot:hover:not(.book)::before { transform: translateY(0); }
+.cal-slot:hover:not(.book) { color: #fff; border-color: var(--brand); background: transparent; }
+.cal-slot > * { position: relative; z-index: 1; }
+
+/* ---------- Contact row hover ---------- */
+.contact-row {
+  transition: padding-left 260ms cubic-bezier(.2,.7,.2,1);
+}
+.contact-row:hover {
+  padding-left: 10px;
+}
+.contact-row .v {
+  background-image: linear-gradient(var(--brand-bright), var(--brand-bright));
+  background-size: 0% 1px;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  transition: background-size 400ms cubic-bezier(.2,.7,.2,1);
+}
+.contact-row:hover .v {
+  background-size: 100% 1px;
+}
+
+/* ---------- Footer big text animate on reveal ---------- */
+.footer-big {
+  background: linear-gradient(90deg,
+    var(--fg) 0%,
+    var(--fg) 50%,
+    var(--fg-dim) 50%,
+    var(--fg-dim) 100%);
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: background-position 1400ms cubic-bezier(.2,.7,.2,1);
+}
+.footer-big.in { background-position: 0 0; }
+.footer-big .ital {
+  -webkit-text-fill-color: currentColor;
+  color: var(--brand-bright);
+}
+
+/* ---------- Floating accent orbs in hero ---------- */
+.hero::before,
+.hero::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+}
+.hero::before {
+  width: 400px; height: 400px;
+  background: color-mix(in srgb, var(--brand) 45%, transparent);
+  top: -100px; right: -80px;
+  animation: orb-drift-a 14s ease-in-out infinite;
+}
+.hero::after {
+  width: 300px; height: 300px;
+  background: color-mix(in srgb, var(--brand-bright) 25%, transparent);
+  bottom: 40px; left: -60px;
+  animation: orb-drift-b 18s ease-in-out infinite;
+}
+.hero-grid, .marquee { position: relative; z-index: 1; }
+@keyframes orb-drift-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-40px, 40px) scale(1.1); }
+  66% { transform: translate(30px, 20px) scale(0.95); }
+}
+@keyframes orb-drift-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(60px, -30px) scale(1.15); }
+}
+
+/* ---------- Section-label typing effect ---------- */
+.section-label.typing::before {
+  width: var(--line-w, 22px);
+  transition: width 600ms cubic-bezier(.2,.7,.2,1);
+}
+.section-label .char {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 400ms, transform 400ms;
+}
+.section-label.in .char {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------- Section title italic float ---------- */
+.section-title .ital {
+  display: inline-block;
+  animation: ital-float 6s ease-in-out infinite;
+}
+@keyframes ital-float {
+  0%, 100% { transform: translateY(0) rotate(-0.5deg); }
+  50% { transform: translateY(-4px) rotate(0.5deg); }
+}
+
+/* ---------- Back-to-top arrow animation on case pages ---------- */
+.back-link {
+  transition: gap 240ms;
+}
+.back-link:hover { gap: 12px; }
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .reveal, [data-stagger] > *, .hero h1 .word > span,
+  .footer-big, .section-label .char {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+  .cursor-spot, .eyebrow::after, .brand-dot::before, .brand-dot::after,
+  .hero::before, .hero::after, .section-title .ital {
+    animation: none !important;
+  }
+}
