@@ -347,6 +347,28 @@
     });
   }
 
+  // Theme toggle (dark / light) with localStorage persistence
+  const savedTheme = localStorage.getItem('me-theme');
+  if (savedTheme) applyTheme(savedTheme);
+
+  const syncToggles = (mode) => {
+    [document.getElementById('themeToggle'), document.getElementById('themeToggleMobile')]
+      .forEach(btn => { if (btn) btn.setAttribute('data-mode', mode); });
+  };
+  syncToggles(document.documentElement.getAttribute('data-mode') || 'dark');
+
+  ['themeToggle', 'themeToggleMobile'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const cur = document.documentElement.getAttribute('data-mode') || 'dark';
+      const next = cur === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      localStorage.setItem('me-theme', next);
+      syncToggles(next);
+    });
+  });
+
   // Mobile drawer toggle
   const mToggle = document.getElementById('mobileNavToggle');
   const mDrawer = document.getElementById('mobileDrawer');

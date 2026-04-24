@@ -1154,6 +1154,43 @@ img, svg { display: block; max-width: 100%; }
 }
 .tw-sw .s.active { border-color: var(--fg); transform: scale(1.1); }
 
+/* ========= THEME TOGGLE ========= */
+.theme-toggle {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg-dim);
+  transition: background 200ms, border-color 200ms, color 200ms;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+.theme-toggle:hover { background: var(--bg-2); border-color: var(--line-2); color: var(--fg); }
+.theme-toggle svg { display: none; }
+[data-mode="dark"]  .theme-toggle .ico-sun  { display: block; }
+[data-mode="light"] .theme-toggle .ico-moon { display: block; }
+
+.theme-toggle-mobile {
+  width: auto;
+  border-radius: 999px;
+  padding: 8px 14px;
+  gap: 8px;
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.theme-toggle-mobile .theme-label-txt { color: var(--fg-dim); }
+[data-mode="dark"]  .theme-toggle-mobile .theme-label-txt::after { content: "Switch to light"; }
+[data-mode="light"] .theme-toggle-mobile .theme-label-txt::after { content: "Switch to dark"; }
+.theme-toggle-mobile .theme-label-txt { font-size: 0; }
+.theme-toggle-mobile .theme-label-txt::after { font-size: 11px; }
+
 /* ========= PORTRAIT PHOTO ========= */
 .hero-portrait img.portrait {
   position: absolute;
