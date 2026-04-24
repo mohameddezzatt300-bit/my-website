@@ -156,9 +156,9 @@ img, svg { display: block; max-width: 100%; }
 }
 .hero-grid {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: 1.6fr 1fr;
   gap: 48px;
-  align-items: stretch;
+  align-items: center;
   min-height: calc(100vh - 200px);
 }
 .hero-main { display: flex; flex-direction: column; justify-content: space-between; }
@@ -275,7 +275,8 @@ img, svg { display: block; max-width: 100%; }
   overflow: hidden;
   background: var(--bg-1);
   border: 1px solid var(--line);
-  min-height: 560px;
+  height: 480px;
+  max-height: 520px;
 }
 .hero-portrait .bg-img {
   position: absolute;
