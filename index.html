@@ -344,13 +344,11 @@
       </p>
     </div>
 
-    <div class="logo-controls rv">
-      <button class="logo-ctl" id="logoPrev" aria-label="Previous">← Prev</button>
-      <button class="logo-ctl" id="logoPause" aria-label="Pause">⏸ Pause</button>
-      <button class="logo-ctl" id="logoNext" aria-label="Next">Next →</button>
-    </div>
-
-    <div class="logo-carousel rv">
+    <div class="logo-carousel-wrap rv">
+      <button class="carousel-arrow carousel-prev" id="logoPrev" aria-label="Previous">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="logo-carousel">
       <div class="logo-row">
         <div class="logo-track">
           <div class="logo-cell"><img src="assets/logos/safaghaly.jpg" alt="Safa Ghaly" loading="lazy"></div>
@@ -424,6 +422,14 @@
           <div class="logo-cell"><img src="assets/logos/chou.jpg" alt="" loading="lazy"></div>
         </div>
       </div>
+      </div>
+      <button class="carousel-arrow carousel-next" id="logoNext" aria-label="Next">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <button class="carousel-pause" id="logoPause" aria-label="Pause">
+        <svg class="ico-pause" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        <svg class="ico-play" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="display:none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </button>
     </div>
   </div>
 </section>

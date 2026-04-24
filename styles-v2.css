@@ -861,23 +861,46 @@ img, svg { display: block; max-width: 100%; }
   to { transform: translateX(-100%); }
 }
 /* Carousel controls */
-.logo-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 20px;
+.logo-carousel-wrap {
+  position: relative;
 }
-.logo-ctl {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.06em;
-  color: var(--fg-dim); background: var(--bg-1);
-  border: 1px solid var(--line); border-radius: 999px;
-  padding: 9px 18px; cursor: pointer;
-  transition: background 200ms, border-color 200ms, color 200ms;
+.carousel-arrow {
+  position: absolute;
+  top: 50%; transform: translateY(-50%);
+  z-index: 10;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg-1) 90%, transparent);
+  backdrop-filter: blur(12px);
+  color: var(--fg-dim);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background 200ms, border-color 200ms, color 200ms, opacity 200ms;
+  opacity: 0;
 }
-.logo-ctl:hover { background: var(--bg-2); border-color: var(--line-2); color: var(--fg); }
-.logo-ctl.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+.logo-carousel-wrap:hover .carousel-arrow { opacity: 1; }
+.carousel-arrow:hover { background: var(--bg-2); border-color: var(--line-2); color: var(--fg); }
+.carousel-prev { left: -20px; }
+.carousel-next { right: -20px; }
+.carousel-pause {
+  position: absolute;
+  bottom: 10px; right: 10px;
+  z-index: 10;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
+  backdrop-filter: blur(8px);
+  color: var(--fg-faint);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background 200ms, color 200ms;
+  opacity: 0;
+}
+.logo-carousel-wrap:hover .carousel-pause { opacity: 1; }
+.carousel-pause:hover { color: var(--fg); background: var(--bg-2); }
+.carousel-pause.paused { color: var(--brand-glow); border-color: color-mix(in srgb, var(--brand-glow) 40%, transparent); }
 .logo-carousel.user-control {
   overflow-x: auto;
   scrollbar-width: none;

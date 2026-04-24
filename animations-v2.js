@@ -360,8 +360,11 @@
     allTracks?.forEach(t => { t.style.animationPlayState = state ? 'paused' : 'running'; });
     if (carousel) carousel.classList.toggle('user-control', state);
     if (pauseBtn) {
-      pauseBtn.textContent = state ? '▶ Resume' : '⏸ Pause';
-      pauseBtn.classList.toggle('active', state);
+      pauseBtn.classList.toggle('paused', state);
+      const iPause = pauseBtn.querySelector('.ico-pause');
+      const iPlay  = pauseBtn.querySelector('.ico-play');
+      if (iPause) iPause.style.display = state ? 'none' : '';
+      if (iPlay)  iPlay.style.display  = state ? '' : 'none';
     }
   };
 
