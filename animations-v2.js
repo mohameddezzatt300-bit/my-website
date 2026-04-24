@@ -347,6 +347,44 @@
     });
   }
 
+  // Logo carousel controls
+  const carousel   = document.querySelector('.logo-carousel');
+  const allTracks  = carousel?.querySelectorAll('.logo-track');
+  const prevBtn    = document.getElementById('logoPrev');
+  const pauseBtn   = document.getElementById('logoPause');
+  const nextBtn    = document.getElementById('logoNext');
+  let carouselPaused = false;
+
+  const setCarouselPaused = (state) => {
+    carouselPaused = state;
+    allTracks?.forEach(t => { t.style.animationPlayState = state ? 'paused' : 'running'; });
+    if (carousel) carousel.classList.toggle('user-control', state);
+    if (pauseBtn) {
+      pauseBtn.textContent = state ? '▶ Resume' : '⏸ Pause';
+      pauseBtn.classList.toggle('active', state);
+    }
+  };
+
+  let resumeTimer;
+  const tempPause = () => {
+    setCarouselPaused(true);
+    clearTimeout(resumeTimer);
+    resumeTimer = setTimeout(() => setCarouselPaused(false), 4000);
+  };
+
+  prevBtn?.addEventListener('click', () => {
+    tempPause();
+    carousel?.scrollBy({ left: -280, behavior: 'smooth' });
+  });
+  nextBtn?.addEventListener('click', () => {
+    tempPause();
+    carousel?.scrollBy({ left: 280, behavior: 'smooth' });
+  });
+  pauseBtn?.addEventListener('click', () => {
+    clearTimeout(resumeTimer);
+    setCarouselPaused(!carouselPaused);
+  });
+
   // Theme toggle (dark / light) with localStorage persistence
   const savedTheme = localStorage.getItem('me-theme');
   if (savedTheme) applyTheme(savedTheme);

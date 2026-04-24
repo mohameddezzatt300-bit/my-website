@@ -860,6 +860,35 @@ img, svg { display: block; max-width: 100%; }
 @keyframes logo-marquee {
   to { transform: translateX(-100%); }
 }
+/* Carousel controls */
+.logo-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.logo-ctl {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.06em;
+  color: var(--fg-dim); background: var(--bg-1);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 9px 18px; cursor: pointer;
+  transition: background 200ms, border-color 200ms, color 200ms;
+}
+.logo-ctl:hover { background: var(--bg-2); border-color: var(--line-2); color: var(--fg); }
+.logo-ctl.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+.logo-carousel.user-control {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+  cursor: grab;
+}
+.logo-carousel.user-control:active { cursor: grabbing; }
+.logo-carousel.user-control::-webkit-scrollbar { display: none; }
+
 .logo-cell {
   flex: 0 0 auto;
   width: 200px; height: 108px;
