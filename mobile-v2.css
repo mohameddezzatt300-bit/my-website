@@ -152,9 +152,9 @@
     min-height: auto;
   }
 
-  /* Portrait first on mobile */
-  .hero-portrait { order: 1; }
-  .hero-main    { order: 2; }
+  /* Text first on mobile */
+  .hero-portrait { order: 2; }
+  .hero-main    { order: 1; }
 
   .hero-portrait {
     min-height: 500px;
