@@ -1382,6 +1382,99 @@ img, svg { display: block; max-width: 100%; }
   .cmeta span { font-size: 10px; padding: 5px 10px; }
 }
 
+/* ========= ENHANCED ANIMATIONS — v2.1 ========= */
+
+/* Hero portrait gentle float */
+@keyframes heroFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+.hero-portrait img.portrait {
+  animation: heroFloat 5s ease-in-out infinite;
+}
+
+/* Service cards — hover lift */
+.svc:hover { transform: translateY(-4px); }
+
+/* Testimonial cards — hover lift + glow + mouse spotlight */
+.testi-card {
+  transition: border-color 300ms, background 300ms,
+              transform 360ms cubic-bezier(.2,.7,.2,1),
+              box-shadow 360ms;
+}
+.testi-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 64px color-mix(in srgb, var(--brand-glow) 10%, rgba(0,0,0,0.4));
+}
+.testi-card::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(360px circle at var(--mx,50%) var(--my,50%),
+    color-mix(in srgb, var(--brand-glow) 7%, transparent), transparent 55%);
+  opacity: 0;
+  transition: opacity 400ms;
+  pointer-events: none;
+  border-radius: var(--r-lg);
+}
+.testi-card:hover::after { opacity: 1; }
+
+/* Contact blocks — hover lift */
+.contact-block {
+  transition: transform 360ms cubic-bezier(.2,.7,.2,1),
+              box-shadow 360ms, border-color 300ms;
+}
+.contact-block:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px color-mix(in srgb, var(--brand-glow) 8%, rgba(0,0,0,0.3));
+  border-color: var(--line-2);
+}
+
+/* Nav links — underline sweep on hover */
+.nav a:not(.cta) { position: relative; }
+.nav a:not(.cta)::after {
+  content: "";
+  position: absolute;
+  bottom: 4px; left: 18px; right: 18px;
+  height: 1px;
+  background: var(--brand-glow);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 220ms cubic-bezier(.2,.7,.2,1);
+}
+.nav a:not(.cta):hover::after { transform: scaleX(1); }
+
+/* Ticker — word highlight on hover */
+.ticker-track span:hover { color: var(--brand-glow); }
+
+/* Stars — pop-in animation */
+@keyframes starPop {
+  0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
+  60%  { transform: scale(1.4) rotate(5deg); }
+  100% { transform: scale(1)   rotate(0);    opacity: 1; }
+}
+.testi-stars .star {
+  display: inline-block;
+  opacity: 0;
+}
+.testi-stars .star.popped {
+  animation: starPop 380ms cubic-bezier(.34,1.56,.64,1) forwards;
+}
+
+/* Stats — number glow flash after count-up */
+@keyframes numGlow {
+  0%   { text-shadow: none; }
+  35%  { text-shadow: 0 0 28px var(--brand-glow), 0 0 60px color-mix(in srgb, var(--brand-glow) 45%, transparent); }
+  100% { text-shadow: none; }
+}
+.stat .num.counted { animation: numGlow 1.4s ease-out; }
+
+/* Reduced-motion overrides */
+@media (prefers-reduced-motion: reduce) {
+  .hero-portrait img.portrait { animation: none; }
+  .testi-stars .star.popped   { animation: none; opacity: 1; }
+  .stat .num.counted          { animation: none; }
+}
+
 /* ========= THEME TOGGLE ========= */
 .theme-toggle {
   width: 36px; height: 36px;

@@ -430,4 +430,63 @@
   });
   window.parent.postMessage({ type: '__edit_mode_available' }, '*');
 
+  // ========= HERO ENTRY SEQUENCE =========
+  if (!reduce) {
+    [
+      ['.hero-eyebrow',  100, 'Y', 20],
+      ['.hero-sub',      560, 'Y', 20],
+      ['.hero-cta',      730, 'Y', 20],
+      ['.hero-portrait', 180, 'X', 32],
+    ].forEach(([sel, delay, axis, dist]) => {
+      const el = document.querySelector(sel);
+      if (!el) return;
+      el.style.opacity = '0';
+      el.style.transform = `translate${axis}(${dist}px)`;
+      el.style.willChange = 'opacity, transform';
+      el.style.transition = `opacity 900ms cubic-bezier(.2,.7,.2,1) ${delay}ms, transform 900ms cubic-bezier(.2,.7,.2,1) ${delay}ms`;
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        el.style.opacity = '';
+        el.style.transform = '';
+      }));
+    });
+  }
+
+  // ========= MOUSE SPOTLIGHT — testi + contact =========
+  document.querySelectorAll('.testi-card, .contact-block').forEach(el => {
+    el.addEventListener('mousemove', e => {
+      const r = el.getBoundingClientRect();
+      el.style.setProperty('--mx', ((e.clientX - r.left) / r.width) * 100 + '%');
+      el.style.setProperty('--my', ((e.clientY - r.top) / r.height) * 100 + '%');
+    });
+  });
+
+  // ========= STARS POP ANIMATION =========
+  const starObs = new IntersectionObserver(es => {
+    es.forEach(e => {
+      if (!e.isIntersecting) return;
+      const starsEl = e.target.querySelector('.testi-stars');
+      if (!starsEl) return;
+      const chars = [...starsEl.textContent];
+      starsEl.innerHTML = chars.map(c => `<span class="star">${c}</span>`).join('');
+      starsEl.querySelectorAll('.star').forEach((s, i) => {
+        setTimeout(() => s.classList.add('popped'), i * 90 + 80);
+      });
+      starObs.unobserve(e.target);
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.testi-card').forEach(c => starObs.observe(c));
+
+  // ========= NUMBER GLOW AFTER COUNT-UP =========
+  if (!reduce) {
+    const glowObs = new IntersectionObserver(es => {
+      es.forEach(e => {
+        if (!e.isIntersecting) return;
+        const num = e.target.querySelector('.num');
+        if (num) setTimeout(() => num.classList.add('counted'), 1800);
+        glowObs.unobserve(e.target);
+      });
+    }, { threshold: 0.4 });
+    document.querySelectorAll('.stat').forEach(s => glowObs.observe(s));
+  }
+
 })();
