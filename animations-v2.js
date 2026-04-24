@@ -432,11 +432,12 @@
 
   // ========= HERO ENTRY SEQUENCE =========
   if (!reduce) {
+    const mobile = window.matchMedia('(max-width: 720px)').matches;
     [
       ['.hero-eyebrow',  100, 'Y', 20],
       ['.hero-sub',      560, 'Y', 20],
       ['.hero-cta',      730, 'Y', 20],
-      ['.hero-portrait', 180, 'X', 32],
+      ['.hero-portrait', mobile ? 380 : 180, mobile ? 'Y' : 'X', mobile ? 24 : 32],
     ].forEach(([sel, delay, axis, dist]) => {
       const el = document.querySelector(sel);
       if (!el) return;

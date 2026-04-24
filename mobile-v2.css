@@ -154,9 +154,10 @@
 
 
   .hero-portrait {
-    min-height: 500px;
+    min-height: 420px;
     border-radius: 20px;
-    margin-bottom: 32px;
+    margin-top: 28px;
+    margin-bottom: 0;
     position: relative;
   }
   /* Gradient overlay at bottom of portrait */
@@ -334,14 +335,6 @@
     border-radius: 16px;
   }
   .testi-quote { font-size: 14.5px; line-height: 1.65; }
-  .testi-cta {
-    flex-direction: column;
-    gap: 10px;
-  }
-  .testi-cta .btn {
-    width: 100%;
-    justify-content: center;
-  }
 
   /* ===== CONTACT ===== */
   .contact-grid {
@@ -402,6 +395,18 @@
 
   /* Disable heavy transforms on low-power devices */
   .hero-portrait .bg-img { transform: none !important; }
+
+  /* Disable portrait float — saves battery, avoids jitter on touch */
+  .hero-portrait img.portrait { animation: none; }
+
+  /* Disable hover lifts — touch has no persistent hover */
+  .svc:hover,
+  .testi-card:hover,
+  .contact-block:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  .testi-card:hover::after { opacity: 0 !important; }
 }
 
 /* ===== Small phones (≤ 380px) ===== */
