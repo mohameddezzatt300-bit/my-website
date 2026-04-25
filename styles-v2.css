@@ -1100,7 +1100,7 @@ img, svg { display: block; max-width: 100%; }
 }
 .footer-big:hover .arrow { transform: translateX(20px) rotate(-8deg); }
 .footer-meta {
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex; justify-content: center; align-items: center;
   flex-wrap: wrap; gap: 16px;
   padding-top: 40px;
   border-top: 1px solid var(--line);
