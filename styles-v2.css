@@ -582,13 +582,13 @@ img, svg { display: block; max-width: 100%; }
 }
 .channel:hover::before { opacity: 1; }
 .channel .logo {
-  height: 26px;
+  height: 34px;
   display: flex; align-items: center;
   position: relative; z-index: 1;
   transition: transform 400ms cubic-bezier(.2,.7,.2,1);
 }
 .channel:hover .logo { transform: translateY(-3px) scale(1.04); }
-.channel .logo svg { height: 100%; width: auto; max-width: 120px; }
+.channel .logo svg { height: 100%; width: auto; max-width: 140px; }
 .channel .tag {
   margin-top: auto;
   font-family: var(--font-mono);
