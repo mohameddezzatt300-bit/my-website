@@ -589,6 +589,7 @@ img, svg { display: block; max-width: 100%; }
 }
 .channel:hover .logo { transform: translateY(-3px) scale(1.04); }
 .channel .logo svg { height: 100%; width: auto; max-width: 140px; }
+.channel .logo img { height: 100%; width: auto; max-width: 140px; object-fit: contain; }
 .channel .tag {
   margin-top: auto;
   font-family: var(--font-mono);
