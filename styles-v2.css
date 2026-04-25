@@ -1620,8 +1620,21 @@ img, svg { display: block; max-width: 100%; }
   border-color: #0A66C2;
 }
 .btn-li:hover { background: #004182; border-color: #004182; }
+.btn-fb {
+  background: #1877F2;
+  color: #fff;
+  border-color: #1877F2;
+}
+.btn-fb:hover { background: #0d65d8; border-color: #0d65d8; }
+.btn-em {
+  background: var(--bg-2);
+  color: var(--fg);
+  border-color: var(--line);
+}
+.btn-em:hover { border-color: var(--brand-glow); color: var(--brand-glow); }
 .btn-wa .ico,
-.btn-li .ico { background: rgba(255,255,255,0.2); }
+.btn-li .ico,
+.btn-fb .ico { background: rgba(255,255,255,0.2); }
 
 /* ========= RESPONSIVE ========= */
 @media (max-width: 980px) {
