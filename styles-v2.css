@@ -564,11 +564,12 @@ img, svg { display: block; max-width: 100%; }
 .channel {
   padding: 32px 24px;
   background: var(--bg-1);
-  display: flex; flex-direction: column; gap: 18px;
+  display: flex; flex-direction: column; align-items: center; gap: 18px;
   min-height: 140px;
   transition: background 240ms;
   position: relative;
   overflow: hidden;
+  text-align: center;
 }
 .channel:hover { background: var(--bg-2); }
 .channel::before {
@@ -583,7 +584,7 @@ img, svg { display: block; max-width: 100%; }
 .channel:hover::before { opacity: 1; }
 .channel .logo {
   height: 38px;
-  display: flex; align-items: center;
+  display: flex; align-items: center; justify-content: center;
   position: relative; z-index: 1;
   transition: transform 400ms cubic-bezier(.2,.7,.2,1);
 }
