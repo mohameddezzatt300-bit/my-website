@@ -824,7 +824,7 @@ img, svg { display: block; max-width: 100%; }
 .ticker-track {
   display: flex; gap: 52px;
   white-space: nowrap;
-  animation: marquee 36s linear infinite;
+  animation: marquee 22s linear infinite;
   font-family: var(--font-display);
   font-style: italic;
   font-weight: 400;
