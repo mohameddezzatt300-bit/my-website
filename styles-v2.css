@@ -582,7 +582,7 @@ img, svg { display: block; max-width: 100%; }
 }
 .channel:hover::before { opacity: 1; }
 .channel .logo {
-  height: 34px;
+  height: 38px;
   display: flex; align-items: center;
   position: relative; z-index: 1;
   transition: transform 400ms cubic-bezier(.2,.7,.2,1);
