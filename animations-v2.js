@@ -534,9 +534,6 @@
     lb.querySelector('.lightbox-prev').addEventListener('click', e => { e.stopPropagation(); showImg(current - 1); });
     lb.querySelector('.lightbox-next').addEventListener('click', e => { e.stopPropagation(); showImg(current + 1); });
 
-    // click background to close
-    lb.addEventListener('click', e => { if (e.target === lb) closeLb(); });
-
     // keyboard
     document.addEventListener('keydown', e => {
       if (!lb.classList.contains('open')) return;
@@ -546,12 +543,26 @@
     });
 
     // touch swipe
-    let touchX = 0;
-    lb.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+    let touchStartX = 0, touchStartY = 0, didSwipe = false;
+    lb.addEventListener('touchstart', e => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      didSwipe = false;
+    }, { passive: true });
+    lb.addEventListener('touchmove', e => {
+      const dx = Math.abs(e.touches[0].clientX - touchStartX);
+      const dy = Math.abs(e.touches[0].clientY - touchStartY);
+      if (dx > dy && dx > 10) didSwipe = true;
+    }, { passive: true });
     lb.addEventListener('touchend', e => {
-      const diff = touchX - e.changedTouches[0].clientX;
-      if (Math.abs(diff) > 40) showImg(diff > 0 ? current + 1 : current - 1);
+      const diff = touchStartX - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 40) {
+        didSwipe = true;
+        showImg(diff > 0 ? current + 1 : current - 1);
+      }
     });
+    // prevent swipe from triggering close
+    lb.addEventListener('click', e => { if (didSwipe) { didSwipe = false; return; } if (e.target === lb) closeLb(); });
   }
 
 })();
