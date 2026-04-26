@@ -419,6 +419,9 @@
     box-shadow: none !important;
   }
   .testi-card:hover::after { opacity: 0 !important; }
+
+  /* Lightbox arrows: black on mobile */
+  .lightbox-prev, .lightbox-next { color: #000; opacity: 0.85; }
 }
 
 /* ===== Small phones (≤ 380px) ===== */
