@@ -421,7 +421,7 @@
   .testi-card:hover::after { opacity: 0 !important; }
 
   /* Lightbox arrows: black on mobile */
-  .lightbox-prev, .lightbox-next { color: #000; opacity: 0.85; }
+  .lightbox-prev, .lightbox-next { color: #000 !important; opacity: 0.85 !important; }
 }
 
 /* ===== Small phones (≤ 380px) ===== */
