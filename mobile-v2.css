@@ -281,11 +281,9 @@
   .channel:nth-child(3) { order: 3; }
   .channel:nth-child(4) { order: 4; }
   .channel:nth-child(5) { order: 2; }
-  /* Google: full-width row, card centered */
+  /* Google: full-width row */
   .channels .channel:nth-child(2) {
     grid-column: 1 / -1;
-    width: calc(50% - 6px);
-    margin: 0 auto;
   }
 
   /* ===== BENTO: stack ===== */
