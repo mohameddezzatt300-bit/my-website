@@ -739,6 +739,39 @@ img, svg { display: block; max-width: 100%; }
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
+
+/* More cases banner */
+.more-cases {
+  margin-top: 32px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 36px 40px;
+  background: var(--bg-1);
+}
+.more-cases-inner {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+}
+.more-cases-num {
+  font-family: var(--font-display);
+  font-size: 80px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--fg);
+  flex-shrink: 0;
+}
+.more-cases-num span {
+  color: var(--brand-glow);
+}
+.more-cases-text p {
+  font-size: 15.5px;
+  color: var(--fg-dim);
+  line-height: 1.7;
+  max-width: 560px;
+}
+.more-cases-text strong { color: var(--fg); }
 .case {
   border: 1px solid var(--line);
   border-radius: var(--r-lg);

@@ -326,6 +326,12 @@
   /* Disable 3D tilt on mobile — jittery on touch */
   .case { transform: none !important; }
 
+  /* More cases banner — mobile */
+  .more-cases { padding: 24px 20px; }
+  .more-cases-inner { flex-direction: column; gap: 16px; align-items: flex-start; }
+  .more-cases-num { font-size: 56px; }
+  .more-cases-text p { font-size: 14px; }
+
   /* ===== LOGO CAROUSEL ===== */
   .logo-carousel { border-radius: 16px; }
   .logo-cell {
