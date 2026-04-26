@@ -490,6 +490,21 @@
     document.querySelectorAll('.stat').forEach(s => glowObs.observe(s));
   }
 
+  // ========= GLITCH — nav brand =========
+  if (!reduce) {
+    const navBrand = document.querySelector('.nav-brand');
+    if (navBrand) {
+      const dot = navBrand.querySelector('.dot');
+      const glitch = document.createElement('span');
+      glitch.className = 'brand-glitch';
+      glitch.setAttribute('data-text', 'M·EZZAT');
+      glitch.textContent = 'M·EZZAT';
+      navBrand.innerHTML = '';
+      if (dot) navBrand.appendChild(dot);
+      navBrand.appendChild(glitch);
+    }
+  }
+
   // ========= LIGHTBOX =========
   const screenImgs = [...document.querySelectorAll('.screen img')];
   if (screenImgs.length) {

@@ -147,6 +147,55 @@ img, svg { display: block; max-width: 100%; }
   box-shadow: 0 0 12px var(--brand-glow);
 }
 
+/* ========= GLITCH ========= */
+.brand-glitch {
+  position: relative;
+  display: inline-block;
+  animation: glitch-shake 6s infinite;
+}
+.brand-glitch::before,
+.brand-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+.brand-glitch::before {
+  color: #0ff;
+  animation: glitch-top 6s infinite;
+}
+.brand-glitch::after {
+  color: #f0f;
+  animation: glitch-bot 6s infinite;
+}
+@keyframes glitch-shake {
+  0%,86%,100% { transform: none; }
+  87%  { transform: translate(2px,0) skewX(-2deg); }
+  88%  { transform: translate(-2px,0) skewX(2deg); }
+  89%  { transform: translate(1px,0); }
+  90%  { transform: none; }
+  93%  { transform: translate(-1px,0); }
+  94%  { transform: none; }
+}
+@keyframes glitch-top {
+  0%,86%,100% { opacity:0; transform:none; clip-path:none; }
+  87% { opacity:1; clip-path:inset(0 0 65% 0); transform:translate(-3px,0); }
+  88% { opacity:1; clip-path:inset(25% 0 45% 0); transform:translate(3px,0); }
+  89% { opacity:0; }
+  93% { opacity:1; clip-path:inset(45% 0 30% 0); transform:translate(-2px,0); }
+  94% { opacity:0; }
+}
+@keyframes glitch-bot {
+  0%,87%,100% { opacity:0; transform:none; clip-path:none; }
+  88% { opacity:1; clip-path:inset(55% 0 0 0); transform:translate(3px,0); }
+  89% { opacity:1; clip-path:inset(35% 0 25% 0); transform:translate(-3px,0); }
+  90% { opacity:0; }
+  93% { opacity:1; clip-path:inset(65% 0 0 0); transform:translate(2px,0); }
+  94% { opacity:0; }
+}
+
 /* ========= HERO ========= */
 .hero {
   min-height: 100vh;
