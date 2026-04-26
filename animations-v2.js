@@ -490,4 +490,31 @@
     document.querySelectorAll('.stat').forEach(s => glowObs.observe(s));
   }
 
+  // ========= LIGHTBOX =========
+  const screenImgs = document.querySelectorAll('.screen img');
+  if (screenImgs.length) {
+    const lb = document.createElement('div');
+    lb.className = 'lightbox';
+    lb.innerHTML = '<span class="lightbox-close">✕</span><img>';
+    document.body.appendChild(lb);
+    const lbImg = lb.querySelector('img');
+
+    screenImgs.forEach(img => {
+      img.addEventListener('click', () => {
+        lbImg.src = img.src;
+        lb.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      });
+    });
+
+    const closeLb = () => {
+      lb.classList.remove('open');
+      document.body.style.overflow = '';
+    };
+
+    lb.addEventListener('click', closeLb);
+    lb.querySelector('.lightbox-close').addEventListener('click', e => { e.stopPropagation(); closeLb(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb(); });
+  }
+
 })();
