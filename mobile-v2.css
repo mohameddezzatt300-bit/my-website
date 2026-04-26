@@ -214,7 +214,7 @@
   .ticker-track {
     font-size: 22px;
     gap: 36px;
-    animation-duration: 12s;
+    animation-duration: 8s;
   }
   .ticker-track span { gap: 36px; }
 
