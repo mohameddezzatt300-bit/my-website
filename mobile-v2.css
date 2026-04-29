@@ -452,7 +452,7 @@
 
 /* ===== About page: hide portrait badge on mobile ===== */
 @media (max-width: 720px) {
-  .about-portrait-badge { display: none; }
+  .about-portrait-badge { display: none !important; }
 }
 
 /* ===== Respect reduced motion on mobile ===== */
