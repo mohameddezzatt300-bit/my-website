@@ -140,6 +140,7 @@ img, svg { display: block; max-width: 100%; }
   border-right: 1px solid var(--line);
   margin-right: 6px;
   display: inline-flex; align-items: center; gap: 8px;
+  text-decoration: none;
 }
 .nav-brand .dot {
   width: 8px; height: 8px; border-radius: 50%;
