@@ -72,58 +72,78 @@ img, svg { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
-  gap: 0;
-  transition: transform 0.9s cubic-bezier(0.76, 0, 0.24, 1);
   pointer-events: all;
 }
-.intro.exit { transform: translateY(-100%); }
-.intro-scan {
-  position: absolute;
-  left: 0; right: 0;
-  height: 2px;
-  background: var(--brand-glow);
-  box-shadow: 0 0 16px var(--brand-glow), 0 0 40px var(--brand-glow);
-  top: 0;
-  animation: intro-scan 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-@keyframes intro-scan {
-  from { top: 0; opacity: 1; }
-  to   { top: 100%; opacity: 0.4; }
-}
 .intro-logo {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
   font-family: var(--font-display);
-  font-size: clamp(32px, 6vw, 56px);
+  font-size: clamp(36px, 7vw, 72px);
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--fg);
-  opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
   white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.25s ease;
 }
 .intro-logo .dot {
-  width: 11px; height: 11px;
+  width: 12px; height: 12px;
   border-radius: 50%;
   background: var(--brand-glow);
   box-shadow: 0 0 14px var(--brand-glow);
   flex-shrink: 0;
 }
-.intro-sub {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--fg-faint);
+.intro-logo::before,
+.intro-logo::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex; align-items: center;
+  padding-left: calc(12px + 12px); /* dot width + gap */
+  font-family: inherit; font-size: inherit; font-weight: inherit;
+  letter-spacing: inherit; white-space: nowrap;
   opacity: 0;
-  transition: opacity 0.5s ease 0.15s;
-  margin-top: 14px;
 }
-.intro.visible .intro-logo { opacity: 1; transform: translateY(0); }
-.intro.visible .intro-sub  { opacity: 1; }
+.intro-logo::before { color: #0ff; }
+.intro-logo::after  { color: #f0f; }
+
+.intro.visible .intro-logo { opacity: 1; }
+.intro.glitching .intro-logo { animation: intro-shake 0.06s steps(1) infinite; }
+.intro.glitching .intro-logo::before {
+  opacity: 0.85;
+  animation: intro-slice-r 0.06s steps(1) infinite;
+}
+.intro.glitching .intro-logo::after {
+  opacity: 0.85;
+  animation: intro-slice-l 0.06s steps(1) infinite;
+}
+.intro.gone { opacity: 0; transition: opacity 0.15s ease; }
+
+@keyframes intro-shake {
+  0%  { transform: translate(0,0) skewX(0deg); }
+  20% { transform: translate(-4px, 1px) skewX(-3deg); }
+  40% { transform: translate(5px, -1px) skewX(2deg); }
+  60% { transform: translate(-3px, 2px) skewX(1deg); }
+  80% { transform: translate(4px, 0px) skewX(-2deg); }
+  100%{ transform: translate(0,0) skewX(0deg); }
+}
+@keyframes intro-slice-r {
+  0%  { clip-path: inset(0 0 75% 0); transform: translate(6px, 0); }
+  25% { clip-path: inset(30% 0 40% 0); transform: translate(-5px, 0); }
+  50% { clip-path: inset(60% 0 10% 0); transform: translate(8px, 0); }
+  75% { clip-path: inset(10% 0 60% 0); transform: translate(-6px, 0); }
+  100%{ clip-path: inset(80% 0 5% 0);  transform: translate(4px, 0); }
+}
+@keyframes intro-slice-l {
+  0%  { clip-path: inset(20% 0 50% 0); transform: translate(-7px, 0); }
+  25% { clip-path: inset(65% 0 15% 0); transform: translate(5px, 0); }
+  50% { clip-path: inset(5% 0 70% 0);  transform: translate(-8px, 0); }
+  75% { clip-path: inset(45% 0 30% 0); transform: translate(6px, 0); }
+  100%{ clip-path: inset(75% 0 5% 0);  transform: translate(-4px, 0); }
+}
 
 /* ========= Top progress + frame ========= */
 .scroll-bar {

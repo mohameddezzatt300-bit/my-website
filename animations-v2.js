@@ -5,26 +5,33 @@
 /* ── Intro overlay ── */
 (function(){
   if (sessionStorage.getItem('intro_done')) return;
+
   const intro = document.createElement('div');
   intro.className = 'intro';
-  intro.innerHTML = `
-    <div class="intro-scan"></div>
-    <div class="intro-logo"><span class="dot"></span>M·EZZAT</div>
-    <div class="intro-sub">Performance Media Buyer</div>
-  `;
+  const logo = document.createElement('div');
+  logo.className = 'intro-logo';
+  logo.setAttribute('data-text', 'M·EZZAT');
+  logo.innerHTML = '<span class="dot"></span>M·EZZAT';
+  intro.appendChild(logo);
   document.body.appendChild(intro);
   document.body.style.overflow = 'hidden';
 
-  setTimeout(() => intro.classList.add('visible'), 850);
+  // 1. Fade in logo
+  setTimeout(() => intro.classList.add('visible'), 200);
 
+  // 2. Start glitch
+  setTimeout(() => intro.classList.add('glitching'), 900);
+
+  // 3. Kill glitch + fade out
   setTimeout(() => {
-    intro.classList.add('exit');
+    intro.classList.remove('glitching');
+    intro.classList.add('gone');
     document.body.style.overflow = '';
     setTimeout(() => {
       intro.remove();
       sessionStorage.setItem('intro_done', '1');
-    }, 950);
-  }, 1900);
+    }, 200);
+  }, 1700);
 })();
 
 (function(){
