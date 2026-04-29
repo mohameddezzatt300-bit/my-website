@@ -14,9 +14,11 @@
   // build spans
   const logoEl = document.createElement('div');
   logoEl.className = 'intro-logo';
+  logoEl.style.cssText = 'font-family:"Plus Jakarta Sans",sans-serif;font-size:clamp(40px,8vw,88px);font-weight:800;letter-spacing:0.08em;color:#f1f4f2;display:flex;align-items:center;';
   const spans = TARGET.split('').map(() => {
     const s = document.createElement('span');
     s.className = 'ch';
+    s.style.cssText = 'display:inline-block;color:#f1f4f2;transition:color 0.15s ease;';
     s.textContent = rand();
     logoEl.appendChild(s);
     return s;
@@ -37,7 +39,7 @@
     spans.forEach((s, i) => {
       if (i >= resolved) {
         s.textContent = rand();
-        s.classList.add('scrambling');
+        s.style.color = '#14c27a';
       }
     });
   }, interval);
@@ -45,8 +47,7 @@
   TARGET.split('').forEach((char, i) => {
     setTimeout(() => {
       spans[i].textContent = char;
-      spans[i].classList.remove('scrambling');
-      spans[i].classList.add('locked');
+      spans[i].style.color = '#f1f4f2';
       resolved = i + 1;
       if (resolved === TARGET.length) {
         clearInterval(tick);
