@@ -6,23 +6,39 @@
 (function(){
   if (sessionStorage.getItem('intro_done')) return;
 
+  // random horizontal lines
+  const linePositions = [18, 35, 52, 68, 82];
+  const lines = linePositions.map(pct => {
+    const l = document.createElement('div');
+    l.className = 'intro-line';
+    l.style.cssText = `top:${pct}%; animation-delay:${(Math.random()*0.3+0.2).toFixed(2)}s;`;
+    return l;
+  });
+
   const intro = document.createElement('div');
   intro.className = 'intro';
-  const logo = document.createElement('div');
-  logo.className = 'intro-logo';
-  logo.setAttribute('data-text', 'M·EZZAT');
-  logo.innerHTML = '<span class="dot"></span>M·EZZAT';
-  intro.appendChild(logo);
+  intro.innerHTML = `
+    <div class="intro-scanbar"></div>
+    <div class="intro-corners">
+      <div class="intro-corner tl"></div>
+      <div class="intro-corner tr"></div>
+      <div class="intro-corner bl"></div>
+      <div class="intro-corner br"></div>
+    </div>
+    <div class="intro-logo" data-text="M·EZZAT"><span class="dot"></span>M·EZZAT</div>
+    <div class="intro-label">Performance Media Buyer · Egypt &amp; GCC</div>
+  `;
+  lines.forEach(l => intro.appendChild(l));
   document.body.appendChild(intro);
   document.body.style.overflow = 'hidden';
 
-  // 1. Fade in logo
-  setTimeout(() => intro.classList.add('visible'), 200);
+  // 1. Reveal shapes + logo
+  setTimeout(() => intro.classList.add('visible'), 150);
 
-  // 2. Start glitch
-  setTimeout(() => intro.classList.add('glitching'), 900);
+  // 2. Glitch burst
+  setTimeout(() => intro.classList.add('glitching'), 1100);
 
-  // 3. Kill glitch + fade out
+  // 3. Fade out
   setTimeout(() => {
     intro.classList.remove('glitching');
     intro.classList.add('gone');
@@ -30,8 +46,8 @@
     setTimeout(() => {
       intro.remove();
       sessionStorage.setItem('intro_done', '1');
-    }, 200);
-  }, 1700);
+    }, 220);
+  }, 1950);
 })();
 
 (function(){
