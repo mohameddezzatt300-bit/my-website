@@ -1,6 +1,35 @@
 /* =========================================================
    v2 animations — scroll-driven, vanilla JS
    ========================================================= */
+
+/* ── Intro overlay ── */
+(function(){
+  if (sessionStorage.getItem('intro_done')) return;
+  const intro = document.createElement('div');
+  intro.className = 'intro';
+  intro.innerHTML = `
+    <div class="intro-half top"></div>
+    <div class="intro-half bot"></div>
+    <div class="intro-logo"><span class="dot"></span>M·EZZAT</div>
+  `;
+  document.body.appendChild(intro);
+  document.body.style.overflow = 'hidden';
+
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      intro.classList.add('visible');
+      setTimeout(() => {
+        intro.classList.add('split');
+        document.body.style.overflow = '';
+        setTimeout(() => {
+          intro.remove();
+          sessionStorage.setItem('intro_done', '1');
+        }, 750);
+      }, 900);
+    }, 80);
+  });
+})();
+
 (function(){
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const hoverable = window.matchMedia('(hover:hover)').matches;

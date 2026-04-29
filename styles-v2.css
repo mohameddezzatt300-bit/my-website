@@ -63,6 +63,51 @@ img, svg { display: block; max-width: 100%; }
 .mono { font-family: var(--font-mono); }
 .ar { font-family: var(--font-ar); direction: rtl; display: inline-block; }
 
+/* ========= Intro overlay ========= */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+}
+.intro-half {
+  position: absolute;
+  left: 0; right: 0;
+  height: 50%;
+  background: var(--bg);
+  transition: transform 0.7s cubic-bezier(0.76, 0, 0.24, 1);
+}
+.intro-half.top { top: 0; }
+.intro-half.bot { bottom: 0; }
+.intro-logo {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 5vw, 48px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  white-space: nowrap;
+  z-index: 1;
+}
+.intro-logo .dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--brand-glow);
+  box-shadow: 0 0 12px var(--brand-glow);
+  flex-shrink: 0;
+}
+.intro.visible .intro-logo { opacity: 1; }
+.intro.split .intro-half.top { transform: translateY(-100%); }
+.intro.split .intro-half.bot { transform: translateY(100%); }
+.intro.split .intro-logo { opacity: 0; transition: opacity 0.2s ease; }
+
 /* ========= Top progress + frame ========= */
 .scroll-bar {
   position: fixed; top: 0; left: 0;
