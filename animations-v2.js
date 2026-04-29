@@ -15,6 +15,19 @@
     return l;
   });
 
+  // glitch blocks
+  const blockColors = ['#14c27a','#0ff','#f0f','#fff'];
+  const blocks = Array.from({length: 6}, () => {
+    const b = document.createElement('div');
+    b.className = 'intro-block';
+    const w = Math.random() * 180 + 40;
+    const top = Math.random() * 90 + 5;
+    const left = Math.random() * 70;
+    const color = blockColors[Math.floor(Math.random() * blockColors.length)];
+    b.style.cssText = `width:${w}px;top:${top}%;left:${left}%;background:${color};animation-delay:${(Math.random()*0.04).toFixed(3)}s`;
+    return b;
+  });
+
   const intro = document.createElement('div');
   intro.className = 'intro';
   intro.innerHTML = `
@@ -25,10 +38,15 @@
       <div class="intro-corner bl"></div>
       <div class="intro-corner br"></div>
     </div>
+    <svg class="intro-ring" width="220" height="220" viewBox="0 0 220 220">
+      <circle cx="110" cy="110" r="90"/>
+    </svg>
+    <div class="intro-cross"></div>
     <div class="intro-logo" data-text="M·EZZAT"><span class="dot"></span>M·EZZAT</div>
     <div class="intro-label">Performance Media Buyer · Egypt &amp; GCC</div>
   `;
   lines.forEach(l => intro.appendChild(l));
+  blocks.forEach(b => intro.appendChild(b));
   document.body.appendChild(intro);
   document.body.style.overflow = 'hidden';
 

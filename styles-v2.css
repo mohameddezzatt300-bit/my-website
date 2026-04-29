@@ -166,6 +166,68 @@ img, svg { display: block; max-width: 100%; }
   transition: opacity 0.4s ease 0.35s;
 }
 .intro.visible .intro-label { opacity: 1; }
+
+/* SVG ring around logo */
+.intro-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.intro-ring circle {
+  fill: none;
+  stroke: var(--brand-glow);
+  stroke-width: 1;
+  stroke-dasharray: 565;
+  stroke-dashoffset: 565;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+.intro.visible .intro-ring circle {
+  opacity: 0.5;
+  animation: intro-ring-draw 0.8s cubic-bezier(0.4,0,0.2,1) 0.2s forwards;
+}
+@keyframes intro-ring-draw {
+  from { stroke-dashoffset: 565; }
+  to   { stroke-dashoffset: 0; }
+}
+
+/* crosshair lines */
+.intro-cross {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px; height: 40px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease 0.4s;
+}
+.intro-cross::before,
+.intro-cross::after {
+  content: '';
+  position: absolute;
+  background: var(--brand-glow);
+  opacity: 0.7;
+}
+.intro-cross::before { width: 1px; height: 100%; left: 50%; top: 0; }
+.intro-cross::after  { height: 1px; width: 100%; top: 50%; left: 0; }
+.intro.visible .intro-cross { opacity: 1; }
+
+/* glitch blocks */
+.intro-block {
+  position: absolute;
+  height: 3px;
+  opacity: 0;
+  pointer-events: none;
+}
+.intro.glitching .intro-block {
+  animation: intro-block-flash 0.05s steps(1) infinite;
+}
+@keyframes intro-block-flash {
+  0%  { opacity: 0.9; }
+  50% { opacity: 0; }
+  100%{ opacity: 0.7; }
+}
 .intro-logo {
   position: relative;
   display: flex;
