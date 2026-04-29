@@ -75,78 +75,31 @@ img, svg { display: block; max-width: 100%; }
   pointer-events: all;
   overflow: hidden;
   opacity: 1;
-  transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .intro.gone { opacity: 0; pointer-events: none; }
 
-/* center line that extends */
-.intro-line {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  height: 1px;
-  width: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
-  transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.intro.visible .intro-line { width: 60vw; }
-
-/* frame box */
-.intro-frame {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 0; height: 0;
-  border: 1px solid rgba(255,255,255,0.08);
-  transition:
-    width 1s cubic-bezier(0.4, 0, 0.2, 1) 0.3s,
-    height 1s cubic-bezier(0.4, 0, 0.2, 1) 0.3s;
-}
-.intro.visible .intro-frame { width: 340px; height: 120px; }
-
-/* dot accent */
-.intro-dot {
-  position: absolute;
-  top: 50%; left: calc(50% - 170px);
-  transform: translate(-50%, -50%);
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--brand-glow);
-  box-shadow: 0 0 12px var(--brand-glow);
-  opacity: 0;
-  transition: opacity 0.6s ease 1s;
-}
-.intro.visible .intro-dot { opacity: 1; }
-
-/* logo reveal via clip-path */
 .intro-logo {
-  position: relative;
-  z-index: 2;
   font-family: var(--font-display);
-  font-size: clamp(28px, 4vw, 44px);
+  font-size: clamp(40px, 8vw, 88px);
   font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: #f1f4f2;
-  clip-path: inset(0 100% 0 0);
-  transition: clip-path 1s cubic-bezier(0.4, 0, 0.2, 1) 0.7s;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.5s ease;
 }
-.intro.visible .intro-logo { clip-path: inset(0 0% 0 0); }
+.intro-logo .ch {
+  display: inline-block;
+  color: #f1f4f2;
+  transition: color 0.15s ease;
+}
+.intro-logo .ch.scrambling { color: var(--brand-glow); }
+.intro-logo .ch.locked     { color: #f1f4f2; }
 
-/* thin bottom rule */
-.intro-rule {
-  position: absolute;
-  bottom: calc(50% - 62px);
-  left: 50%;
-  transform: translateX(-50%);
-  height: 1px;
-  width: 0;
-  background: var(--brand-glow);
-  opacity: 0.5;
-  transition: width 0.8s ease 1.2s;
+.intro.exit .intro-logo {
+  transform: scale(1.15);
+  opacity: 0;
 }
-.intro.visible .intro-rule { width: 32px; }
 .intro-logo {
   position: relative;
   display: flex;

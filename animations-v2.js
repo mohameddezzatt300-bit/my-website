@@ -2,36 +2,68 @@
    v2 animations — scroll-driven, vanilla JS
    ========================================================= */
 
-/* ── Intro overlay ── */
+/* ── Intro overlay — text scramble ── */
 (function(){
   if (sessionStorage.getItem('intro_done')) return;
 
+  const TARGET  = 'M·EZZAT';
+  const CHARS   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ·#@%&';
+  const rand    = () => CHARS[Math.floor(Math.random() * CHARS.length)];
+
+  // build spans
+  const logoEl = document.createElement('div');
+  logoEl.className = 'intro-logo';
+  const spans = TARGET.split('').map(() => {
+    const s = document.createElement('span');
+    s.className = 'ch';
+    s.textContent = rand();
+    logoEl.appendChild(s);
+    return s;
+  });
+
   const intro = document.createElement('div');
   intro.className = 'intro';
-  intro.innerHTML = `
-    <div class="intro-line"></div>
-    <div class="intro-frame"></div>
-    <div class="intro-dot"></div>
-    <div class="intro-logo">M·EZZAT</div>
-    <div class="intro-rule"></div>
-  `;
+  intro.appendChild(logoEl);
   document.body.appendChild(intro);
   document.body.style.overflow = 'hidden';
 
-  // trigger transitions
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => intro.classList.add('visible'));
-  });
+  // scramble loop — resolve chars one by one
+  let resolved = 0;
+  const interval = 40; // ms between frame updates
+  const lockDelay = 120; // ms between each char locking
 
-  // fade out
-  setTimeout(() => {
-    intro.classList.add('gone');
-    document.body.style.overflow = '';
+  const tick = setInterval(() => {
+    spans.forEach((s, i) => {
+      if (i >= resolved) {
+        s.textContent = rand();
+        s.classList.add('scrambling');
+      }
+    });
+  }, interval);
+
+  TARGET.split('').forEach((char, i) => {
     setTimeout(() => {
-      intro.remove();
-      sessionStorage.setItem('intro_done', '1');
-    }, 1050);
-  }, 2600);
+      spans[i].textContent = char;
+      spans[i].classList.remove('scrambling');
+      spans[i].classList.add('locked');
+      resolved = i + 1;
+      if (resolved === TARGET.length) {
+        clearInterval(tick);
+        // hold then exit
+        setTimeout(() => {
+          intro.classList.add('exit');
+          setTimeout(() => {
+            intro.classList.add('gone');
+            document.body.style.overflow = '';
+            setTimeout(() => {
+              intro.remove();
+              sessionStorage.setItem('intro_done', '1');
+            }, 850);
+          }, 620);
+        }, 500);
+      }
+    }, 300 + i * lockDelay);
+  });
 })();
 
 (function(){
