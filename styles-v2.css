@@ -68,166 +68,85 @@ img, svg { display: block; max-width: 100%; }
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: var(--bg);
+  background: #080a09;
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: all;
   overflow: hidden;
+  opacity: 1;
+  transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
+.intro.gone { opacity: 0; pointer-events: none; }
 
-/* scan bar */
-.intro-scanbar {
-  position: absolute;
-  left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--brand-glow), transparent);
-  opacity: 0;
-  top: 0;
-  animation: intro-scanbar 1s ease-in-out 0.1s forwards;
-}
-@keyframes intro-scanbar {
-  0%   { top: 0; opacity: 0; }
-  10%  { opacity: 0.8; }
-  90%  { opacity: 0.5; }
-  100% { top: 100%; opacity: 0; }
-}
-
-/* horizontal noise lines */
+/* center line that extends */
 .intro-line {
   position: absolute;
-  left: 0; right: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   height: 1px;
+  width: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+  transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.intro.visible .intro-line { width: 60vw; }
+
+/* frame box */
+.intro-frame {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0; height: 0;
+  border: 1px solid rgba(255,255,255,0.08);
+  transition:
+    width 1s cubic-bezier(0.4, 0, 0.2, 1) 0.3s,
+    height 1s cubic-bezier(0.4, 0, 0.2, 1) 0.3s;
+}
+.intro.visible .intro-frame { width: 340px; height: 120px; }
+
+/* dot accent */
+.intro-dot {
+  position: absolute;
+  top: 50%; left: calc(50% - 170px);
+  transform: translate(-50%, -50%);
+  width: 5px; height: 5px;
+  border-radius: 50%;
   background: var(--brand-glow);
+  box-shadow: 0 0 12px var(--brand-glow);
   opacity: 0;
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: none;
+  transition: opacity 0.6s ease 1s;
 }
-.intro.visible .intro-line { animation: intro-line-in 0.4s ease forwards; }
-@keyframes intro-line-in {
-  0%   { opacity: 0; transform: scaleX(0); }
-  50%  { opacity: 0.6; transform: scaleX(1); }
-  100% { opacity: 0.15; transform: scaleX(1); }
-}
+.intro.visible .intro-dot { opacity: 1; }
 
-/* corner brackets */
-.intro-corners {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-.intro-corner {
-  position: absolute;
-  width: 28px; height: 28px;
-  opacity: 0;
-  transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
-}
-.intro-corner::before,
-.intro-corner::after {
-  content: '';
-  position: absolute;
-  background: var(--brand-glow);
-}
-.intro-corner::before { width: 2px; height: 100%; }
-.intro-corner::after  { width: 100%; height: 2px; }
-.intro-corner.tl { top: 28px; left: 28px; transform: translate(-8px,-8px); }
-.intro-corner.tr { top: 28px; right: 28px; transform: translate(8px,-8px); }
-.intro-corner.bl { bottom: 28px; left: 28px; transform: translate(-8px,8px); }
-.intro-corner.br { bottom: 28px; right: 28px; transform: translate(8px,8px); }
-.intro-corner.tr::before { right:0; }
-.intro-corner.tr::after  { right:0; bottom:0; top:auto; }
-.intro-corner.bl::before { bottom:0; top:auto; }
-.intro-corner.bl::after  { bottom:0; }
-.intro-corner.br::before { right:0; bottom:0; top:auto; }
-.intro-corner.br::after  { right:0; bottom:0; top:auto; }
-
-.intro.visible .intro-corner {
-  opacity: 1;
-  transform: translate(0,0);
-}
-.intro.visible .intro-corner.tl { transition-delay: 0.1s; }
-.intro.visible .intro-corner.tr { transition-delay: 0.15s; }
-.intro.visible .intro-corner.bl { transition-delay: 0.2s; }
-.intro.visible .intro-corner.br { transition-delay: 0.25s; }
-
-/* label text */
-.intro-label {
-  position: absolute;
-  bottom: 32px;
-  left: 0; right: 0;
-  text-align: center;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.2em;
+/* logo reveal via clip-path */
+.intro-logo {
+  position: relative;
+  z-index: 2;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 800;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--fg-faint);
-  opacity: 0;
-  transition: opacity 0.4s ease 0.35s;
+  color: #f1f4f2;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 1s cubic-bezier(0.4, 0, 0.2, 1) 0.7s;
 }
-.intro.visible .intro-label { opacity: 1; }
+.intro.visible .intro-logo { clip-path: inset(0 0% 0 0); }
 
-/* SVG ring around logo */
-.intro-ring {
+/* thin bottom rule */
+.intro-rule {
   position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-.intro-ring circle {
-  fill: none;
-  stroke: var(--brand-glow);
-  stroke-width: 1;
-  stroke-dasharray: 565;
-  stroke-dashoffset: 565;
-  opacity: 0;
-  transition: opacity 0.1s ease;
-}
-.intro.visible .intro-ring circle {
-  opacity: 0.5;
-  animation: intro-ring-draw 0.8s cubic-bezier(0.4,0,0.2,1) 0.2s forwards;
-}
-@keyframes intro-ring-draw {
-  from { stroke-dashoffset: 565; }
-  to   { stroke-dashoffset: 0; }
-}
-
-/* crosshair lines */
-.intro-cross {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 40px; height: 40px;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease 0.4s;
-}
-.intro-cross::before,
-.intro-cross::after {
-  content: '';
-  position: absolute;
+  bottom: calc(50% - 62px);
+  left: 50%;
+  transform: translateX(-50%);
+  height: 1px;
+  width: 0;
   background: var(--brand-glow);
-  opacity: 0.7;
+  opacity: 0.5;
+  transition: width 0.8s ease 1.2s;
 }
-.intro-cross::before { width: 1px; height: 100%; left: 50%; top: 0; }
-.intro-cross::after  { height: 1px; width: 100%; top: 50%; left: 0; }
-.intro.visible .intro-cross { opacity: 1; }
-
-/* glitch blocks */
-.intro-block {
-  position: absolute;
-  height: 3px;
-  opacity: 0;
-  pointer-events: none;
-}
-.intro.glitching .intro-block {
-  animation: intro-block-flash 0.05s steps(1) infinite;
-}
-@keyframes intro-block-flash {
-  0%  { opacity: 0.9; }
-  50% { opacity: 0; }
-  100%{ opacity: 0.7; }
-}
+.intro.visible .intro-rule { width: 32px; }
 .intro-logo {
   position: relative;
   display: flex;

@@ -6,66 +6,32 @@
 (function(){
   if (sessionStorage.getItem('intro_done')) return;
 
-  // random horizontal lines
-  const linePositions = [18, 35, 52, 68, 82];
-  const lines = linePositions.map(pct => {
-    const l = document.createElement('div');
-    l.className = 'intro-line';
-    l.style.cssText = `top:${pct}%; animation-delay:${(Math.random()*0.3+0.2).toFixed(2)}s;`;
-    return l;
-  });
-
-  // glitch blocks
-  const blockColors = ['#14c27a','#0ff','#f0f','#fff'];
-  const blocks = Array.from({length: 6}, () => {
-    const b = document.createElement('div');
-    b.className = 'intro-block';
-    const w = Math.random() * 180 + 40;
-    const top = Math.random() * 90 + 5;
-    const left = Math.random() * 70;
-    const color = blockColors[Math.floor(Math.random() * blockColors.length)];
-    b.style.cssText = `width:${w}px;top:${top}%;left:${left}%;background:${color};animation-delay:${(Math.random()*0.04).toFixed(3)}s`;
-    return b;
-  });
-
   const intro = document.createElement('div');
   intro.className = 'intro';
   intro.innerHTML = `
-    <div class="intro-scanbar"></div>
-    <div class="intro-corners">
-      <div class="intro-corner tl"></div>
-      <div class="intro-corner tr"></div>
-      <div class="intro-corner bl"></div>
-      <div class="intro-corner br"></div>
-    </div>
-    <svg class="intro-ring" width="220" height="220" viewBox="0 0 220 220">
-      <circle cx="110" cy="110" r="90"/>
-    </svg>
-    <div class="intro-cross"></div>
-    <div class="intro-logo" data-text="M·EZZAT"><span class="dot"></span>M·EZZAT</div>
-    <div class="intro-label">Performance Media Buyer · Egypt &amp; GCC</div>
+    <div class="intro-line"></div>
+    <div class="intro-frame"></div>
+    <div class="intro-dot"></div>
+    <div class="intro-logo">M·EZZAT</div>
+    <div class="intro-rule"></div>
   `;
-  lines.forEach(l => intro.appendChild(l));
-  blocks.forEach(b => intro.appendChild(b));
   document.body.appendChild(intro);
   document.body.style.overflow = 'hidden';
 
-  // 1. Reveal shapes + logo
-  setTimeout(() => intro.classList.add('visible'), 150);
+  // trigger transitions
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => intro.classList.add('visible'));
+  });
 
-  // 2. Glitch burst
-  setTimeout(() => intro.classList.add('glitching'), 1100);
-
-  // 3. Fade out
+  // fade out
   setTimeout(() => {
-    intro.classList.remove('glitching');
     intro.classList.add('gone');
     document.body.style.overflow = '';
     setTimeout(() => {
       intro.remove();
       sessionStorage.setItem('intro_done', '1');
-    }, 220);
-  }, 1950);
+    }, 1050);
+  }, 2600);
 })();
 
 (function(){
