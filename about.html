@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en" data-mode="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>About — Mohamed Ezzat · Performance Media Buyer</title>
+<meta name="description" content="Performance Media Buyer with 3+ years scaling DTC brands across Egypt and GCC. 100M+ EGP in revenue driven." />
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Inter:wght@400;500;600;700&family=Readex+Pro:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles-v2.css" />
+<link rel="stylesheet" href="mobile-v2.css" />
+<style>
+  /* ── About page specific ── */
+  .about-hero {
+    padding: 140px 0 80px;
+    border-bottom: 1px solid var(--line);
+  }
+  .about-hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 80px;
+    align-items: center;
+  }
+  .about-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fg-faint);
+    border: 1px solid var(--line);
+    padding: 6px 14px;
+    border-radius: 999px;
+    margin-bottom: 28px;
+  }
+  .about-eyebrow .live {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--brand-glow);
+    box-shadow: 0 0 8px var(--brand-glow);
+    animation: pulse 2s infinite;
+  }
+  .about-hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(52px, 6vw, 80px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .about-title {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--brand-glow);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+  .about-bio {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 40px;
+  }
+  .about-bio li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 16px;
+    color: var(--fg-dim);
+    line-height: 1.6;
+    list-style: none;
+  }
+  .about-bio li::before {
+    content: "→";
+    color: var(--brand-glow);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .about-quick-stats {
+    display: flex;
+    gap: 32px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+  }
+  .about-quick-stat .n {
+    font-family: var(--font-display);
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--fg);
+    line-height: 1;
+  }
+  .about-quick-stat .n span { color: var(--brand-glow); }
+  .about-quick-stat .l {
+    font-size: 12px;
+    color: var(--fg-faint);
+    font-family: var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* Portrait */
+  .about-portrait-wrap {
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    isolation: isolate;
+    aspect-ratio: 3/4;
+    border: 1px solid var(--line);
+  }
+  .about-portrait-wrap img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+  }
+  .about-portrait-wrap::after {
+    content: "";
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 35%;
+    background: linear-gradient(to top, var(--bg) 0%, transparent 100%);
+    pointer-events: none;
+  }
+  .about-portrait-badge {
+    position: absolute;
+    bottom: 24px; left: 24px; right: 24px;
+    background: color-mix(in srgb, var(--bg-2) 90%, transparent);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    z-index: 2;
+  }
+  .about-portrait-badge .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--brand-glow);
+    box-shadow: 0 0 10px var(--brand-glow);
+    flex-shrink: 0;
+  }
+  .about-portrait-badge strong {
+    font-size: 14px;
+    font-weight: 700;
+    display: block;
+  }
+  .about-portrait-badge span {
+    font-size: 11px;
+    color: var(--fg-faint);
+    font-family: var(--font-mono);
+    letter-spacing: 0.06em;
+  }
+
+  /* Sections */
+  .about-section {
+    padding: 80px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .about-section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--brand-glow);
+    margin-bottom: 12px;
+  }
+  .about-section h2 {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 4vw, 48px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 48px;
+  }
+  .about-section h2 .em { color: var(--brand-glow); }
+
+  /* Experience timeline */
+  .exp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .exp-card {
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 32px;
+    transition: border-color 300ms;
+  }
+  .exp-card:hover { border-color: var(--line-2); }
+  .exp-period {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--brand-glow);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .exp-company {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .exp-role {
+    font-size: 13px;
+    color: var(--fg-faint);
+    font-family: var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .exp-card ul {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .exp-card ul li {
+    font-size: 14px;
+    color: var(--fg-dim);
+    line-height: 1.6;
+    list-style: none;
+    padding-left: 16px;
+    position: relative;
+  }
+  .exp-card ul li::before {
+    content: "·";
+    position: absolute;
+    left: 0;
+    color: var(--brand-glow);
+    font-size: 18px;
+    line-height: 1.2;
+  }
+  .exp-current {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--brand-glow);
+    border: 1px solid var(--brand-glow);
+    border-radius: 999px;
+    padding: 2px 8px;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+
+  /* Skills grid */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .skill-chip {
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 300ms, background 300ms;
+  }
+  .skill-chip:hover {
+    border-color: var(--brand-glow);
+    background: var(--bg-2);
+  }
+  .skill-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--brand-glow);
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+  }
+  .skill-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fg);
+    letter-spacing: -0.01em;
+  }
+
+  /* Education */
+  .edu-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .edu-card {
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 32px;
+  }
+  .edu-period {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--brand-glow);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .edu-name {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .edu-detail {
+    font-size: 14px;
+    color: var(--fg-dim);
+    line-height: 1.6;
+  }
+  .edu-badge {
+    display: inline-block;
+    margin-top: 16px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: color-mix(in srgb, var(--brand-glow) 15%, transparent);
+    color: var(--brand-glow);
+    border: 1px solid color-mix(in srgb, var(--brand-glow) 30%, transparent);
+    border-radius: 999px;
+    padding: 4px 12px;
+  }
+
+  /* Courses */
+  .courses-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .course-item {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .course-item:last-child { border-bottom: 0; }
+  .course-n {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--brand-glow);
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+    width: 28px;
+  }
+  .course-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--fg);
+    flex: 1;
+  }
+  .course-provider {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-faint);
+  }
+  .course-badge {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--brand-glow);
+    border: 1px solid var(--brand-glow);
+    border-radius: 999px;
+    padding: 2px 8px;
+  }
+
+  /* Mobile */
+  @media (max-width: 720px) {
+    .about-hero { padding: 90px 0 56px; }
+    .about-hero-grid { grid-template-columns: 1fr; gap: 40px; }
+    .about-portrait-wrap { aspect-ratio: 4/3; order: -1; }
+    .about-quick-stats { flex-wrap: wrap; gap: 20px; }
+    .exp-grid, .edu-grid { grid-template-columns: 1fr; }
+    .skills-grid { grid-template-columns: repeat(2, 1fr); }
+    .about-section { padding: 56px 0; }
+    .about-section h2 { margin-bottom: 32px; }
+    .course-provider { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="frame-corners"><span></span></div>
+
+<nav class="nav">
+  <span class="nav-brand"><span class="dot"></span>M·EZZAT</span>
+  <a href="index.html#work">Work</a>
+  <a href="index.html#services">Services</a>
+  <a href="about.html" class="active" style="color:var(--brand-glow)">About</a>
+  <a href="index.html#contact">Contact</a>
+  <a href="index.html#book" class="cta">Book a call</a>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+    <svg class="ico-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <svg class="ico-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</nav>
+
+<button class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Menu"><span></span></button>
+<aside class="mobile-drawer" id="mobileDrawer">
+  <a href="index.html#work">Work</a>
+  <a href="index.html#services">Services</a>
+  <a href="about.html">About</a>
+  <a href="index.html#contact">Contact</a>
+  <a href="index.html#book" class="cta">Book a call</a>
+  <div class="mobile-meta">
+    <span>Alexandria · Egypt</span>
+    <span>&lt; 24h response</span>
+    <span>© 2026 M. Ezzat</span>
+    <button class="theme-toggle theme-toggle-mobile" id="themeToggleMobile" aria-label="Toggle theme">
+      <svg class="ico-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="ico-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <span class="theme-label-txt"></span>
+    </button>
+  </div>
+</aside>
+
+<!-- HERO -->
+<section class="about-hero">
+  <div class="wrap">
+    <div class="about-hero-grid rv">
+
+      <!-- Left: text -->
+      <div>
+        <div class="about-eyebrow"><span class="live"></span> Performance Media Buyer · Alexandria, Egypt</div>
+        <h1 class="about-hero-h1">Mohamed<br/><span style="color:var(--brand-glow)">Ezzat</span>.</h1>
+        <div class="about-title">Senior Performance Media Buyer</div>
+        <ul class="about-bio">
+          <li>Experienced in executing successful campaigns across multiple platforms — Meta, TikTok, Google, and Snapchat.</li>
+          <li>Expert in market analysis, negotiation, and campaign optimization to maximize ROI &amp; ROAS.</li>
+          <li>Skilled at leveraging data to drive strategic decisions and build sustainable customer acquisition systems.</li>
+          <li>Strong communicator, detail-oriented, and results-driven in fast-paced DTC environments.</li>
+        </ul>
+        <div class="about-quick-stats">
+          <div class="about-quick-stat">
+            <div class="n">50<span>+</span></div>
+            <div class="l">Clients</div>
+          </div>
+          <div class="about-quick-stat">
+            <div class="n">100M<span>+</span></div>
+            <div class="l">EGP Revenue</div>
+          </div>
+          <div class="about-quick-stat">
+            <div class="n">10<span>x</span></div>
+            <div class="l">Peak ROAS</div>
+          </div>
+          <div class="about-quick-stat">
+            <div class="n">3<span>+</span></div>
+            <div class="l">Years</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: portrait -->
+      <div class="about-portrait-wrap">
+        <img src="assets/logos/portrait.jpg" alt="Mohamed Ezzat" loading="eager">
+        <div class="about-portrait-badge">
+          <span class="dot"></span>
+          <div>
+            <strong>Mohamed Ezzat</strong>
+            <span>B-Mark Agency · Senior Media Buyer</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section class="about-section">
+  <div class="wrap rv">
+    <div class="about-section-label">02 — Work history</div>
+    <h2>Work <span class="em">experience</span>.</h2>
+    <div class="exp-grid">
+
+      <div class="exp-card">
+        <div class="exp-period">06/2024 — Present</div>
+        <div class="exp-company">B-Mark Agency <span class="exp-current">Current</span></div>
+        <div class="exp-role">Senior Performance Media Buyer</div>
+        <ul>
+          <li>Emphasizes data-driven decision-making, continuous experimentation, and optimization.</li>
+          <li>Focuses on driving measurable results and business growth through strategic marketing initiatives.</li>
+          <li>Collaborates closely with marketing teams to develop targeted campaigns aligned with business goals.</li>
+        </ul>
+      </div>
+
+      <div class="exp-card">
+        <div class="exp-period">09/2023 — 06/2024</div>
+        <div class="exp-company">AZAD Agency</div>
+        <div class="exp-role">Performance Media Buyer</div>
+        <ul>
+          <li>Analyzed market trends, audience demographics, and campaign objectives to strategically allocate budgets.</li>
+          <li>Utilized various channels including digital advertising, email marketing, SEO, and social media.</li>
+          <li>Managed full-funnel paid campaigns across Meta and Google platforms.</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section class="about-section">
+  <div class="wrap rv">
+    <div class="about-section-label">03 — Capabilities</div>
+    <h2>Professional <span class="em">skills</span>.</h2>
+    <div class="skills-grid">
+      <div class="skill-chip"><span class="skill-num">01</span><span class="skill-name">Facebook Ads</span></div>
+      <div class="skill-chip"><span class="skill-num">02</span><span class="skill-name">Instagram Ads</span></div>
+      <div class="skill-chip"><span class="skill-num">03</span><span class="skill-name">Google Ads</span></div>
+      <div class="skill-chip"><span class="skill-num">04</span><span class="skill-name">TikTok Ads</span></div>
+      <div class="skill-chip"><span class="skill-num">05</span><span class="skill-name">Snapchat Ads</span></div>
+      <div class="skill-chip"><span class="skill-num">06</span><span class="skill-name">Data Analysis</span></div>
+      <div class="skill-chip"><span class="skill-num">07</span><span class="skill-name">SEO</span></div>
+      <div class="skill-chip"><span class="skill-num">08</span><span class="skill-name">Conversion Tracking</span></div>
+      <div class="skill-chip"><span class="skill-num">09</span><span class="skill-name">Google Analytics</span></div>
+      <div class="skill-chip"><span class="skill-num">10</span><span class="skill-name">CRO</span></div>
+      <div class="skill-chip"><span class="skill-num">11</span><span class="skill-name">Planning</span></div>
+      <div class="skill-chip"><span class="skill-num">12</span><span class="skill-name">Market Analysis</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- EDUCATION -->
+<section class="about-section">
+  <div class="wrap rv">
+    <div class="about-section-label">04 — Academic background</div>
+    <h2>Education<span class="em">.</span></h2>
+    <div class="edu-grid">
+
+      <div class="edu-card">
+        <div class="edu-period">2019 — 2023</div>
+        <div class="edu-name">Bachelor of Commerce</div>
+        <div class="edu-detail">Accounting Department<br/>Alexandria University<br/>GPA: 3.08 — Grade: Very Good</div>
+        <span class="edu-badge">Graduated</span>
+      </div>
+
+      <div class="edu-card">
+        <div class="edu-period">2016 — 2019</div>
+        <div class="edu-name">Secondary School</div>
+        <div class="edu-detail">Madina Al Manwara Secondary School<br/>Alexandria, Egypt</div>
+        <span class="edu-badge">Completed</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- COURSES -->
+<section class="about-section">
+  <div class="wrap rv">
+    <div class="about-section-label">05 — Continuous learning</div>
+    <h2>Professional <span class="em">courses</span>.</h2>
+    <div class="courses-list">
+      <div class="course-item">
+        <span class="course-n">01</span>
+        <span class="course-name">Social Media Management</span>
+        <span class="course-provider">Meta</span>
+      </div>
+      <div class="course-item">
+        <span class="course-n">02</span>
+        <span class="course-name">Strategic Management</span>
+        <span class="course-provider">—</span>
+      </div>
+      <div class="course-item">
+        <span class="course-n">03</span>
+        <span class="course-name">Digital Analytics</span>
+        <span class="course-provider">EDRAK</span>
+      </div>
+      <div class="course-item">
+        <span class="course-n">04</span>
+        <span class="course-name">Digital Advertising — Managing Paid Campaigns</span>
+        <span class="course-provider">EDRAK</span>
+      </div>
+      <div class="course-item">
+        <span class="course-n">05</span>
+        <span class="course-name">Brand Strategy</span>
+        <span class="course-provider">YANFAA</span>
+      </div>
+      <div class="course-item">
+        <span class="course-n">06</span>
+        <span class="course-name">Strategy from Planning to Execution</span>
+        <span class="course-provider">YANFAA</span>
+      </div>
+      <div class="course-item">
+        <span class="course-n">07</span>
+        <span class="course-name">Fundamentals of Digital Marketing</span>
+        <span class="course-provider">Google</span>
+      </div>
+      <div class="course-item">
+        <span class="course-n">08</span>
+        <span class="course-name">Top 10% of Marketers — Changing Mindset</span>
+        <span class="course-provider">Abdo Ramadan</span>
+        <span class="course-badge">In Progress</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="case-footer-cta rv">
+  <div class="wrap">
+    <h2>Ready to scale<br/>your brand <span class="em">profitably</span>?</h2>
+    <a href="index.html#book" class="btn btn-primary">Schedule a discovery call <span class="ico">→</span></a>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="wrap">
+    <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px; padding:48px 0 32px;">
+      <span style="font-family:var(--font-mono);font-size:11px;color:var(--fg-faint);letter-spacing:0.06em;">© 2026 Mohamed Ezzat · Senior Performance Media Buyer</span>
+      <a href="index.html" style="font-family:var(--font-mono);font-size:11px;color:var(--fg-faint);letter-spacing:0.08em;text-transform:uppercase;">← Back to portfolio</a>
+    </div>
+  </div>
+</footer>
+
+<script src="animations-v2.js"></script>
+</body>
+</html>
