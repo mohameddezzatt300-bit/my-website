@@ -8,26 +8,23 @@
   const intro = document.createElement('div');
   intro.className = 'intro';
   intro.innerHTML = `
-    <div class="intro-half top"></div>
-    <div class="intro-half bot"></div>
+    <div class="intro-scan"></div>
     <div class="intro-logo"><span class="dot"></span>M·EZZAT</div>
+    <div class="intro-sub">Performance Media Buyer</div>
   `;
   document.body.appendChild(intro);
   document.body.style.overflow = 'hidden';
 
-  requestAnimationFrame(() => {
+  setTimeout(() => intro.classList.add('visible'), 850);
+
+  setTimeout(() => {
+    intro.classList.add('exit');
+    document.body.style.overflow = '';
     setTimeout(() => {
-      intro.classList.add('visible');
-      setTimeout(() => {
-        intro.classList.add('split');
-        document.body.style.overflow = '';
-        setTimeout(() => {
-          intro.remove();
-          sessionStorage.setItem('intro_done', '1');
-        }, 750);
-      }, 900);
-    }, 80);
-  });
+      intro.remove();
+      sessionStorage.setItem('intro_done', '1');
+    }, 950);
+  }, 1900);
 })();
 
 (function(){
