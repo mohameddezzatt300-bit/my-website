@@ -450,6 +450,11 @@
   .mobile-drawer a { font-size: 28px; padding: 10px 0; }
 }
 
+/* ===== About page: hide portrait badge on mobile ===== */
+@media (max-width: 720px) {
+  .about-portrait-badge { display: none; }
+}
+
 /* ===== Respect reduced motion on mobile ===== */
 @media (max-width: 720px) and (prefers-reduced-motion: reduce) {
   .mobile-drawer { transition: none; }
