@@ -4,6 +4,7 @@
 
 /* ── Intro overlay — text scramble ── */
 (function(){
+  sessionStorage.removeItem('intro_done');
   if (sessionStorage.getItem('intro_done')) return;
 
   const TARGET  = 'M·EZZAT';
