@@ -6,98 +6,153 @@
 (function(){
   const S = (el, css) => Object.assign(el.style, css);
 
-  // wrapper
+  /* ── canvas particles ── */
+  const cv = document.createElement('canvas');
+  S(cv, { position:'fixed', inset:'0', zIndex:'9998', opacity:'0', transition:'opacity 0.6s ease' });
+  document.body.appendChild(cv);
+  const ctx = cv.getContext('2d');
+  let W, H, pts = [];
+  const resize = () => { W = cv.width = innerWidth; H = cv.height = innerHeight; };
+  resize(); window.addEventListener('resize', () => { resize(); initPts(); });
+  const initPts = () => {
+    pts = [];
+    const cols = Math.floor(W/100), rows = Math.floor(H/100);
+    for (let i=0;i<=cols;i++) for (let j=0;j<=rows;j++)
+      pts.push({ x:(i/cols)*W, y:(j/rows)*H, ox:(i/cols)*W, oy:(j/rows)*H, vx:0, vy:0 });
+  };
+  initPts();
+  let mx = W/2, my = H/2;
+  window.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; });
+  const drawPts = () => {
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(p => {
+      const dx=mx-p.x, dy=my-p.y, d=Math.sqrt(dx*dx+dy*dy);
+      const f=Math.max(0,100-d)/100;
+      p.vx+=(-dx/(d||1))*f*0.3; p.vy+=(-dy/(d||1))*f*0.3;
+      p.vx+=(p.ox-p.x)*0.05; p.vy+=(p.oy-p.y)*0.05;
+      p.vx*=0.85; p.vy*=0.85; p.x+=p.vx; p.y+=p.vy;
+    });
+    pts.forEach((a,i) => pts.forEach((b,j) => {
+      if (j<=i) return;
+      const dx=a.x-b.x, dy=a.y-b.y, d=Math.sqrt(dx*dx+dy*dy);
+      if (d<100) {
+        ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
+        ctx.strokeStyle=`rgba(20,194,122,${0.06*(1-d/100)})`; ctx.lineWidth=0.5; ctx.stroke();
+      }
+    }));
+    pts.forEach(p => {
+      ctx.beginPath(); ctx.arc(p.x,p.y,0.8,0,Math.PI*2);
+      ctx.fillStyle='rgba(20,194,122,0.2)'; ctx.fill();
+    });
+    requestAnimationFrame(drawPts);
+  };
+  drawPts();
+  setTimeout(() => { cv.style.opacity='1'; }, 100);
+
+  /* ── wrapper ── */
   const intro = document.createElement('div');
   S(intro, { position:'fixed', inset:'0', zIndex:'9999', pointerEvents:'all' });
 
-  // curtains
-  const cl = document.createElement('div');
-  const cr = document.createElement('div');
-  const curtainBase = {
-    position:'fixed', top:'0', height:'100%', width:'50%',
-    background:'#080a09', zIndex:'9999',
-    transition:'transform 1.1s cubic-bezier(0.76,0,0.24,1)'
-  };
-  S(cl, { ...curtainBase, left:'0' });
-  S(cr, { ...curtainBase, right:'0' });
+  /* ── curtains ── */
+  const cl = document.createElement('div'), cr = document.createElement('div');
+  const cBase = { position:'fixed', top:'0', height:'100%', width:'50%', background:'#080a09', zIndex:'9999', transition:'transform 1.1s cubic-bezier(0.76,0,0.24,1)' };
+  S(cl, { ...cBase, left:'0' }); S(cr, { ...cBase, right:'0' });
 
-  // horizontal line
+  /* ── scan line ── */
+  const scan = document.createElement('div');
+  S(scan, { position:'fixed', left:'0', right:'0', height:'1px', top:'0', zIndex:'10002', background:'linear-gradient(90deg,transparent,#14c27a,transparent)', opacity:'0.6', animation:'none' });
+
+  /* ── center horizontal line ── */
   const lineH = document.createElement('div');
-  S(lineH, {
-    position:'fixed', left:'50%', top:'50%',
-    transform:'translate(-50%,-50%)',
-    width:'0', height:'1px',
-    background:'linear-gradient(90deg,transparent,rgba(241,244,242,0.3),transparent)',
-    zIndex:'10000', transition:'width 0.8s cubic-bezier(0.16,1,0.3,1) 0.3s'
+  S(lineH, { position:'fixed', left:'50%', top:'50%', transform:'translate(-50%,-50%)', width:'0', height:'1px', background:'linear-gradient(90deg,transparent,rgba(241,244,242,0.2),transparent)', zIndex:'10000', transition:'width 0.9s cubic-bezier(0.16,1,0.3,1) 0.2s' });
+
+  /* ── corner brackets ── */
+  const corners = ['tl','tr','bl','br'].map(pos => {
+    const c = document.createElement('div');
+    const isT = pos[0]==='t', isL = pos[1]==='l';
+    S(c, {
+      position:'fixed', width:'22px', height:'22px', zIndex:'10002',
+      [isT?'top':'bottom']:'24px', [isL?'left':'right']:'24px',
+      borderTop: isT?'1px solid rgba(20,194,122,0.6)':'none',
+      borderBottom: !isT?'1px solid rgba(20,194,122,0.6)':'none',
+      borderLeft: isL?'1px solid rgba(20,194,122,0.6)':'none',
+      borderRight: !isL?'1px solid rgba(20,194,122,0.6)':'none',
+      opacity:'0', transform:`translate(${isL?'-6px':'6px'},${isT?'-6px':'6px'})`,
+      transition:`opacity 0.4s ease, transform 0.5s cubic-bezier(0.34,1.56,0.64,1)`
+    });
+    return c;
   });
 
-  // center content
+  /* ── center content ── */
   const content = document.createElement('div');
-  S(content, {
-    position:'fixed', top:'50%', left:'50%',
-    transform:'translate(-50%,-50%) translateY(12px)',
-    zIndex:'10001', display:'flex', flexDirection:'column',
-    alignItems:'center', gap:'16px', textAlign:'center',
-    opacity:'0', transition:'opacity 0.7s ease 0.9s, transform 0.7s ease 0.9s'
-  });
+  S(content, { position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%) translateY(14px)', zIndex:'10001', display:'flex', flexDirection:'column', alignItems:'center', gap:'18px', textAlign:'center', opacity:'0', transition:'opacity 0.7s ease 0.8s, transform 0.7s ease 0.8s' });
 
   const brand = document.createElement('div');
   brand.textContent = 'M·EZZAT';
-  S(brand, {
-    fontFamily:'"Plus Jakarta Sans",sans-serif',
-    fontSize:'clamp(40px,8vw,84px)', fontWeight:'800',
-    letterSpacing:'0.06em', color:'#f1f4f2', lineHeight:'1'
-  });
+  S(brand, { fontFamily:'"Plus Jakarta Sans",sans-serif', fontSize:'clamp(44px,8vw,88px)', fontWeight:'800', letterSpacing:'0.08em', color:'#f1f4f2', lineHeight:'1' });
 
-  // ring
-  const ringWrap = document.createElement('div');
-  S(ringWrap, { position:'relative', width:'52px', height:'52px' });
-  const circumference = 2 * Math.PI * 20;
-  ringWrap.innerHTML = `
-    <svg width="52" height="52" viewBox="0 0 52 52" style="transform:rotate(-90deg)">
-      <circle cx="26" cy="26" r="20" fill="none" stroke="#1a1a1a" stroke-width="1.5"/>
-      <circle id="intro-ring-fill" cx="26" cy="26" r="20" fill="none"
-        stroke="#14c27a" stroke-width="1.5" stroke-linecap="round"
-        stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}"/>
-    </svg>
-    <div id="intro-pct" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:9px;letter-spacing:1px;color:#555;">0%</div>
-  `;
+  const sub = document.createElement('div');
+  sub.textContent = 'PERFORMANCE MEDIA BUYER';
+  S(sub, { fontFamily:'monospace', fontSize:'9px', letterSpacing:'0.22em', color:'rgba(255,255,255,0.2)', marginTop:'-4px' });
+
+  /* ── ring ── */
+  const rw = document.createElement('div');
+  S(rw, { position:'relative', width:'56px', height:'56px', marginTop:'4px' });
+  const circ = 2 * Math.PI * 22;
+  rw.innerHTML = `<svg width="56" height="56" viewBox="0 0 56 56" style="transform:rotate(-90deg)">
+    <circle cx="28" cy="28" r="22" fill="none" stroke="#111" stroke-width="1.5"/>
+    <circle id="i-ring" cx="28" cy="28" r="22" fill="none" stroke="#14c27a" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ}"/>
+  </svg>
+  <div id="i-pct" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:9px;letter-spacing:1px;color:#444">0%</div>`;
 
   content.appendChild(brand);
-  content.appendChild(ringWrap);
-  intro.appendChild(cl);
-  intro.appendChild(cr);
-  intro.appendChild(lineH);
+  content.appendChild(sub);
+  content.appendChild(rw);
+
+  intro.appendChild(cl); intro.appendChild(cr);
+  intro.appendChild(scan); intro.appendChild(lineH);
+  corners.forEach(c => intro.appendChild(c));
   intro.appendChild(content);
   document.body.appendChild(intro);
   document.body.style.overflow = 'hidden';
 
-  // ring counter
-  const ringFill = document.getElementById('intro-ring-fill');
-  const pctEl    = document.getElementById('intro-pct');
+  /* ── scan line animation ── */
+  let scanY = 0, scanDir = 1;
+  const scanAnim = setInterval(() => {
+    scanY += scanDir * 1.5;
+    if (scanY >= 100 || scanY <= 0) scanDir *= -1;
+    scan.style.top = scanY + '%';
+  }, 16);
+
+  /* ── ring counter ── */
+  const ringEl = document.getElementById('i-ring');
+  const pctEl  = document.getElementById('i-pct');
   let pct = 0;
   const ticker = setInterval(() => {
     pct = Math.min(pct + 2, 100);
     pctEl.textContent = pct + '%';
-    ringFill.style.strokeDashoffset = circumference * (1 - pct / 100);
+    ringEl.style.strokeDashoffset = circ * (1 - pct/100);
     if (pct >= 100) clearInterval(ticker);
-  }, 36);
+  }, 28);
 
-  // line grow
-  setTimeout(() => { lineH.style.width = 'min(560px,75vw)'; }, 50);
+  /* ── sequence ── */
+  setTimeout(() => { lineH.style.width = 'min(600px,80vw)'; }, 50);
 
-  // show content
+  setTimeout(() => {
+    corners.forEach(c => { c.style.opacity='1'; c.style.transform='translate(0,0)'; });
+  }, 300);
+
   setTimeout(() => {
     S(content, { opacity:'1', transform:'translate(-50%,-50%) translateY(0)' });
-  }, 200);
+  }, 400);
 
-  // open curtains + reveal site
   setTimeout(() => {
+    clearInterval(scanAnim);
     cl.style.transform = 'translateX(-100%)';
     cr.style.transform = 'translateX(100%)';
     document.body.style.overflow = '';
-    setTimeout(() => intro.remove(), 1200);
-  }, 2800);
+    setTimeout(() => { intro.remove(); cv.remove(); }, 1200);
+  }, 2900);
 })();
 
 (function(){
