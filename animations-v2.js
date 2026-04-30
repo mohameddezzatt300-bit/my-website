@@ -4,48 +4,100 @@
 
 /* ── Intro overlay ── */
 (function(){
+  const S = (el, css) => Object.assign(el.style, css);
+
+  // wrapper
   const intro = document.createElement('div');
-  intro.style.cssText = [
-    'position:fixed','inset:0','z-index:9999',
-    'background:#080a09','display:flex','flex-direction:column',
-    'align-items:center','justify-content:center','gap:20px',
-    'transition:transform 0.9s cubic-bezier(0.76,0,0.24,1)'
-  ].join(';');
+  S(intro, { position:'fixed', inset:'0', zIndex:'9999', pointerEvents:'all' });
 
-  const name = document.createElement('div');
-  name.textContent = 'M·EZZAT';
-  name.style.cssText = [
-    'font-family:"Plus Jakarta Sans",Arial,sans-serif',
-    'font-size:clamp(36px,7vw,80px)','font-weight:800',
-    'letter-spacing:0.1em','color:#f1f4f2',
-    'opacity:0','transform:translateY(16px)',
-    'transition:opacity 0.7s ease,transform 0.7s ease'
-  ].join(';');
+  // curtains
+  const cl = document.createElement('div');
+  const cr = document.createElement('div');
+  const curtainBase = {
+    position:'fixed', top:'0', height:'100%', width:'50%',
+    background:'#080a09', zIndex:'9999',
+    transition:'transform 1.1s cubic-bezier(0.76,0,0.24,1)'
+  };
+  S(cl, { ...curtainBase, left:'0' });
+  S(cr, { ...curtainBase, right:'0' });
 
-  const line = document.createElement('div');
-  line.style.cssText = [
-    'width:0','height:1px','background:#14c27a',
-    'transition:width 0.8s ease 0.4s','opacity:0.7'
-  ].join(';');
+  // horizontal line
+  const lineH = document.createElement('div');
+  S(lineH, {
+    position:'fixed', left:'50%', top:'50%',
+    transform:'translate(-50%,-50%)',
+    width:'0', height:'1px',
+    background:'linear-gradient(90deg,transparent,rgba(241,244,242,0.3),transparent)',
+    zIndex:'10000', transition:'width 0.8s cubic-bezier(0.16,1,0.3,1) 0.3s'
+  });
 
-  intro.appendChild(name);
-  intro.appendChild(line);
+  // center content
+  const content = document.createElement('div');
+  S(content, {
+    position:'fixed', top:'50%', left:'50%',
+    transform:'translate(-50%,-50%) translateY(12px)',
+    zIndex:'10001', display:'flex', flexDirection:'column',
+    alignItems:'center', gap:'16px', textAlign:'center',
+    opacity:'0', transition:'opacity 0.7s ease 0.9s, transform 0.7s ease 0.9s'
+  });
+
+  const brand = document.createElement('div');
+  brand.textContent = 'M·EZZAT';
+  S(brand, {
+    fontFamily:'"Plus Jakarta Sans",sans-serif',
+    fontSize:'clamp(40px,8vw,84px)', fontWeight:'800',
+    letterSpacing:'0.06em', color:'#f1f4f2', lineHeight:'1'
+  });
+
+  // ring
+  const ringWrap = document.createElement('div');
+  S(ringWrap, { position:'relative', width:'52px', height:'52px' });
+  const circumference = 2 * Math.PI * 20;
+  ringWrap.innerHTML = `
+    <svg width="52" height="52" viewBox="0 0 52 52" style="transform:rotate(-90deg)">
+      <circle cx="26" cy="26" r="20" fill="none" stroke="#1a1a1a" stroke-width="1.5"/>
+      <circle id="intro-ring-fill" cx="26" cy="26" r="20" fill="none"
+        stroke="#14c27a" stroke-width="1.5" stroke-linecap="round"
+        stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}"/>
+    </svg>
+    <div id="intro-pct" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:9px;letter-spacing:1px;color:#555;">0%</div>
+  `;
+
+  content.appendChild(brand);
+  content.appendChild(ringWrap);
+  intro.appendChild(cl);
+  intro.appendChild(cr);
+  intro.appendChild(lineH);
+  intro.appendChild(content);
   document.body.appendChild(intro);
   document.body.style.overflow = 'hidden';
 
-  // reveal
-  requestAnimationFrame(() => setTimeout(() => {
-    name.style.opacity = '1';
-    name.style.transform = 'translateY(0)';
-    line.style.width = '48px';
-  }, 100));
+  // ring counter
+  const ringFill = document.getElementById('intro-ring-fill');
+  const pctEl    = document.getElementById('intro-pct');
+  let pct = 0;
+  const ticker = setInterval(() => {
+    pct = Math.min(pct + 2, 100);
+    pctEl.textContent = pct + '%';
+    ringFill.style.strokeDashoffset = circumference * (1 - pct / 100);
+    if (pct >= 100) clearInterval(ticker);
+  }, 36);
 
-  // exit — slide up
+  // line grow
+  setTimeout(() => { lineH.style.width = 'min(560px,75vw)'; }, 50);
+
+  // show content
   setTimeout(() => {
-    intro.style.transform = 'translateY(-100%)';
+    S(content, { opacity:'1', transform:'translate(-50%,-50%) translateY(0)' });
+  }, 200);
+
+  // open curtains + reveal site
+  setTimeout(() => {
+    cl.style.transform = 'translateX(-100%)';
+    cr.style.transform = 'translateX(100%)';
     document.body.style.overflow = '';
-    setTimeout(() => intro.remove(), 950);
-  }, 1800);
+    setTimeout(() => intro.remove(), 1200);
+  }, 2800);
 })();
 
 (function(){
