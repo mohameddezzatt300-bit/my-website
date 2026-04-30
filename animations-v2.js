@@ -2,70 +2,50 @@
    v2 animations — scroll-driven, vanilla JS
    ========================================================= */
 
-/* ── Intro overlay — text scramble ── */
+/* ── Intro overlay ── */
 (function(){
-  sessionStorage.removeItem('intro_done');
-  if (sessionStorage.getItem('intro_done')) return;
-
-  const TARGET  = 'M·EZZAT';
-  const CHARS   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ·#@%&';
-  const rand    = () => CHARS[Math.floor(Math.random() * CHARS.length)];
-
-  // build spans
-  const logoEl = document.createElement('div');
-  logoEl.className = 'intro-logo';
-  logoEl.style.cssText = 'font-family:"Plus Jakarta Sans",sans-serif;font-size:clamp(40px,8vw,88px);font-weight:800;letter-spacing:0.08em;color:#f1f4f2;display:flex;align-items:center;';
-  const spans = TARGET.split('').map(() => {
-    const s = document.createElement('span');
-    s.className = 'ch';
-    s.style.cssText = 'display:inline-block;color:#f1f4f2;transition:color 0.15s ease;';
-    s.textContent = rand();
-    logoEl.appendChild(s);
-    return s;
-  });
-
   const intro = document.createElement('div');
-  intro.className = 'intro';
-  intro.appendChild(logoEl);
+  intro.style.cssText = [
+    'position:fixed','inset:0','z-index:9999',
+    'background:#080a09','display:flex','flex-direction:column',
+    'align-items:center','justify-content:center','gap:20px',
+    'transition:transform 0.9s cubic-bezier(0.76,0,0.24,1)'
+  ].join(';');
+
+  const name = document.createElement('div');
+  name.textContent = 'M·EZZAT';
+  name.style.cssText = [
+    'font-family:"Plus Jakarta Sans",Arial,sans-serif',
+    'font-size:clamp(36px,7vw,80px)','font-weight:800',
+    'letter-spacing:0.1em','color:#f1f4f2',
+    'opacity:0','transform:translateY(16px)',
+    'transition:opacity 0.7s ease,transform 0.7s ease'
+  ].join(';');
+
+  const line = document.createElement('div');
+  line.style.cssText = [
+    'width:0','height:1px','background:#14c27a',
+    'transition:width 0.8s ease 0.4s','opacity:0.7'
+  ].join(';');
+
+  intro.appendChild(name);
+  intro.appendChild(line);
   document.body.appendChild(intro);
   document.body.style.overflow = 'hidden';
 
-  // scramble loop — resolve chars one by one
-  let resolved = 0;
-  const interval = 40; // ms between frame updates
-  const lockDelay = 120; // ms between each char locking
+  // reveal
+  requestAnimationFrame(() => setTimeout(() => {
+    name.style.opacity = '1';
+    name.style.transform = 'translateY(0)';
+    line.style.width = '48px';
+  }, 100));
 
-  const tick = setInterval(() => {
-    spans.forEach((s, i) => {
-      if (i >= resolved) {
-        s.textContent = rand();
-        s.style.color = '#14c27a';
-      }
-    });
-  }, interval);
-
-  TARGET.split('').forEach((char, i) => {
-    setTimeout(() => {
-      spans[i].textContent = char;
-      spans[i].style.color = '#f1f4f2';
-      resolved = i + 1;
-      if (resolved === TARGET.length) {
-        clearInterval(tick);
-        // hold then exit
-        setTimeout(() => {
-          intro.classList.add('exit');
-          setTimeout(() => {
-            intro.classList.add('gone');
-            document.body.style.overflow = '';
-            setTimeout(() => {
-              intro.remove();
-              sessionStorage.setItem('intro_done', '1');
-            }, 850);
-          }, 620);
-        }, 500);
-      }
-    }, 300 + i * lockDelay);
-  });
+  // exit — slide up
+  setTimeout(() => {
+    intro.style.transform = 'translateY(-100%)';
+    document.body.style.overflow = '';
+    setTimeout(() => intro.remove(), 950);
+  }, 1800);
 })();
 
 (function(){
