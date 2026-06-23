@@ -312,7 +312,7 @@ function addAcc(){
     budget:document.getElementById('na-bud').value.trim(),
     tasks:[],
     mediaPlan:{clientName:name,totalBudget:30000,currency:cur,duration:'3',objective:obj,campaigns:DCAMPS(),kpis:dKPIs(obj,cur),logoBase64:null,logoAspect:1},
-    report:{period:'',preparedBy:'',currency:cur,budgetTotal:'',budgetSpent:'',metrics:[],campaigns:[],wins:'',challenges:'',recommendations:''}
+    report:{period:'',preparedBy:'',currency:cur,budgetTotal:'',budgetSpent:'',metrics:[],campaigns:[],topAds:[],campCols:defCampCols(),wins:'',challenges:'',recommendations:''}
   };
   db.accounts.push(a);db.active=a.id;save();closeM();
   addT=false;sub='tasks';filt='all';killChart();render();
@@ -610,13 +610,42 @@ function addRepMetric(){
 function delRepMetric(i){rpt().metrics.splice(i,1);save();renderMain()}
 function updRepMetric(i,f,v){rpt().metrics[i][f]=v;save()}
 
+// all available camp columns
+const CAMP_COLS=[
+  {key:'spend',label:'Spend',def:true},
+  {key:'impressions',label:'Impressions',def:true},
+  {key:'clicks',label:'Clicks',def:true},
+  {key:'ctr',label:'CTR',def:false},
+  {key:'cpc',label:'CPC',def:false},
+  {key:'cpm',label:'CPM',def:false},
+  {key:'conversions',label:'Conversions',def:false},
+  {key:'cpa',label:'CPA / CPL',def:false},
+  {key:'roas',label:'ROAS',def:false},
+  {key:'reach',label:'Reach',def:false},
+  {key:'views',label:'Video Views',def:false},
+  {key:'result',label:'Key Result',def:true},
+  {key:'notes',label:'Notes',def:true},
+];
+function defCampCols(){const o={};CAMP_COLS.forEach(c=>o[c.key]=c.def);return o}
+function getCampCols(){return rpt().campCols||(rpt().campCols=defCampCols(),rpt().campCols)}
+function togCampCol(key){const c=getCampCols();c[key]=!c[key];save();renderMain()}
+
 function addRepCamp(){
   rpt().campaigns=rpt().campaigns||[];
-  rpt().campaigns.push({name:'',spend:'',impressions:'',clicks:'',result:'',notes:''});
+  rpt().campaigns.push({name:'',spend:'',impressions:'',clicks:'',ctr:'',cpc:'',cpm:'',conversions:'',cpa:'',roas:'',reach:'',views:'',result:'',notes:''});
   save();renderMain();
 }
 function delRepCamp(i){rpt().campaigns.splice(i,1);save();renderMain()}
 function updRepCamp(i,f,v){rpt().campaigns[i][f]=v;save()}
+
+// Top Ads
+function addTopAd(){
+  rpt().topAds=rpt().topAds||[];
+  rpt().topAds.push({name:'',platform:'',format:'',metric:'',why:'',link:''});
+  save();renderMain();
+}
+function delTopAd(i){rpt().topAds.splice(i,1);save();renderMain()}
+function updTopAd(i,f,v){rpt().topAds[i][f]=v;save()}
 
 function renderRep(main,a){
   const r=a.report||{};
@@ -709,24 +738,63 @@ function renderRep(main,a){
   <div class="rep-section">
     <div class="rep-sec-hd"><i class="ti ti-list"></i> Campaign Performance</div>
     <div class="rep-sec-body">
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Visible Columns</div>
+        <div class="toggles">
+          ${CAMP_COLS.map(col=>`<button class="toggle-btn${getCampCols()[col.key]?' active':''}" onclick="togCampCol('${col.key}')">${col.label}</button>`).join('')}
+        </div>
+      </div>
       <div style="overflow-x:auto">
         <table class="metric-tbl">
-          <thead><tr><th>Campaign</th><th>Spend</th><th>Impressions</th><th>Clicks</th><th>Key Result</th><th>Notes</th><th></th></tr></thead>
+          <thead><tr>
+            <th>Campaign</th>
+            ${CAMP_COLS.filter(col=>getCampCols()[col.key]).map(col=>`<th>${col.label}</th>`).join('')}
+            <th></th>
+          </tr></thead>
           <tbody>
-            ${cps.length===0?`<tr><td colspan="7" style="text-align:center;color:#888;padding:20px">No campaigns yet — add below</td></tr>`:''}
+            ${cps.length===0?`<tr><td colspan="${2+CAMP_COLS.filter(col=>getCampCols()[col.key]).length}" style="text-align:center;color:#888;padding:20px">No campaigns yet — add below</td></tr>`:''}
             ${cps.map((c,i)=>`<tr>
               <td><input value="${esc(c.name)}" placeholder="Campaign name" onchange="updRepCamp(${i},'name',this.value)"/></td>
-              <td><input value="${esc(c.spend)}" placeholder="0" onchange="updRepCamp(${i},'spend',this.value)"/></td>
-              <td><input value="${esc(c.impressions)}" placeholder="0" onchange="updRepCamp(${i},'impressions',this.value)"/></td>
-              <td><input value="${esc(c.clicks)}" placeholder="0" onchange="updRepCamp(${i},'clicks',this.value)"/></td>
-              <td><input value="${esc(c.result)}" placeholder="e.g. 120 leads / 3.2x ROAS" onchange="updRepCamp(${i},'result',this.value)"/></td>
-              <td><input value="${esc(c.notes)}" placeholder="Notes" onchange="updRepCamp(${i},'notes',this.value)"/></td>
+              ${CAMP_COLS.filter(col=>getCampCols()[col.key]).map(col=>`<td><input value="${esc(c[col.key]||'')}" placeholder="${col.key==='result'?'e.g. 120 leads':'0'}" onchange="updRepCamp(${i},'${col.key}',this.value)"/></td>`).join('')}
               <td><button class="del-btn" onclick="delRepCamp(${i})"><i class="ti ti-trash"></i></button></td>
             </tr>`).join('')}
           </tbody>
         </table>
       </div>
       <button class="add-btn" onclick="addRepCamp()"><i class="ti ti-plus"></i> Add Campaign</button>
+    </div>
+  </div>
+
+  <!-- Top Ads -->
+  <div class="rep-section">
+    <div class="rep-sec-hd"><i class="ti ti-award"></i> Top Performing Ads</div>
+    <div class="rep-sec-body">
+      ${(rpt().topAds||[]).length===0?`<p style="color:#888;font-size:13px;margin-bottom:14px">Document your best-performing ads this period.</p>`:''}
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:14px">
+        ${(rpt().topAds||[]).map((ad,i)=>`
+        <div style="background:#f6fbf8;border:1px solid var(--brd);border-radius:10px;padding:16px;position:relative">
+          <button class="del-btn" onclick="delTopAd(${i})" style="position:absolute;top:10px;right:10px"><i class="ti ti-trash"></i></button>
+          <div class="g3" style="margin-bottom:10px">
+            <div class="fg"><label>Ad Name / Description</label><input value="${esc(ad.name)}" placeholder="e.g. Ramadan Video 30s" onchange="updTopAd(${i},'name',this.value)"/></div>
+            <div class="fg"><label>Platform</label>
+              <select onchange="updTopAd(${i},'platform',this.value)" style="height:38px;border:.5px solid var(--brd);border-radius:8px;padding:0 12px;font-size:14px;font-family:inherit;background:#fff">
+                <option value="">Select</option>
+                ${ADPLATS.map(p=>`<option value="${p}"${ad.platform===p?' selected':''}>${p}</option>`).join('')}
+              </select>
+            </div>
+            <div class="fg"><label>Format</label>
+              <select onchange="updTopAd(${i},'format',this.value)" style="height:38px;border:.5px solid var(--brd);border-radius:8px;padding:0 12px;font-size:14px;font-family:inherit;background:#fff">
+                <option value="">Select</option>
+                ${['Video','Image','Carousel','Story','Reel','Collection'].map(f=>`<option value="${f}"${ad.format===f?' selected':''}>${f}</option>`).join('')}
+              </select>
+            </div>
+            <div class="fg"><label>Key Metric / Result</label><input value="${esc(ad.metric)}" placeholder="e.g. 3.2x ROAS / 85 EGP CPL" onchange="updTopAd(${i},'metric',this.value)"/></div>
+            <div class="fg span2"><label>Why It Worked</label><input value="${esc(ad.why)}" placeholder="Hook, audience, offer, creative angle..." onchange="updTopAd(${i},'why',this.value)"/></div>
+          </div>
+          <div class="fg"><label>Reference Link</label><input type="url" value="${esc(ad.link)}" placeholder="https://..." onchange="updTopAd(${i},'link',this.value)"/></div>
+        </div>`).join('')}
+      </div>
+      <button class="add-btn" onclick="addTopAd()"><i class="ti ti-plus"></i> Add Top Ad</button>
     </div>
   </div>
 
@@ -783,14 +851,19 @@ function previewReport(){
     </tr>`;
   }).join('');
 
+  const visCols=CAMP_COLS.filter(col=>getCampCols()[col.key]);
+  const campHead=visCols.map(col=>`<th style="background:#f0f7f4;color:#888;font-weight:700;text-align:left;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #c8e2d6">${col.label}</th>`).join('');
   const campRows=cps.map(c=>`<tr>
     <td style="padding:10px 14px;border-bottom:1px solid #e8f4ee;font-weight:600">${esc(c.name)||'—'}</td>
-    <td style="padding:10px 14px;border-bottom:1px solid #e8f4ee">${c.spend?Number(c.spend).toLocaleString()+' '+cur:'—'}</td>
-    <td style="padding:10px 14px;border-bottom:1px solid #e8f4ee">${c.impressions?Number(c.impressions).toLocaleString():'—'}</td>
-    <td style="padding:10px 14px;border-bottom:1px solid #e8f4ee">${c.clicks?Number(c.clicks).toLocaleString():'—'}</td>
-    <td style="padding:10px 14px;border-bottom:1px solid #e8f4ee;font-weight:600;color:#054930">${esc(c.result)||'—'}</td>
-    <td style="padding:10px 14px;border-bottom:1px solid #e8f4ee;color:#666;font-size:12px">${esc(c.notes)||''}</td>
+    ${visCols.map(col=>{
+      const v=c[col.key]||'';
+      const isNum=['spend','impressions','clicks','conversions','reach','views'].includes(col.key);
+      const isResult=col.key==='result';
+      const disp=isNum&&v?Number(v).toLocaleString()+(col.key==='spend'?' '+cur:''):esc(v)||'—';
+      return `<td style="padding:10px 14px;border-bottom:1px solid #e8f4ee;${isResult?'font-weight:600;color:#054930':''}${col.key==='notes'?'color:#666;font-size:12px':''}">${disp}</td>`;
+    }).join('')}
   </tr>`).join('');
+  const topAds=r.topAds||[];
 
   const insightBlock=(icon,title,text,bg)=>text?`
     <div style="background:${bg};border-radius:10px;padding:18px;flex:1;min-width:200px">
@@ -885,9 +958,30 @@ th{background:#f0f7f4;color:#888;font-weight:700;text-align:left;padding:12px 14
   ${cps.length>0?`<div class="sec">
     <div class="sec-title">🎯 Campaign Performance</div>
     <table>
-      <thead><tr><th>Campaign</th><th>Spend</th><th>Impressions</th><th>Clicks</th><th>Key Result</th><th>Notes</th></tr></thead>
+      <thead><tr>
+        <th style="background:#f0f7f4;color:#888;font-weight:700;text-align:left;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #c8e2d6">Campaign</th>
+        ${campHead}
+      </tr></thead>
       <tbody>${campRows}</tbody>
     </table>
+  </div>`:''}
+
+  <!-- TOP ADS -->
+  ${topAds.length>0?`<div class="sec">
+    <div class="sec-title">⭐ Top Performing Ads</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
+      ${topAds.map((ad,i)=>`
+      <div style="background:#f6fbf8;border-radius:12px;padding:18px;border:1px solid #c8e2d6;position:relative">
+        <div style="position:absolute;top:12px;right:14px;display:flex;gap:6px;flex-wrap:wrap">
+          ${ad.platform?`<span style="background:#054930;color:#fff;border-radius:20px;padding:2px 10px;font-size:10px;font-weight:700">${esc(ad.platform)}</span>`:''}
+          ${ad.format?`<span style="background:#0cb87d;color:#fff;border-radius:20px;padding:2px 10px;font-size:10px;font-weight:700">${esc(ad.format)}</span>`:''}
+        </div>
+        <div style="font-size:15px;font-weight:800;color:#054930;margin-bottom:8px;padding-right:110px;line-height:1.3">${esc(ad.name)||'Untitled Ad'}</div>
+        ${ad.metric?`<div style="background:#054930;color:#0cb87d;border-radius:8px;padding:8px 14px;font-size:18px;font-weight:800;display:inline-block;margin-bottom:10px">${esc(ad.metric)}</div>`:''}
+        ${ad.why?`<div style="font-size:12px;color:#555;line-height:1.6"><strong style="color:#054930">Why it worked:</strong> ${esc(ad.why)}</div>`:''}
+        ${ad.link?`<a href="${esc(ad.link)}" style="display:inline-block;margin-top:10px;font-size:12px;color:#0cb87d;font-weight:600" target="_blank">🔗 View Reference</a>`:''}
+      </div>`).join('')}
+    </div>
   </div>`:''}
 
   <!-- INSIGHTS -->
@@ -1125,7 +1219,9 @@ function updStats(){
 load();
 // migrate old accounts that don't have report field
 db.accounts.forEach(a=>{
-  if(!a.report)a.report={period:'',preparedBy:'',currency:'EGP',budgetTotal:'',budgetSpent:'',metrics:[],campaigns:[],wins:'',challenges:'',recommendations:''};
+  if(!a.report)a.report={period:'',preparedBy:'',currency:'EGP',budgetTotal:'',budgetSpent:'',metrics:[],campaigns:[],topAds:[],campCols:defCampCols(),wins:'',challenges:'',recommendations:''};
+  if(!a.report.topAds)a.report.topAds=[];
+  if(!a.report.campCols)a.report.campCols=defCampCols();
 });
 render();
 </script>
