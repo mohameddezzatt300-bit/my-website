@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Media Buying Dashboard</title>
+  <style>
+    :root {
+      --primary: #054930;
+      --primary-dark: #033320;
+      --primary-light: #076644;
+      --secondary: #0cb87d;
+      --secondary-dark: #09a06b;
+      --secondary-light: #d4f5e9;
+      --bg: #f0f4f2;
+      --surface: #ffffff;
+      --text: #1a1a1a;
+      --text-muted: #6b7280;
+      --border: #c8e2d6;
+      --danger: #ef4444;
+      --danger-bg: #fee2e2;
+      --warning-bg: #fffbeb;
+      --warning: #d97706;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--primary);
+      color: white;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(5,73,48,.35);
+    }
+    .header-logo { display: flex; align-items: center; gap: 10px; }
+    .header-logo svg { width: 28px; height: 28px; opacity: .9; }
+    .header h1 { font-size: 18px; font-weight: 800; letter-spacing: -.3px; }
+    .header-sub { font-size: 11px; opacity: .6; margin-top: 1px; }
+    .header-stats { display: flex; gap: 28px; }
+    .stat { text-align: center; }
+    .stat-num { font-size: 22px; font-weight: 800; color: var(--secondary); line-height: 1; }
+    .stat-label { font-size: 10px; opacity: .6; margin-top: 2px; text-transform: uppercase; letter-spacing: .5px; }
+
+    /* ── TABS BAR ── */
+    .tabs-bar {
+      background: var(--primary-dark);
+      padding: 0 24px;
+      display: flex;
+      align-items: stretch;
+      gap: 2px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      min-height: 46px;
+    }
+    .tabs-bar::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      padding: 0 20px;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,.55);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+      transition: all .18s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+    }
+    .tab-btn:hover { color: white; background: rgba(255,255,255,.06); }
+    .tab-btn.active { color: var(--secondary); border-bottom-color: var(--secondary); }
+
+    .tab-count {
+      background: rgba(255,255,255,.12);
+      border-radius: 10px;
+      padding: 1px 7px;
+      font-size: 11px;
+    }
+    .tab-btn.active .tab-count { background: rgba(12,184,125,.2); color: var(--secondary); }
+
+    .tab-x {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.1);
+      border: none;
+      color: rgba(255,255,255,.6);
+      font-size: 12px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0;
+      transition: opacity .15s;
+      flex-shrink: 0;
+    }
+    .tab-btn:hover .tab-x { opacity: 1; }
+    .tab-x:hover { background: rgba(239,68,68,.4); color: white; }
+
+    .add-tab-btn {
+      padding: 0 18px;
+      background: transparent;
+      border: none;
+      color: var(--secondary);
+      font-size: 20px;
+      cursor: pointer;
+      font-weight: 300;
+      display: flex; align-items: center;
+      transition: opacity .15s;
+      flex-shrink: 0;
+    }
+    .add-tab-btn:hover { opacity: .7; }
+
+    /* ── MAIN ── */
+    .main {
+      padding: 24px 28px;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    /* ── ACCOUNT HEADER ── */
+    .account-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .account-name { font-size: 24px; font-weight: 800; color: var(--primary); }
+    .account-meta { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+    .account-meta span + span::before { content: ' · '; }
+
+    /* ── LAYOUT ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 24px;
+    }
+
+    /* ── SECTION ── */
+    .section-hd {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-size: 13px; font-weight: 800; color: var(--primary);
+      text-transform: uppercase; letter-spacing: .8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::before {
+      content: '';
+      display: block; width: 3px; height: 14px;
+      background: var(--secondary); border-radius: 2px;
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      padding: 8px 16px; border: none; border-radius: 8px;
+      cursor: pointer; font-size: 13px; font-weight: 700;
+      transition: all .15s; display: inline-flex; align-items: center; gap: 6px;
+      font-family: inherit;
+    }
+    .btn-primary { background: var(--secondary); color: white; }
+    .btn-primary:hover { background: var(--secondary-dark); transform: translateY(-1px); }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1.5px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--secondary); color: var(--secondary); }
+    .btn-danger { background: var(--danger-bg); color: var(--danger); }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+    .btn-xs { padding: 3px 9px; font-size: 11px; border-radius: 6px; }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--surface);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,.04);
+    }
+    .card-hd {
+      padding: 14px 18px;
+      background: #f6fbf8;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 13px; font-weight: 700; color: var(--primary);
+    }
+    .card-body { padding: 18px; }
+
+    /* ── FORM ── */
+    .form-panel {
+      background: #f6fbf8;
+      border: 1.5px dashed var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 16px;
+      animation: slideDown .2s ease;
+    }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .form-panel h4 {
+      font-size: 13px; font-weight: 800; color: var(--primary);
+      text-transform: uppercase; letter-spacing: .5px;
+      margin-bottom: 14px;
+    }
+
+    .fg { display: flex; flex-direction: column; gap: 5px; }
+    .fg label {
+      font-size: 11px; font-weight: 700; color: var(--primary);
+      text-transform: uppercase; letter-spacing: .5px;
+    }
+    .fg input, .fg select, .fg textarea {
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      background: white;
+      color: var(--text);
+      font-family: inherit;
+      width: 100%;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .fg input:focus, .fg select:focus, .fg textarea:focus {
+      outline: none;
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 3px rgba(12,184,125,.12);
+    }
+    .fg textarea { resize: vertical; min-height: 70px; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .span-2 { grid-column: 1 / -1; }
+    .form-row { margin-bottom: 12px; }
+    .form-foot { display: flex; gap: 8px; justify-content: flex-end; padding-top: 4px; }
+
+    /* ── FILTERS ── */
+    .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .filter {
+      padding: 5px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      background: white; cursor: pointer;
+      font-size: 12px; font-weight: 600; color: var(--text-muted);
+      transition: all .15s; font-family: inherit;
+    }
+    .filter:hover { border-color: var(--secondary); color: var(--secondary); }
+    .filter.active { background: var(--secondary); border-color: var(--secondary); color: white; }
+
+    /* ── TASK CARD ── */
+    .tasks-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .task-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      transition: box-shadow .15s, border-color .15s;
+    }
+    .task-card:hover { box-shadow: 0 2px 14px rgba(5,73,48,.08); border-color: #a8d5c0; }
+    .task-card.done { opacity: .6; background: #f8fbf9; }
+    .task-card.done .task-idea { text-decoration: line-through; color: var(--text-muted); }
+
+    .task-idea { font-size: 14px; font-weight: 700; margin-bottom: 8px; line-height: 1.4; }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .tag {
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 700;
+    }
+    .tag-funnel { background: #e6f4ee; color: var(--primary); }
+    .tag-platform { background: #fff3e0; color: #b45309; }
+    .tag-segment { background: #ede9fe; color: #5b21b6; }
+    .tag-deadline { background: #fef9c3; color: #92400e; }
+    .tag-deadline.overdue { background: var(--danger-bg); color: var(--danger); }
+    .tag-ref a { color: var(--secondary); text-decoration: none; font-weight: 700; font-size: 11px; }
+    .tag-ref a:hover { text-decoration: underline; }
+
+    .task-notes {
+      margin-top: 8px;
+      font-size: 12px; color: var(--text-muted); font-style: italic;
+      padding: 7px 10px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border-left: 3px solid var(--border);
+    }
+
+    .task-controls { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+    .status-sel {
+      padding: 4px 8px; border: 1.5px solid var(--border); border-radius: 7px;
+      font-size: 12px; font-weight: 600; background: white; cursor: pointer;
+      color: var(--text); font-family: inherit; width: auto;
+    }
+    .status-sel:focus { outline: none; border-color: var(--secondary); }
+
+    /* ── PLATFORM CHECKBOXES ── */
+    .platform-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .plat-check {
+      display: flex; align-items: center; gap: 5px;
+      padding: 6px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      font-size: 12px; font-weight: 600;
+      transition: all .15s;
+      user-select: none;
+    }
+    .plat-check input { display: none; }
+    .plat-check:hover { border-color: var(--secondary); }
+    .plat-check.checked { background: var(--secondary-light); border-color: var(--secondary); color: var(--primary); }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      text-align: center; padding: 40px 20px;
+      color: var(--text-muted);
+    }
+    .empty-icon { font-size: 36px; margin-bottom: 10px; }
+    .empty h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; color: var(--primary); }
+    .empty p { font-size: 13px; }
+
+    /* ── MODAL ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.45);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999; padding: 20px;
+      animation: fadeIn .15s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal {
+      background: white; border-radius: 16px; padding: 28px;
+      width: 100%; max-width: 460px;
+      box-shadow: 0 24px 64px rgba(0,0,0,.22);
+      animation: popIn .2s ease;
+    }
+    @keyframes popIn { from { opacity: 0; transform: scale(.95) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    .modal h3 { font-size: 18px; font-weight: 800; color: var(--primary); margin-bottom: 18px; }
+    .modal .fg { margin-bottom: 12px; }
+    .modal-foot { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .header-stats { display: none; }
+      .grid-3 { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      .main { padding: 16px; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+    <div>
+      <h1>Media Buying Dashboard</h1>
+      <div class="header-sub">Content Requests &amp; Media Planning</div>
+    </div>
+  </div>
+  <div class="header-stats">
+    <div class="stat"><div class="stat-num" id="s-accounts">0</div><div class="stat-label">Accounts</div></div>
+    <div class="stat"><div class="stat-num" id="s-tasks">0</div><div class="stat-label">Total Tasks</div></div>
+    <div class="stat"><div class="stat-num" id="s-pending">0</div><div class="stat-label">Pending</div></div>
+    <div class="stat"><div class="stat-num" id="s-done">0</div><div class="stat-label">Done</div></div>
+  </div>
+</header>
+
+<!-- TABS BAR -->
+<div class="tabs-bar" id="tabs-bar">
+  <button class="add-tab-btn" id="add-tab-btn" title="Add Account">＋</button>
+</div>
+
+<!-- MAIN -->
+<main class="main" id="main"></main>
+
+<!-- ADD ACCOUNT MODAL -->
+<div class="overlay hidden" id="modal-add-account">
+  <div class="modal">
+    <h3>Add New Account</h3>
+    <div class="fg"><label>Account Name *</label><input id="na-name" type="text" placeholder="e.g. Nike Egypt" /></div>
+    <div class="fg"><label>Industry / Category</label><input id="na-industry" type="text" placeholder="e.g. Sports &amp; Apparel" /></div>
+    <div class="fg">
+      <label>Primary Platform</label>
+      <select id="na-platform">
+        <option value="">Select Platform</option>
+        <option>Facebook Ads</option><option>Google Ads</option><option>TikTok Ads</option>
+        <option>Instagram</option><option>Snapchat Ads</option><option>LinkedIn Ads</option>
+        <option>YouTube Ads</option><option>Twitter/X Ads</option><option>Multi-Platform</option>
+      </select>
+    </div>
+    <div class="fg"><label>Monthly Budget</label><input id="na-budget" type="text" placeholder="e.g. $5,000" /></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-account')">Cancel</button>
+      <button class="btn btn-primary" onclick="addAccount()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════
+//  STATE
+// ════════════════════════════════
+const PLATFORMS = ['Facebook Ads','Instagram','TikTok Ads','Google Ads','Snapchat Ads','LinkedIn Ads','YouTube Ads','Twitter/X Ads'];
+const FUNNELS = [
+  { val: 'TOFU', label: '🌱 TOFU — Awareness' },
+  { val: 'MOFU', label: '🔥 MOFU — Consideration' },
+  { val: 'BOFU', label: '💎 BOFU — Conversion' },
+  { val: 'Retention', label: '🔄 Retention' }
+];
+const OBJECTIVES = ['Brand Awareness','Reach','Traffic','Engagement','Lead Generation','App Installs','Conversions','Sales','Video Views'];
+
+let db = { accounts: [], active: null };
+let addingTask = false;
+let taskFilter = 'all';
+
+function load() {
+  try { const s = localStorage.getItem('mbd_v2'); if (s) db = JSON.parse(s); } catch(e) {}
+}
+function save() { localStorage.setItem('mbd_v2', JSON.stringify(db)); }
+function acct() { return db.accounts.find(a => a.id === db.active) || null; }
+function esc(s) { const d = document.createElement('div'); d.appendChild(document.createTextNode(s||'')); return d.innerHTML; }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+// ════════════════════════════════
+//  MODAL
+// ════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+document.getElementById('modal-add-account').addEventListener('click', function(e) {
+  if (e.target === this) closeModal('modal-add-account');
+});
+document.getElementById('na-name').addEventListener('keydown', e => { if (e.key === 'Enter') addAccount(); });
+
+// ════════════════════════════════
+//  ACCOUNTS
+// ════════════════════════════════
+document.getElementById('add-tab-btn').onclick = () => {
+  ['na-name','na-industry','na-budget'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('na-platform').value = '';
+  openModal('modal-add-account');
+  setTimeout(() => document.getElementById('na-name').focus(), 80);
+};
+
+function addAccount() {
+  const name = document.getElementById('na-name').value.trim();
+  if (!name) { document.getElementById('na-name').focus(); return; }
+  const acc = {
+    id: uid(), name,
+    industry: document.getElementById('na-industry').value.trim(),
+    platform: document.getElementById('na-platform').value,
+    budget: document.getElementById('na-budget').value.trim(),
+    tasks: [],
+    mediaPlan: { objective:'', startDate:'', endDate:'', budget:'', audience:'', platforms:[], notes:'' }
+  };
+  acc.mediaPlan.budget = acc.budget;
+  db.accounts.push(acc);
+  db.active = acc.id;
+  save();
+  closeModal('modal-add-account');
+  addingTask = false;
+  taskFilter = 'all';
+  render();
+}
+
+function deleteAccount(id) {
+  if (!confirm('Delete this account and all its data?')) return;
+  db.accounts = db.accounts.filter(a => a.id !== id);
+  if (db.active === id) db.active = db.accounts[0]?.id || null;
+  save(); render();
+}
+
+function setActive(id) {
+  db.active = id;
+  addingTask = false;
+  taskFilter = 'all';
+  render();
+}
+
+// ════════════════════════════════
+//  TASKS
+// ════════════════════════════════
+function toggleAddTask() { addingTask = !addingTask; renderTaskPanel(); }
+
+function submitTask() {
+  const a = acct(); if (!a) return;
+  const idea = document.getElementById('tf-idea').value.trim();
+  if (!idea) { document.getElementById('tf-idea').focus(); return; }
+  a.tasks.unshift({
+    id: uid(), idea,
+    segment: document.getElementById('tf-segment').value.trim(),
+    refLink: document.getElementById('tf-ref').value.trim(),
+    funnel: document.getElementById('tf-funnel').value,
+    platform: document.getElementById('tf-platform').value,
+    deadline: document.getElementById('tf-deadline').value,
+    notes: document.getElementById('tf-notes').value.trim(),
+    status: 'pending',
+    at: new Date().toISOString()
+  });
+  save();
+  addingTask = false;
+  renderTaskPanel();
+  updateStats();
+}
+
+function deleteTask(aid, tid) {
+  const a = db.accounts.find(x => x.id === aid); if (!a) return;
+  a.tasks = a.tasks.filter(t => t.id !== tid);
+  save(); renderTaskPanel(); updateStats();
+}
+
+function setTaskStatus(aid, tid, val) {
+  const a = db.accounts.find(x => x.id === aid); if (!a) return;
+  const t = a.tasks.find(x => x.id === tid); if (!t) return;
+  t.status = val;
+  save(); renderTaskPanel(); updateStats();
+}
+
+// ════════════════════════════════
+//  MEDIA PLAN
+// ════════════════════════════════
+function saveMediaPlan() {
+  const a = acct(); if (!a) return;
+  a.mediaPlan = {
+    objective: document.getElementById('mp-obj').value,
+    startDate: document.getElementById('mp-start').value,
+    endDate: document.getElementById('mp-end').value,
+    budget: document.getElementById('mp-budget').value,
+    audience: document.getElementById('mp-audience').value,
+    notes: document.getElementById('mp-notes').value,
+    platforms: PLATFORMS.filter(p => {
+      const el = document.querySelector(`.plat-check[data-p="${p}"]`);
+      return el && el.classList.contains('checked');
+    })
+  };
+  save();
+  const btn = document.getElementById('mp-save-btn');
+  btn.textContent = '✓ Saved!'; btn.style.background = '#054930';
+  setTimeout(() => { btn.textContent = '💾 Save Plan'; btn.style.background = ''; }, 1800);
+}
+
+// ════════════════════════════════
+//  RENDER
+// ════════════════════════════════
+function render() {
+  renderTabs();
+  renderMain();
+  updateStats();
+}
+
+function renderTabs() {
+  const bar = document.getElementById('tabs-bar');
+  // keep + button
+  const addBtn = document.getElementById('add-tab-btn');
+  bar.innerHTML = '';
+  db.accounts.forEach(a => {
+    const pending = a.tasks.filter(t => t.status !== 'done').length;
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (a.id === db.active ? ' active' : '');
+    btn.innerHTML = `<span>${esc(a.name)}</span><span class="tab-count">${pending}</span><button class="tab-x" title="Delete">×</button>`;
+    btn.onclick = () => setActive(a.id);
+    btn.querySelector('.tab-x').onclick = e => { e.stopPropagation(); deleteAccount(a.id); };
+    bar.appendChild(btn);
+  });
+  bar.appendChild(addBtn);
+}
+
+function renderMain() {
+  const main = document.getElementById('main');
+  const a = acct();
+
+  if (!a) {
+    main.innerHTML = `
+      <div class="empty" style="margin-top:60px">
+        <div class="empty-icon">📋</div>
+        <h3>No Accounts Yet</h3>
+        <p>Click <strong>＋</strong> in the tab bar to create your first account.</p>
+      </div>`;
+    return;
+  }
+
+  main.innerHTML = `
+    <div class="account-header">
+      <div>
+        <div class="account-name">${esc(a.name)}</div>
+        <div class="account-meta">
+          ${a.industry ? `<span>${esc(a.industry)}</span>` : ''}
+          ${a.platform ? `<span>${esc(a.platform)}</span>` : ''}
+          ${a.budget ? `<span>Budget: ${esc(a.budget)}</span>` : ''}
+          <span>${a.tasks.length} task${a.tasks.length !== 1 ? 's' : ''}</span>
+        </div>
+      </div>
+    </div>
+    <div class="layout">
+      <div>
+        <div class="section-hd">
+          <div class="section-title">Content Requests</div>
+          <button class="btn btn-primary btn-sm" id="toggle-task-btn" onclick="toggleAddTask()">
+            ${addingTask ? '✕ Cancel' : '＋ New Request'}
+          </button>
+        </div>
+        <div id="task-panel"></div>
+      </div>
+      <div>
+        <div class="section-hd"><div class="section-title">Media Plan</div></div>
+        <div id="media-panel"></div>
+      </div>
+    </div>`;
+
+  renderTaskPanel();
+  renderMediaPanel();
+}
+
+function renderTaskPanel() {
+  const el = document.getElementById('task-panel'); if (!el) return;
+  const a = acct(); if (!a) return;
+
+  // update toggle btn label
+  const tbtn = document.getElementById('toggle-task-btn');
+  if (tbtn) tbtn.textContent = addingTask ? '✕ Cancel' : '＋ New Request';
+
+  let html = '';
+
+  // ── ADD TASK FORM ──
+  if (addingTask) {
+    html += `
+      <div class="form-panel">
+        <h4>New Content Request</h4>
+        <div class="form-row"><div class="fg">
+          <label>Content Idea *</label>
+          <textarea id="tf-idea" placeholder="Describe the content idea in detail..." rows="2"></textarea>
+        </div></div>
+        <div class="grid-2">
+          <div class="fg"><label>Target Segment</label><input id="tf-segment" type="text" placeholder="e.g. Women 25–34, Cairo" /></div>
+          <div class="fg"><label>Reference Link</label><input id="tf-ref" type="url" placeholder="https://..." /></div>
+          <div class="fg">
+            <label>Funnel Stage</label>
+            <select id="tf-funnel">
+              <option value="">Select Stage</option>
+              ${FUNNELS.map(f => `<option value="${f.val}">${f.label}</option>`).join('')}
+            </select>
+          </div>
+          <div class="fg">
+            <label>Platform</label>
+            <select id="tf-platform">
+              <option value="">Select Platform</option>
+              ${PLATFORMS.map(p => `<option>${p}</option>`).join('')}
+            </select>
+          </div>
+          <div class="fg"><label>Deadline</label><input id="tf-deadline" type="date" /></div>
+        </div>
+        <div class="form-row"><div class="fg">
+          <label>Notes</label>
+          <textarea id="tf-notes" placeholder="Any requirements, references, or context..." rows="2"></textarea>
+        </div></div>
+        <div class="form-foot">
+          <button class="btn btn-ghost btn-sm" onclick="toggleAddTask()">Cancel</button>
+          <button class="btn btn-primary btn-sm" onclick="submitTask()">💾 Save Request</button>
+        </div>
+      </div>`;
+  }
+
+  // ── FILTERS ──
+  const cnt = (s) => s === 'all' ? a.tasks.length : a.tasks.filter(t => t.status === s).length;
+  html += `
+    <div class="filters">
+      <button class="filter${taskFilter==='all'?' active':''}" onclick="setFilter('all')">All (${cnt('all')})</button>
+      <button class="filter${taskFilter==='pending'?' active':''}" onclick="setFilter('pending')">📋 Pending (${cnt('pending')})</button>
+      <button class="filter${taskFilter==='in-progress'?' active':''}" onclick="setFilter('in-progress')">⚡ In Progress (${cnt('in-progress')})</button>
+      <button class="filter${taskFilter==='done'?' active':''}" onclick="setFilter('done')">✅ Done (${cnt('done')})</button>
+    </div>`;
+
+  // ── TASK LIST ──
+  let tasks = taskFilter === 'all' ? a.tasks : a.tasks.filter(t => t.status === taskFilter);
+
+  if (tasks.length === 0) {
+    html += `<div class="empty"><div class="empty-icon">${a.tasks.length === 0 ? '📝' : '🔍'}</div>
+      <h3>${a.tasks.length === 0 ? 'No requests yet' : 'No matches'}</h3>
+      <p>${a.tasks.length === 0 ? 'Add your first content request above.' : 'Try a different filter.'}</p></div>`;
+  } else {
+    html += '<div class="tasks-list">';
+    tasks.forEach(t => {
+      const over = t.deadline && new Date(t.deadline + 'T00:00:00') < new Date() && t.status !== 'done';
+      const dlabel = t.deadline ? new Date(t.deadline + 'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
+      html += `
+        <div class="task-card ${t.status === 'done' ? 'done' : ''}">
+          <div>
+            <div class="task-idea">${esc(t.idea)}</div>
+            <div class="tags">
+              ${t.funnel ? `<span class="tag tag-funnel">${esc(t.funnel)}</span>` : ''}
+              ${t.platform ? `<span class="tag tag-platform">${esc(t.platform)}</span>` : ''}
+              ${t.segment ? `<span class="tag tag-segment">👥 ${esc(t.segment)}</span>` : ''}
+              ${t.deadline ? `<span class="tag tag-deadline${over?' overdue':''}">📅 ${dlabel}${over?' ⚠️':''}</span>` : ''}
+              ${t.refLink ? `<span class="tag-ref">🔗 <a href="${esc(t.refLink)}" target="_blank" rel="noopener">Reference</a></span>` : ''}
+            </div>
+            ${t.notes ? `<div class="task-notes">${esc(t.notes)}</div>` : ''}
+          </div>
+          <div class="task-controls">
+            <select class="status-sel" onchange="setTaskStatus('${a.id}','${t.id}',this.value)">
+              <option value="pending" ${t.status==='pending'?'selected':''}>📋 Pending</option>
+              <option value="in-progress" ${t.status==='in-progress'?'selected':''}>⚡ In Progress</option>
+              <option value="done" ${t.status==='done'?'selected':''}>✅ Done</option>
+            </select>
+            <button class="btn btn-danger btn-xs" onclick="deleteTask('${a.id}','${t.id}')">Delete</button>
+          </div>
+        </div>`;
+    });
+    html += '</div>';
+  }
+
+  el.innerHTML = html;
+}
+
+function setFilter(f) { taskFilter = f; renderTaskPanel(); }
+
+function renderMediaPanel() {
+  const el = document.getElementById('media-panel'); if (!el) return;
+  const a = acct(); if (!a) return;
+  const mp = a.mediaPlan || {};
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-hd">Campaign Details</div>
+      <div class="card-body">
+        <div class="grid-2">
+          <div class="fg">
+            <label>Campaign Objective</label>
+            <select id="mp-obj">
+              <option value="">Select Objective</option>
+              ${OBJECTIVES.map(o => `<option${mp.objective===o?' selected':''}>${o}</option>`).join('')}
+            </select>
+          </div>
+          <div class="fg"><label>Total Budget</label><input id="mp-budget" type="text" placeholder="e.g. $5,000" value="${esc(mp.budget||'')}"/></div>
+          <div class="fg"><label>Start Date</label><input id="mp-start" type="date" value="${mp.startDate||''}"/></div>
+          <div class="fg"><label>End Date</label><input id="mp-end" type="date" value="${mp.endDate||''}"/></div>
+        </div>
+        <div class="form-row fg">
+          <label>Target Audience</label>
+          <textarea id="mp-audience" placeholder="Age, gender, location, interests, behaviors..." rows="2">${esc(mp.audience||'')}</textarea>
+        </div>
+        <div class="form-row fg">
+          <label>Active Platforms</label>
+          <div class="platform-grid" id="platform-grid">
+            ${PLATFORMS.map(p => `
+              <div class="plat-check${(mp.platforms||[]).includes(p)?' checked':''}" data-p="${p}" onclick="togglePlat(this)">
+                <input type="checkbox" ${(mp.platforms||[]).includes(p)?'checked':''}/>${p}
+              </div>`).join('')}
+          </div>
+        </div>
+        <div class="form-row fg">
+          <label>Strategy Notes &amp; KPIs</label>
+          <textarea id="mp-notes" placeholder="Key messages, KPIs, budget allocation, notes..." rows="3">${esc(mp.notes||'')}</textarea>
+        </div>
+        <div style="text-align:right">
+          <button class="btn btn-primary" id="mp-save-btn" onclick="saveMediaPlan()">💾 Save Plan</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function togglePlat(el) { el.classList.toggle('checked'); }
+
+function updateStats() {
+  const all = db.accounts.flatMap(a => a.tasks);
+  document.getElementById('s-accounts').textContent = db.accounts.length;
+  document.getElementById('s-tasks').textContent = all.length;
+  document.getElementById('s-pending').textContent = all.filter(t => t.status === 'pending').length;
+  document.getElementById('s-done').textContent = all.filter(t => t.status === 'done').length;
+}
+
+// ════════════════════════════════
+//  INIT
+// ════════════════════════════════
+load();
+render();
+</script>
+</body>
+</html>
