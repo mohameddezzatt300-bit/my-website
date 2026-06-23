@@ -1,803 +1,780 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Media Buying Dashboard</title>
-  <style>
-    :root {
-      --primary: #054930;
-      --primary-dark: #033320;
-      --primary-light: #076644;
-      --secondary: #0cb87d;
-      --secondary-dark: #09a06b;
-      --secondary-light: #d4f5e9;
-      --bg: #f0f4f2;
-      --surface: #ffffff;
-      --text: #1a1a1a;
-      --text-muted: #6b7280;
-      --border: #c8e2d6;
-      --danger: #ef4444;
-      --danger-bg: #fee2e2;
-      --warning-bg: #fffbeb;
-      --warning: #d97706;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Media Buying Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{--p:#054930;--pd:#033320;--s:#0cb87d;--sd:#09a06b;--sl:#d4f5e9;--bg:#f0f4f2;--sur:#fff;--brd:#c8e2d6;--txt:#1a1a1a;--muted:#6b7280;--red:#ef4444;--redbg:#fee2e2}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px}
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+/* HEADER */
+.hdr{background:var(--p);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(5,73,48,.35)}
+.hdr-l{display:flex;align-items:center;gap:10px}
+.hdr h1{font-size:18px;font-weight:800}
+.hdr-sub{font-size:11px;opacity:.6;margin-top:1px}
+.hdr-stats{display:flex;gap:28px}
+.stat{text-align:center}
+.stat-n{font-size:22px;font-weight:800;color:var(--s);line-height:1}
+.stat-l{font-size:10px;opacity:.6;margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      font-size: 14px;
-    }
+/* TABS */
+.tabs-bar{background:var(--pd);padding:0 24px;display:flex;align-items:stretch;gap:2px;overflow-x:auto;scrollbar-width:none;min-height:46px}
+.tabs-bar::-webkit-scrollbar{display:none}
+.tab-btn{padding:0 20px;border:none;background:transparent;color:rgba(255,255,255,.55);cursor:pointer;font-size:13px;font-weight:600;border-bottom:3px solid transparent;white-space:nowrap;transition:all .18s;display:flex;align-items:center;gap:8px}
+.tab-btn:hover{color:#fff;background:rgba(255,255,255,.06)}
+.tab-btn.active{color:var(--s);border-bottom-color:var(--s)}
+.tab-count{background:rgba(255,255,255,.12);border-radius:10px;padding:1px 7px;font-size:11px}
+.tab-btn.active .tab-count{background:rgba(12,184,125,.2);color:var(--s)}
+.tab-x{width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;flex-shrink:0}
+.tab-btn:hover .tab-x{opacity:1}
+.tab-x:hover{background:rgba(239,68,68,.4);color:#fff}
+.add-tab-btn{padding:0 18px;background:transparent;border:none;color:var(--s);font-size:20px;cursor:pointer;font-weight:300;display:flex;align-items:center;transition:opacity .15s;flex-shrink:0}
+.add-tab-btn:hover{opacity:.7}
 
-    /* ── HEADER ── */
-    .header {
-      background: var(--primary);
-      color: white;
-      padding: 14px 28px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 12px rgba(5,73,48,.35);
-    }
-    .header-logo { display: flex; align-items: center; gap: 10px; }
-    .header-logo svg { width: 28px; height: 28px; opacity: .9; }
-    .header h1 { font-size: 18px; font-weight: 800; letter-spacing: -.3px; }
-    .header-sub { font-size: 11px; opacity: .6; margin-top: 1px; }
-    .header-stats { display: flex; gap: 28px; }
-    .stat { text-align: center; }
-    .stat-num { font-size: 22px; font-weight: 800; color: var(--secondary); line-height: 1; }
-    .stat-label { font-size: 10px; opacity: .6; margin-top: 2px; text-transform: uppercase; letter-spacing: .5px; }
+/* SUB-TABS */
+.sub-tabs{background:#fff;border-bottom:1px solid var(--brd);padding:0 28px;display:flex;gap:0}
+.sub-tab{padding:12px 20px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;font-weight:600;border-bottom:2px solid transparent;transition:all .15s;display:flex;align-items:center;gap:7px;font-family:inherit}
+.sub-tab:hover{color:var(--p)}
+.sub-tab.active{color:var(--p);border-bottom-color:var(--s)}
 
-    /* ── TABS BAR ── */
-    .tabs-bar {
-      background: var(--primary-dark);
-      padding: 0 24px;
-      display: flex;
-      align-items: stretch;
-      gap: 2px;
-      overflow-x: auto;
-      scrollbar-width: none;
-      min-height: 46px;
-    }
-    .tabs-bar::-webkit-scrollbar { display: none; }
+/* MAIN */
+.main{padding:24px 28px;max-width:1440px;margin:0 auto}
 
-    .tab-btn {
-      padding: 0 20px;
-      border: none;
-      background: transparent;
-      color: rgba(255,255,255,.55);
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      border-bottom: 3px solid transparent;
-      white-space: nowrap;
-      transition: all .18s;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      position: relative;
-    }
-    .tab-btn:hover { color: white; background: rgba(255,255,255,.06); }
-    .tab-btn.active { color: var(--secondary); border-bottom-color: var(--secondary); }
+/* BUTTONS */
+.btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;transition:all .15s;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
+.btn-p{background:var(--s);color:#fff}.btn-p:hover{background:var(--sd)}
+.btn-g{background:transparent;color:var(--muted);border:1.5px solid var(--brd)}.btn-g:hover{border-color:var(--s);color:var(--s)}
+.btn-d{background:var(--redbg);color:var(--red)}.btn-d:hover{background:#fecaca}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-xs{padding:3px 9px;font-size:11px;border-radius:6px}
 
-    .tab-count {
-      background: rgba(255,255,255,.12);
-      border-radius: 10px;
-      padding: 1px 7px;
-      font-size: 11px;
-    }
-    .tab-btn.active .tab-count { background: rgba(12,184,125,.2); color: var(--secondary); }
+/* CARDS */
+.card{background:var(--sur);border-radius:12px;border:.5px solid var(--brd);margin-bottom:18px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.card-body{padding:20px}
 
-    .tab-x {
-      width: 18px; height: 18px;
-      border-radius: 50%;
-      background: rgba(255,255,255,.1);
-      border: none;
-      color: rgba(255,255,255,.6);
-      font-size: 12px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      opacity: 0;
-      transition: opacity .15s;
-      flex-shrink: 0;
-    }
-    .tab-btn:hover .tab-x { opacity: 1; }
-    .tab-x:hover { background: rgba(239,68,68,.4); color: white; }
+/* SECTION TITLE */
+.sec-t{font-size:15px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;color:var(--txt)}
+.sec-t i{color:var(--s);font-size:18px}
 
-    .add-tab-btn {
-      padding: 0 18px;
-      background: transparent;
-      border: none;
-      color: var(--secondary);
-      font-size: 20px;
-      cursor: pointer;
-      font-weight: 300;
-      display: flex; align-items: center;
-      transition: opacity .15s;
-      flex-shrink: 0;
-    }
-    .add-tab-btn:hover { opacity: .7; }
+/* FORMS */
+.ctrl{display:flex;align-items:center;gap:12px;margin-bottom:1rem;flex-wrap:wrap}
+.ctrl label{font-size:14px;color:#888;min-width:80px}
+.ctrl input,.ctrl select{height:38px;font-size:14px;border:.5px solid var(--brd);border-radius:8px;padding:0 12px;background:#fff;color:var(--txt);font-family:inherit;transition:border-color .15s}
+.ctrl input:focus,.ctrl select:focus{outline:none;border-color:var(--s);box-shadow:0 0 0 3px rgba(12,184,125,.12)}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:11px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:.5px}
+.fg input,.fg select,.fg textarea{height:38px;padding:0 12px;width:100%;border:.5px solid var(--brd);border-radius:8px;font-size:14px;background:#fff;color:var(--txt);font-family:inherit;transition:border-color .15s}
+.fg textarea{height:auto;padding:10px 12px;resize:vertical;min-height:70px}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--s);box-shadow:0 0 0 3px rgba(12,184,125,.12)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.span2{grid-column:1/-1}
+.frow{margin-bottom:14px}
+.ffoot{display:flex;gap:8px;justify-content:flex-end;padding-top:4px}
 
-    /* ── MAIN ── */
-    .main {
-      padding: 24px 28px;
-      max-width: 1440px;
-      margin: 0 auto;
-    }
+/* TASK FORM */
+.task-panel{background:#f6fbf8;border:1.5px dashed var(--brd);border-radius:12px;padding:18px;margin-bottom:16px;animation:sd .2s ease}
+@keyframes sd{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.task-panel h4{font-size:13px;font-weight:800;color:var(--p);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
 
-    /* ── ACCOUNT HEADER ── */
-    .account-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .account-name { font-size: 24px; font-weight: 800; color: var(--primary); }
-    .account-meta { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
-    .account-meta span + span::before { content: ' · '; }
+/* FILTERS */
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.filter{padding:5px 14px;border:1.5px solid var(--brd);border-radius:20px;background:#fff;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);transition:all .15s;font-family:inherit}
+.filter:hover{border-color:var(--s);color:var(--s)}
+.filter.active{background:var(--s);border-color:var(--s);color:#fff}
 
-    /* ── LAYOUT ── */
-    .layout {
-      display: grid;
-      grid-template-columns: 1.3fr 1fr;
-      gap: 24px;
-    }
+/* TASK CARDS */
+.tasks-list{display:flex;flex-direction:column;gap:10px}
+.tc{background:#fff;border:1px solid var(--brd);border-radius:10px;padding:14px;display:grid;grid-template-columns:1fr auto;gap:12px;transition:box-shadow .15s,border-color .15s}
+.tc:hover{box-shadow:0 2px 14px rgba(5,73,48,.08);border-color:#a8d5c0}
+.tc.done{opacity:.6;background:#f8fbf9}
+.tc.done .t-idea{text-decoration:line-through;color:var(--muted)}
+.t-idea{font-size:14px;font-weight:700;margin-bottom:8px;line-height:1.4}
+.tags{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tag{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.tf{background:#e6f4ee;color:var(--p)}
+.tp{background:#fff3e0;color:#b45309}
+.ts{background:#ede9fe;color:#5b21b6}
+.td-tag{background:#fef9c3;color:#92400e}
+.td-tag.ov{background:var(--redbg);color:var(--red)}
+.t-ref a{color:var(--s);text-decoration:none;font-weight:700;font-size:11px}
+.t-notes{margin-top:8px;font-size:12px;color:var(--muted);font-style:italic;padding:7px 10px;background:#f8f9fa;border-radius:6px;border-left:3px solid var(--brd)}
+.t-ctrl{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.ss{padding:4px 8px;border:1.5px solid var(--brd);border-radius:7px;font-size:12px;font-weight:600;background:#fff;cursor:pointer;color:var(--txt);font-family:inherit;width:auto}
 
-    /* ── SECTION ── */
-    .section-hd {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 14px;
-    }
-    .section-title {
-      font-size: 13px; font-weight: 800; color: var(--primary);
-      text-transform: uppercase; letter-spacing: .8px;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .section-title::before {
-      content: '';
-      display: block; width: 3px; height: 14px;
-      background: var(--secondary); border-radius: 2px;
-    }
+/* MEDIA PLAN */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px}
+.mc{background:#f0f7f4;border-radius:8px;padding:1rem;border:1px solid var(--brd)}
+.mc .lbl{font-size:12px;color:#888;margin-bottom:4px}
+.mc .val{font-size:20px;font-weight:700;color:var(--p)}
+.funnel-bar{display:flex;height:44px;border-radius:8px;overflow:hidden;margin-bottom:10px}
+.funnel-bar div{display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;transition:width .3s}
+.funnel-labels{display:flex;gap:16px;font-size:12px;color:#888;flex-wrap:wrap}
+.funnel-labels span{display:flex;align-items:center;gap:6px}
+.funnel-labels .dot,.plat-legend .dot{width:10px;height:10px;border-radius:2px;display:inline-block}
+.tbl-wrap{overflow-x:auto;border:.5px solid var(--brd);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f0f7f4;color:#888;font-weight:600;text-align:left;padding:12px;border-bottom:.5px solid var(--brd);white-space:nowrap}
+td{padding:10px 12px;border-bottom:.5px solid var(--brd);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+td input,td select{width:100%;height:34px;font-size:13px;border:.5px solid var(--brd);border-radius:8px;padding:0 8px;background:#fff;color:var(--txt);font-family:inherit}
+td input:focus,td select:focus{outline:none;border-color:var(--s)}
+.del-btn{background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:4px 8px;border-radius:6px}
+.del-btn:hover{background:var(--redbg)}
+.total-row{background:#f0f7f4;font-weight:600}
+.total-row td{border-bottom:none}
+.toggle-btn{display:inline-flex;align-items:center;gap:5px;font-size:13px;padding:6px 14px;border:.5px solid var(--brd);border-radius:8px;cursor:pointer;background:none;color:var(--txt);transition:all .15s;font-family:inherit}
+.toggle-btn:hover{background:var(--sl);color:var(--p)}
+.toggle-btn.active{background:var(--s);color:#fff;border-color:var(--s)}
+.toggles{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.add-btn{display:inline-flex;align-items:center;gap:6px;margin-top:14px;cursor:pointer;font-size:14px;background:none;border:.5px solid var(--brd);border-radius:8px;padding:8px 16px;color:var(--txt);font-family:inherit;transition:all .15s}
+.add-btn:hover{background:var(--sl);border-color:var(--s);color:var(--p)}
+.chart-wrap{position:relative;width:100%;height:280px;margin-top:1rem}
+.plat-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#888;margin-bottom:8px}
+.plat-legend span{display:flex;align-items:center;gap:4px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.kpi-card{background:#f0f7f4;border-radius:8px;padding:1rem;display:flex;flex-direction:column;gap:6px;border:1px solid var(--brd)}
+.kpi-card .lbl{font-size:12px;color:#888}
+.kpi-row{display:flex;align-items:center;gap:8px}
+.rm-kpi{background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:2px}
+.kpi-input{width:120px;height:34px;font-size:14px;border:.5px solid var(--brd);border-radius:8px;padding:0 10px;background:#fff;color:var(--txt);text-align:center;font-weight:600;font-family:inherit}
+.kpi-input:focus{outline:none;border-color:var(--s)}
+.act-bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.act-bar button{background:#fff;border:.5px solid var(--brd);border-radius:8px;padding:10px 18px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;color:var(--txt);transition:all .15s;font-family:inherit}
+.act-bar button:hover{background:var(--sl);border-color:var(--s);color:var(--p)}
 
-    /* ── BUTTONS ── */
-    .btn {
-      padding: 8px 16px; border: none; border-radius: 8px;
-      cursor: pointer; font-size: 13px; font-weight: 700;
-      transition: all .15s; display: inline-flex; align-items: center; gap: 6px;
-      font-family: inherit;
-    }
-    .btn-primary { background: var(--secondary); color: white; }
-    .btn-primary:hover { background: var(--secondary-dark); transform: translateY(-1px); }
-    .btn-ghost { background: transparent; color: var(--text-muted); border: 1.5px solid var(--border); }
-    .btn-ghost:hover { border-color: var(--secondary); color: var(--secondary); }
-    .btn-danger { background: var(--danger-bg); color: var(--danger); }
-    .btn-danger:hover { background: #fecaca; }
-    .btn-sm { padding: 5px 12px; font-size: 12px; }
-    .btn-xs { padding: 3px 9px; font-size: 11px; border-radius: 6px; }
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px;animation:fi .15s ease}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+.modal{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:460px;box-shadow:0 24px 64px rgba(0,0,0,.22);animation:pi .2s ease}
+@keyframes pi{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal h3{font-size:18px;font-weight:800;color:var(--p);margin-bottom:18px}
+.modal .fg{margin-bottom:12px}
+.mfoot{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
 
-    /* ── CARD ── */
-    .card {
-      background: var(--surface);
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      overflow: hidden;
-      box-shadow: 0 1px 4px rgba(0,0,0,.04);
-    }
-    .card-hd {
-      padding: 14px 18px;
-      background: #f6fbf8;
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-      font-size: 13px; font-weight: 700; color: var(--primary);
-    }
-    .card-body { padding: 18px; }
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.ei{font-size:36px;margin-bottom:10px}
+.empty h3{font-size:16px;font-weight:700;margin-bottom:4px;color:var(--p)}
 
-    /* ── FORM ── */
-    .form-panel {
-      background: #f6fbf8;
-      border: 1.5px dashed var(--border);
-      border-radius: 12px;
-      padding: 18px;
-      margin-bottom: 16px;
-      animation: slideDown .2s ease;
-    }
-    @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+.hidden{display:none!important}
 
-    .form-panel h4 {
-      font-size: 13px; font-weight: 800; color: var(--primary);
-      text-transform: uppercase; letter-spacing: .5px;
-      margin-bottom: 14px;
-    }
-
-    .fg { display: flex; flex-direction: column; gap: 5px; }
-    .fg label {
-      font-size: 11px; font-weight: 700; color: var(--primary);
-      text-transform: uppercase; letter-spacing: .5px;
-    }
-    .fg input, .fg select, .fg textarea {
-      padding: 9px 12px;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      font-size: 13px;
-      background: white;
-      color: var(--text);
-      font-family: inherit;
-      width: 100%;
-      transition: border-color .15s, box-shadow .15s;
-    }
-    .fg input:focus, .fg select:focus, .fg textarea:focus {
-      outline: none;
-      border-color: var(--secondary);
-      box-shadow: 0 0 0 3px rgba(12,184,125,.12);
-    }
-    .fg textarea { resize: vertical; min-height: 70px; }
-
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-    .span-2 { grid-column: 1 / -1; }
-    .form-row { margin-bottom: 12px; }
-    .form-foot { display: flex; gap: 8px; justify-content: flex-end; padding-top: 4px; }
-
-    /* ── FILTERS ── */
-    .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
-    .filter {
-      padding: 5px 14px;
-      border: 1.5px solid var(--border);
-      border-radius: 20px;
-      background: white; cursor: pointer;
-      font-size: 12px; font-weight: 600; color: var(--text-muted);
-      transition: all .15s; font-family: inherit;
-    }
-    .filter:hover { border-color: var(--secondary); color: var(--secondary); }
-    .filter.active { background: var(--secondary); border-color: var(--secondary); color: white; }
-
-    /* ── TASK CARD ── */
-    .tasks-list { display: flex; flex-direction: column; gap: 10px; }
-
-    .task-card {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 12px;
-      transition: box-shadow .15s, border-color .15s;
-    }
-    .task-card:hover { box-shadow: 0 2px 14px rgba(5,73,48,.08); border-color: #a8d5c0; }
-    .task-card.done { opacity: .6; background: #f8fbf9; }
-    .task-card.done .task-idea { text-decoration: line-through; color: var(--text-muted); }
-
-    .task-idea { font-size: 14px; font-weight: 700; margin-bottom: 8px; line-height: 1.4; }
-
-    .tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-    .tag {
-      padding: 3px 10px; border-radius: 20px;
-      font-size: 11px; font-weight: 700;
-    }
-    .tag-funnel { background: #e6f4ee; color: var(--primary); }
-    .tag-platform { background: #fff3e0; color: #b45309; }
-    .tag-segment { background: #ede9fe; color: #5b21b6; }
-    .tag-deadline { background: #fef9c3; color: #92400e; }
-    .tag-deadline.overdue { background: var(--danger-bg); color: var(--danger); }
-    .tag-ref a { color: var(--secondary); text-decoration: none; font-weight: 700; font-size: 11px; }
-    .tag-ref a:hover { text-decoration: underline; }
-
-    .task-notes {
-      margin-top: 8px;
-      font-size: 12px; color: var(--text-muted); font-style: italic;
-      padding: 7px 10px;
-      background: #f8f9fa;
-      border-radius: 6px;
-      border-left: 3px solid var(--border);
-    }
-
-    .task-controls { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
-    .status-sel {
-      padding: 4px 8px; border: 1.5px solid var(--border); border-radius: 7px;
-      font-size: 12px; font-weight: 600; background: white; cursor: pointer;
-      color: var(--text); font-family: inherit; width: auto;
-    }
-    .status-sel:focus { outline: none; border-color: var(--secondary); }
-
-    /* ── PLATFORM CHECKBOXES ── */
-    .platform-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-    .plat-check {
-      display: flex; align-items: center; gap: 5px;
-      padding: 6px 12px;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      background: white;
-      cursor: pointer;
-      font-size: 12px; font-weight: 600;
-      transition: all .15s;
-      user-select: none;
-    }
-    .plat-check input { display: none; }
-    .plat-check:hover { border-color: var(--secondary); }
-    .plat-check.checked { background: var(--secondary-light); border-color: var(--secondary); color: var(--primary); }
-
-    /* ── EMPTY STATE ── */
-    .empty {
-      text-align: center; padding: 40px 20px;
-      color: var(--text-muted);
-    }
-    .empty-icon { font-size: 36px; margin-bottom: 10px; }
-    .empty h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; color: var(--primary); }
-    .empty p { font-size: 13px; }
-
-    /* ── MODAL ── */
-    .overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.45);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 999; padding: 20px;
-      animation: fadeIn .15s ease;
-    }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .modal {
-      background: white; border-radius: 16px; padding: 28px;
-      width: 100%; max-width: 460px;
-      box-shadow: 0 24px 64px rgba(0,0,0,.22);
-      animation: popIn .2s ease;
-    }
-    @keyframes popIn { from { opacity: 0; transform: scale(.95) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-    .modal h3 { font-size: 18px; font-weight: 800; color: var(--primary); margin-bottom: 18px; }
-    .modal .fg { margin-bottom: 12px; }
-    .modal-foot { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
-
-    .hidden { display: none !important; }
-
-    @media (max-width: 900px) {
-      .layout { grid-template-columns: 1fr; }
-      .header-stats { display: none; }
-      .grid-3 { grid-template-columns: 1fr 1fr; }
-    }
-    @media (max-width: 600px) {
-      .main { padding: 16px; }
-      .grid-2, .grid-3 { grid-template-columns: 1fr; }
-    }
-  </style>
+@media(max-width:900px){.hdr-stats{display:none}.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.main{padding:16px}.g2,.g3{grid-template-columns:1fr}.ctrl{flex-direction:column;align-items:stretch}}
+</style>
 </head>
 <body>
 
-<!-- HEADER -->
-<header class="header">
-  <div class="header-logo">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-      <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-    </svg>
-    <div>
-      <h1>Media Buying Dashboard</h1>
-      <div class="header-sub">Content Requests &amp; Media Planning</div>
-    </div>
+<header class="hdr">
+  <div class="hdr-l">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" opacity=".9"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <div><h1>Media Buying Dashboard</h1><div class="hdr-sub">Content Requests &amp; Media Planning</div></div>
   </div>
-  <div class="header-stats">
-    <div class="stat"><div class="stat-num" id="s-accounts">0</div><div class="stat-label">Accounts</div></div>
-    <div class="stat"><div class="stat-num" id="s-tasks">0</div><div class="stat-label">Total Tasks</div></div>
-    <div class="stat"><div class="stat-num" id="s-pending">0</div><div class="stat-label">Pending</div></div>
-    <div class="stat"><div class="stat-num" id="s-done">0</div><div class="stat-label">Done</div></div>
+  <div class="hdr-stats">
+    <div class="stat"><div class="stat-n" id="s-acc">0</div><div class="stat-l">Accounts</div></div>
+    <div class="stat"><div class="stat-n" id="s-tasks">0</div><div class="stat-l">Tasks</div></div>
+    <div class="stat"><div class="stat-n" id="s-pend">0</div><div class="stat-l">Pending</div></div>
+    <div class="stat"><div class="stat-n" id="s-done">0</div><div class="stat-l">Done</div></div>
   </div>
 </header>
 
-<!-- TABS BAR -->
 <div class="tabs-bar" id="tabs-bar">
   <button class="add-tab-btn" id="add-tab-btn" title="Add Account">＋</button>
 </div>
 
-<!-- MAIN -->
+<div class="sub-tabs hidden" id="sub-tabs">
+  <button class="sub-tab active" id="st-tasks" onclick="switchSub('tasks')"><i class="ti ti-clipboard-list"></i> Content Requests</button>
+  <button class="sub-tab" id="st-mp" onclick="switchSub('mp')"><i class="ti ti-chart-dots-3"></i> Media Plan</button>
+</div>
+
 <main class="main" id="main"></main>
 
-<!-- ADD ACCOUNT MODAL -->
-<div class="overlay hidden" id="modal-add-account">
+<!-- MODAL -->
+<div class="overlay hidden" id="modal-add">
   <div class="modal">
     <h3>Add New Account</h3>
-    <div class="fg"><label>Account Name *</label><input id="na-name" type="text" placeholder="e.g. Nike Egypt" /></div>
-    <div class="fg"><label>Industry / Category</label><input id="na-industry" type="text" placeholder="e.g. Sports &amp; Apparel" /></div>
-    <div class="fg">
-      <label>Primary Platform</label>
-      <select id="na-platform">
+    <div class="fg"><label>Account Name *</label><input id="na-name" type="text" placeholder="e.g. Nike Egypt"/></div>
+    <div class="fg"><label>Industry</label><input id="na-ind" type="text" placeholder="e.g. Sports &amp; Apparel"/></div>
+    <div class="fg"><label>Primary Platform</label>
+      <select id="na-plat">
         <option value="">Select Platform</option>
         <option>Facebook Ads</option><option>Google Ads</option><option>TikTok Ads</option>
         <option>Instagram</option><option>Snapchat Ads</option><option>LinkedIn Ads</option>
         <option>YouTube Ads</option><option>Twitter/X Ads</option><option>Multi-Platform</option>
       </select>
     </div>
-    <div class="fg"><label>Monthly Budget</label><input id="na-budget" type="text" placeholder="e.g. $5,000" /></div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeModal('modal-add-account')">Cancel</button>
-      <button class="btn btn-primary" onclick="addAccount()">Create Account</button>
+    <div class="fg"><label>Monthly Budget</label><input id="na-bud" type="text" placeholder="e.g. 50,000 EGP"/></div>
+    <div class="mfoot">
+      <button class="btn btn-g" onclick="closeM()">Cancel</button>
+      <button class="btn btn-p" onclick="addAcc()">Create Account</button>
     </div>
   </div>
 </div>
 
 <script>
-// ════════════════════════════════
-//  STATE
-// ════════════════════════════════
-const PLATFORMS = ['Facebook Ads','Instagram','TikTok Ads','Google Ads','Snapchat Ads','LinkedIn Ads','YouTube Ads','Twitter/X Ads'];
-const FUNNELS = [
-  { val: 'TOFU', label: '🌱 TOFU — Awareness' },
-  { val: 'MOFU', label: '🔥 MOFU — Consideration' },
-  { val: 'BOFU', label: '💎 BOFU — Conversion' },
-  { val: 'Retention', label: '🔄 Retention' }
+// ── CONSTANTS ──
+const FC={awareness:'#7F77DD',consideration:'#0cb87d',conversion:'#054930',retention:'#EF9F27'};
+const SL={awareness:'Awareness',consideration:'Consideration',conversion:'Conversion',retention:'Retention'};
+const PC={'Meta':'#378ADD','Google Ads':'#1D9E75','TikTok':'#7F77DD','Snapchat':'#EF9F27','LinkedIn':'#0C447C','Twitter/X':'#555','YouTube':'#E24B4A','Other':'#888'};
+const PLATS=Object.keys(PC);
+const ADPLATS=['Facebook Ads','Instagram','TikTok Ads','Google Ads','Snapchat Ads','LinkedIn Ads','YouTube Ads','Twitter/X Ads'];
+const GOALS=['Reach','Traffic','Engagement','Video views','Lead generation','Conversions','Purchase','App installs','Messages','Store traffic','Brand awareness','ROAS','Catalog sales','Website visits','Subscribers','Custom'];
+const OCOLS=[
+  {key:'goal',label:'Goal',def:true,type:'select',opts:GOALS},
+  {key:'targeting',label:'Targeting',def:true},
+  {key:'audience',label:'Audience',def:true},
+  {key:'placement',label:'Placement',def:false},
+  {key:'notes',label:'Notes',def:false}
 ];
-const OBJECTIVES = ['Brand Awareness','Reach','Traffic','Engagement','Lead Generation','App Installs','Conversions','Sales','Video Views'];
+let VC={};
+OCOLS.forEach(c=>VC[c.key]=c.def);
 
-let db = { accounts: [], active: null };
-let addingTask = false;
-let taskFilter = 'all';
+const DCAMPS=()=>[
+  {name:'TOF — Broad Awareness',platform:'Meta',stage:'awareness',pct:15,goal:'Reach',audience:'Broad 18-45',targeting:'Broad',placement:'',notes:''},
+  {name:'TOF — Interest Targeting',platform:'Meta',stage:'awareness',pct:10,goal:'Video views',audience:'Interests',targeting:'Interest-based',placement:'',notes:''},
+  {name:'MOF — Engagers',platform:'Meta',stage:'consideration',pct:15,goal:'Engagement',audience:'Engaged 7d',targeting:'Custom audience',placement:'',notes:''},
+  {name:'MOF — Lookalike',platform:'Meta',stage:'consideration',pct:10,goal:'Traffic',audience:'LAL 1-3%',targeting:'Lookalike',placement:'',notes:''},
+  {name:'BOF — Retargeting',platform:'Meta',stage:'conversion',pct:20,goal:'Purchase',audience:'ATC/VC 14d',targeting:'Custom audience',placement:'',notes:''},
+  {name:'BOF — DPA Catalog',platform:'Meta',stage:'conversion',pct:10,goal:'Catalog sales',audience:'Catalog viewers',targeting:'DPA',placement:'',notes:''},
+  {name:'Google — Search Brand',platform:'Google Ads',stage:'conversion',pct:10,goal:'Conversions',audience:'Brand keywords',targeting:'Search',placement:'',notes:''},
+  {name:'Google — PMax',platform:'Google Ads',stage:'consideration',pct:10,goal:'Conversions',audience:'All signals',targeting:'PMax',placement:'',notes:''}
+];
 
-function load() {
-  try { const s = localStorage.getItem('mbd_v2'); if (s) db = JSON.parse(s); } catch(e) {}
+function dKPIs(obj,cur){
+  const e=cur==='EGP';
+  if(obj==='conversions')return[{label:'CPM',value:e?'45':'8',suffix:' '+cur},{label:'CTR',value:'1.2',suffix:'%'},{label:'CVR',value:'2.5',suffix:'%'},{label:'CPA',value:e?'150':'25',suffix:' '+cur},{label:'ROAS',value:'3.0',suffix:'x'}];
+  if(obj==='leads')return[{label:'CPM',value:e?'35':'6',suffix:' '+cur},{label:'CTR',value:'1.5',suffix:'%'},{label:'Lead CVR',value:'8',suffix:'%'},{label:'CPL',value:e?'50':'8',suffix:' '+cur}];
+  if(obj==='traffic')return[{label:'CPC',value:e?'3':'0.50',suffix:' '+cur},{label:'CTR',value:'2.0',suffix:'%'},{label:'Bounce rate',value:'45',suffix:'%'}];
+  return[{label:'CPM',value:e?'25':'4',suffix:' '+cur},{label:'Reach',value:'500000',suffix:''},{label:'Frequency',value:'2.5',suffix:'x'}];
 }
-function save() { localStorage.setItem('mbd_v2', JSON.stringify(db)); }
-function acct() { return db.accounts.find(a => a.id === db.active) || null; }
-function esc(s) { const d = document.createElement('div'); d.appendChild(document.createTextNode(s||'')); return d.innerHTML; }
-function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
-// ════════════════════════════════
-//  MODAL
-// ════════════════════════════════
-function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+// ── STATE ──
+let db={accounts:[],active:null};
+let sub='tasks';
+let addT=false;
+let filt='all';
+let chart=null;
 
-document.getElementById('modal-add-account').addEventListener('click', function(e) {
-  if (e.target === this) closeModal('modal-add-account');
-});
-document.getElementById('na-name').addEventListener('keydown', e => { if (e.key === 'Enter') addAccount(); });
+function load(){try{const s=localStorage.getItem('mbd_v3');if(s)db=JSON.parse(s)}catch(e){}}
+function save(){localStorage.setItem('mbd_v3',JSON.stringify(db))}
+function acct(){return db.accounts.find(a=>a.id===db.active)||null}
+function mp(){return acct()?.mediaPlan||{}}
+function camps(){return mp().campaigns||[]}
+function kpis(){return mp().kpis||[]}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+function fmt(n){const el=document.getElementById('mp-cur');const c=el?el.value:(mp().currency||'EGP');return Math.round(n).toLocaleString('en')+' '+c}
 
-// ════════════════════════════════
-//  ACCOUNTS
-// ════════════════════════════════
-document.getElementById('add-tab-btn').onclick = () => {
-  ['na-name','na-industry','na-budget'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('na-platform').value = '';
-  openModal('modal-add-account');
-  setTimeout(() => document.getElementById('na-name').focus(), 80);
+// ── MODAL ──
+function openM(){document.getElementById('modal-add').classList.remove('hidden')}
+function closeM(){document.getElementById('modal-add').classList.add('hidden')}
+document.getElementById('modal-add').addEventListener('click',function(e){if(e.target===this)closeM()});
+document.getElementById('na-name').addEventListener('keydown',e=>{if(e.key==='Enter')addAcc()});
+document.getElementById('add-tab-btn').onclick=()=>{
+  ['na-name','na-ind','na-bud'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('na-plat').value='';
+  openM();setTimeout(()=>document.getElementById('na-name').focus(),80);
 };
 
-function addAccount() {
-  const name = document.getElementById('na-name').value.trim();
-  if (!name) { document.getElementById('na-name').focus(); return; }
-  const acc = {
-    id: uid(), name,
-    industry: document.getElementById('na-industry').value.trim(),
-    platform: document.getElementById('na-platform').value,
-    budget: document.getElementById('na-budget').value.trim(),
-    tasks: [],
-    mediaPlan: { objective:'', startDate:'', endDate:'', budget:'', audience:'', platforms:[], notes:'' }
+// ── ACCOUNTS ──
+function addAcc(){
+  const name=document.getElementById('na-name').value.trim();
+  if(!name){document.getElementById('na-name').focus();return}
+  const cur='EGP',obj='conversions';
+  const a={
+    id:uid(),name,
+    industry:document.getElementById('na-ind').value.trim(),
+    platform:document.getElementById('na-plat').value,
+    budget:document.getElementById('na-bud').value.trim(),
+    tasks:[],
+    mediaPlan:{clientName:name,totalBudget:30000,currency:cur,duration:'3',objective:obj,campaigns:DCAMPS(),kpis:dKPIs(obj,cur),logoBase64:null,logoAspect:1}
   };
-  acc.mediaPlan.budget = acc.budget;
-  db.accounts.push(acc);
-  db.active = acc.id;
-  save();
-  closeModal('modal-add-account');
-  addingTask = false;
-  taskFilter = 'all';
-  render();
+  db.accounts.push(a);db.active=a.id;save();closeM();
+  addT=false;sub='tasks';filt='all';killChart();render();
 }
 
-function deleteAccount(id) {
-  if (!confirm('Delete this account and all its data?')) return;
-  db.accounts = db.accounts.filter(a => a.id !== id);
-  if (db.active === id) db.active = db.accounts[0]?.id || null;
-  save(); render();
+function delAcc(id){
+  if(!confirm('Delete this account and all its data?'))return;
+  if(db.active===id)killChart();
+  db.accounts=db.accounts.filter(a=>a.id!==id);
+  if(db.active===id)db.active=db.accounts[0]?.id||null;
+  save();render();
 }
 
-function setActive(id) {
-  db.active = id;
-  addingTask = false;
-  taskFilter = 'all';
-  render();
+function setAcc(id){
+  if(db.active!==id)killChart();
+  db.active=id;addT=false;sub='tasks';filt='all';render();
 }
 
-// ════════════════════════════════
-//  TASKS
-// ════════════════════════════════
-function toggleAddTask() { addingTask = !addingTask; renderTaskPanel(); }
-
-function submitTask() {
-  const a = acct(); if (!a) return;
-  const idea = document.getElementById('tf-idea').value.trim();
-  if (!idea) { document.getElementById('tf-idea').focus(); return; }
-  a.tasks.unshift({
-    id: uid(), idea,
-    segment: document.getElementById('tf-segment').value.trim(),
-    refLink: document.getElementById('tf-ref').value.trim(),
-    funnel: document.getElementById('tf-funnel').value,
-    platform: document.getElementById('tf-platform').value,
-    deadline: document.getElementById('tf-deadline').value,
-    notes: document.getElementById('tf-notes').value.trim(),
-    status: 'pending',
-    at: new Date().toISOString()
-  });
-  save();
-  addingTask = false;
-  renderTaskPanel();
-  updateStats();
-}
-
-function deleteTask(aid, tid) {
-  const a = db.accounts.find(x => x.id === aid); if (!a) return;
-  a.tasks = a.tasks.filter(t => t.id !== tid);
-  save(); renderTaskPanel(); updateStats();
-}
-
-function setTaskStatus(aid, tid, val) {
-  const a = db.accounts.find(x => x.id === aid); if (!a) return;
-  const t = a.tasks.find(x => x.id === tid); if (!t) return;
-  t.status = val;
-  save(); renderTaskPanel(); updateStats();
-}
-
-// ════════════════════════════════
-//  MEDIA PLAN
-// ════════════════════════════════
-function saveMediaPlan() {
-  const a = acct(); if (!a) return;
-  a.mediaPlan = {
-    objective: document.getElementById('mp-obj').value,
-    startDate: document.getElementById('mp-start').value,
-    endDate: document.getElementById('mp-end').value,
-    budget: document.getElementById('mp-budget').value,
-    audience: document.getElementById('mp-audience').value,
-    notes: document.getElementById('mp-notes').value,
-    platforms: PLATFORMS.filter(p => {
-      const el = document.querySelector(`.plat-check[data-p="${p}"]`);
-      return el && el.classList.contains('checked');
-    })
-  };
-  save();
-  const btn = document.getElementById('mp-save-btn');
-  btn.textContent = '✓ Saved!'; btn.style.background = '#054930';
-  setTimeout(() => { btn.textContent = '💾 Save Plan'; btn.style.background = ''; }, 1800);
-}
-
-// ════════════════════════════════
-//  RENDER
-// ════════════════════════════════
-function render() {
-  renderTabs();
+function switchSub(s){
+  if(s!=='mp')killChart();
+  sub=s;
+  document.getElementById('st-tasks').classList.toggle('active',s==='tasks');
+  document.getElementById('st-mp').classList.toggle('active',s==='mp');
   renderMain();
-  updateStats();
+  if(s==='mp')setTimeout(recalc,60);
 }
 
-function renderTabs() {
-  const bar = document.getElementById('tabs-bar');
-  // keep + button
-  const addBtn = document.getElementById('add-tab-btn');
-  bar.innerHTML = '';
-  db.accounts.forEach(a => {
-    const pending = a.tasks.filter(t => t.status !== 'done').length;
-    const btn = document.createElement('button');
-    btn.className = 'tab-btn' + (a.id === db.active ? ' active' : '');
-    btn.innerHTML = `<span>${esc(a.name)}</span><span class="tab-count">${pending}</span><button class="tab-x" title="Delete">×</button>`;
-    btn.onclick = () => setActive(a.id);
-    btn.querySelector('.tab-x').onclick = e => { e.stopPropagation(); deleteAccount(a.id); };
+function killChart(){if(chart){chart.destroy();chart=null}}
+
+// ── TASKS ──
+function togAddT(){addT=!addT;renderMain()}
+
+function submitT(){
+  const a=acct();if(!a)return;
+  const idea=document.getElementById('tf-idea').value.trim();
+  if(!idea){document.getElementById('tf-idea').focus();return}
+  a.tasks.unshift({
+    id:uid(),idea,
+    segment:document.getElementById('tf-seg').value.trim(),
+    refLink:document.getElementById('tf-ref').value.trim(),
+    funnel:document.getElementById('tf-fun').value,
+    platform:document.getElementById('tf-plat').value,
+    deadline:document.getElementById('tf-dead').value,
+    notes:document.getElementById('tf-notes').value.trim(),
+    status:'pending',at:new Date().toISOString()
+  });
+  save();addT=false;renderMain();updStats();
+}
+
+function delT(aid,tid){
+  const a=db.accounts.find(x=>x.id===aid);if(!a)return;
+  a.tasks=a.tasks.filter(t=>t.id!==tid);
+  save();renderMain();updStats();
+}
+
+function setTS(aid,tid,val){
+  const a=db.accounts.find(x=>x.id===aid);if(!a)return;
+  const t=a.tasks.find(x=>x.id===tid);if(!t)return;
+  t.status=val;save();renderMain();updStats();
+}
+
+function setFilt(f){filt=f;renderMain()}
+
+// ── MEDIA PLAN MUTATIONS ──
+function saveMpS(){
+  const a=acct();if(!a)return;
+  a.mediaPlan.clientName=document.getElementById('mp-client').value;
+  a.mediaPlan.totalBudget=parseFloat(document.getElementById('mp-bud').value)||0;
+  a.mediaPlan.currency=document.getElementById('mp-cur').value;
+  a.mediaPlan.duration=document.getElementById('mp-dur').value;
+  save();recalc();
+}
+
+function onObjCh(){
+  const a=acct();if(!a)return;
+  const obj=document.getElementById('mp-obj').value;
+  const cur=document.getElementById('mp-cur').value;
+  a.mediaPlan.objective=obj;a.mediaPlan.kpis=dKPIs(obj,cur);
+  save();recalc();
+}
+
+function setCF(i,field,val){camps()[i][field]=val;save();recalc()}
+
+function addCamp(){
+  camps().push({name:'New campaign',platform:'Meta',stage:'consideration',pct:5,goal:'',audience:'',targeting:'',placement:'',notes:''});
+  save();recalc();
+}
+
+function delCamp(i){
+  const c=camps();if(c.length<=1)return;
+  c.splice(i,1);save();recalc();
+}
+
+function togCol(key){VC[key]=!VC[key];recalc()}
+
+function addKPI(){
+  const label=prompt('KPI name (e.g. ROAS, CPA, CTR):');if(!label)return;
+  const suffix=prompt('Unit (e.g. %, x, EGP — or leave empty):')||'';
+  kpis().push({label,value:'0',suffix});save();renderKPIs();
+}
+
+function rmKPI(i){kpis().splice(i,1);save();renderKPIs()}
+function upKPI(i,v){kpis()[i].value=v;save()}
+
+function handleLogo(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    acct().mediaPlan.logoBase64=e.target.result;
+    const img=document.getElementById('mp-logo-prev');
+    if(img){img.src=e.target.result;img.style.display='inline-block'}
+    const tmp=new Image();
+    tmp.onload=()=>{acct().mediaPlan.logoAspect=tmp.width/tmp.height};
+    tmp.src=e.target.result;save();
+  };
+  r.readAsDataURL(f);
+}
+
+// ── RECALC ──
+function recalc(){
+  const budEl=document.getElementById('mp-bud');if(!budEl)return;
+  const total=parseFloat(budEl.value)||0;
+  const dur=parseInt(document.getElementById('mp-dur').value)||1;
+  const cs=camps();
+
+  document.getElementById('mp-met').innerHTML=
+    `<div class="mc"><div class="lbl">Total Budget</div><div class="val">${fmt(total)}</div></div>`+
+    `<div class="mc"><div class="lbl">Monthly</div><div class="val">${fmt(total/dur)}</div></div>`+
+    `<div class="mc"><div class="lbl">Daily</div><div class="val">${fmt(total/(dur*30))}</div></div>`+
+    `<div class="mc"><div class="lbl">Campaigns</div><div class="val">${cs.length}</div></div>`;
+
+  const stages={awareness:0,consideration:0,conversion:0,retention:0};
+  cs.forEach(c=>stages[c.stage]=(stages[c.stage]||0)+c.pct);
+  const totPct=cs.reduce((s,c)=>s+c.pct,0);
+
+  let bH='',lH='';
+  for(const s in stages){const p=stages[s];if(p>0){
+    bH+=`<div style="width:${totPct?Math.round(p/totPct*100):0}%;background:${FC[s]}">${Math.round(p)}%</div>`;
+    lH+=`<span><span class="dot" style="background:${FC[s]}"></span>${SL[s]} — ${Math.round(p)}% — ${fmt(total*p/100)}</span>`;
+  }}
+  document.getElementById('mp-fbar').innerHTML=bH;
+  document.getElementById('mp-flbl').innerHTML=lH;
+
+  renderToggs();renderTbl(total);renderChart(total);renderKPIs();
+}
+
+function renderToggs(){
+  let h='';
+  OCOLS.forEach(c=>{
+    const a=VC[c.key];
+    h+=`<button class="toggle-btn${a?' active':''}" onclick="togCol('${c.key}')"><i class="ti ti-${a?'eye':'eye-off'}"></i> ${c.label}</button>`;
+  });
+  document.getElementById('mp-toggs').innerHTML=h;
+}
+
+function renderTbl(total){
+  const cs=camps();
+  const head=document.getElementById('mp-thead');
+  const tbody=document.getElementById('mp-tbody');
+  let hh='<th>Campaign</th><th>Platform</th><th>Stage</th><th>%</th><th>Budget</th>';
+  OCOLS.forEach(c=>{if(VC[c.key])hh+=`<th>${c.label}</th>`});
+  hh+='<th></th>';
+  head.innerHTML=hh;
+  let h='';
+  cs.forEach((c,i)=>{
+    const amt=total*c.pct/100;
+    h+='<tr>';
+    h+=`<td><input value="${esc(c.name)}" onchange="setCF(${i},'name',this.value)"></td>`;
+    h+=`<td><select onchange="setCF(${i},'platform',this.value)">${PLATS.map(p=>`<option value="${p}"${c.platform===p?' selected':''}>${p}</option>`).join('')}</select></td>`;
+    h+=`<td><select onchange="setCF(${i},'stage',this.value)">${['awareness','consideration','conversion','retention'].map(s=>`<option value="${s}"${c.stage===s?' selected':''}>${SL[s]}</option>`).join('')}</select></td>`;
+    h+=`<td><input type="number" value="${c.pct}" min="0" max="100" step="1" style="width:70px" onchange="setCF(${i},'pct',parseFloat(this.value)||0)"></td>`;
+    h+=`<td style="font-weight:600;white-space:nowrap">${fmt(amt)}</td>`;
+    OCOLS.forEach(col=>{
+      if(VC[col.key]){
+        if(col.type==='select'){
+          h+=`<td><select onchange="setCF(${i},'${col.key}',this.value)">${col.opts.map(o=>`<option value="${esc(o)}"${c[col.key]===o?' selected':''}>${esc(o)}</option>`).join('')}</select></td>`;
+        }else{
+          h+=`<td><input value="${esc(c[col.key]||'')}" onchange="setCF(${i},'${col.key}',this.value)"></td>`;
+        }
+      }
+    });
+    h+=`<td style="text-align:center"><button class="del-btn" onclick="delCamp(${i})" title="Delete"><i class="ti ti-trash"></i></button></td>`;
+    h+='</tr>';
+  });
+  const tPct=cs.reduce((s,c)=>s+c.pct,0);
+  const visCnt=OCOLS.filter(c=>VC[c.key]).length;
+  h+=`<tr class="total-row"><td>Total</td><td></td><td></td>`;
+  h+=`<td style="color:${Math.round(tPct)===100?'#054930':'#ef4444'}">${Math.round(tPct)}%</td>`;
+  h+=`<td>${fmt(total*tPct/100)}</td>`;
+  for(let x=0;x<visCnt;x++)h+='<td></td>';
+  h+='<td></td></tr>';
+  tbody.innerHTML=h;
+}
+
+function renderChart(total){
+  const cs=camps();
+  const ctx=document.getElementById('mp-chart');if(!ctx)return;
+  const labels=cs.map(c=>c.name);
+  const data=cs.map(c=>Math.round(total*c.pct/100));
+  const bg=cs.map(c=>PC[c.platform]||'#888');
+  const used={};cs.forEach(c=>used[c.platform]=true);
+  let leg='';
+  for(const p in used)leg+=`<span><span class="dot" style="background:${PC[p]||'#888'}"></span>${p}</span>`;
+  document.getElementById('mp-pleg').innerHTML=leg;
+  killChart();
+  chart=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{data,backgroundColor:bg,borderRadius:4,barThickness:24}]},
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)}}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#888',callback:v=>Math.round(v).toLocaleString()}},
+        y:{grid:{display:false},ticks:{color:'#444',font:{size:11}}}
+      }
+    }
+  });
+}
+
+function renderKPIs(){
+  const el=document.getElementById('mp-kpis');if(!el)return;
+  let h='';
+  kpis().forEach((k,i)=>{
+    h+=`<div class="kpi-card"><div class="lbl">${esc(k.label)}</div><div class="kpi-row">
+      <input class="kpi-input" value="${esc(k.value)}" onchange="upKPI(${i},this.value)">
+      <span style="font-size:13px;color:#888">${esc(k.suffix)}</span>
+      <button class="rm-kpi" onclick="rmKPI(${i})" title="Remove"><i class="ti ti-x"></i></button>
+    </div></div>`;
+  });
+  el.innerHTML=h;
+}
+
+// ── EXPORTS ──
+function expCSV(){
+  const total=parseFloat(document.getElementById('mp-bud').value)||0;
+  const cur=document.getElementById('mp-cur').value;
+  const hdr=['Campaign','Platform','Stage','%','Budget ('+cur+')'];
+  OCOLS.forEach(c=>{if(VC[c.key])hdr.push(c.label)});
+  const lines=[hdr.join(',')];
+  camps().forEach(c=>{
+    const row=['"'+c.name+'"',c.platform,c.stage,c.pct,Math.round(total*c.pct/100)];
+    OCOLS.forEach(col=>{if(VC[col.key])row.push('"'+(c[col.key]||'')+'"')});
+    lines.push(row.join(','));
+  });
+  lines.push('','Expected Results');
+  kpis().forEach(k=>lines.push(k.label+','+k.value+k.suffix));
+  const b=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='media_plan.csv';a.click();
+}
+
+function expTXT(){
+  const total=parseFloat(document.getElementById('mp-bud').value)||0;
+  const dur=document.getElementById('mp-dur').value;
+  const obj=document.getElementById('mp-obj').value;
+  let t='MEDIA PLAN\n==========\n\n';
+  t+=`Budget: ${fmt(total)} | Duration: ${dur} months | Objective: ${obj}\n`;
+  t+=`Monthly: ${fmt(total/parseInt(dur))} | Daily: ${fmt(total/(parseInt(dur)*30))}\n\nCAMPAIGNS\n`;
+  camps().forEach(c=>{t+=`- ${c.name} [${c.platform}] | ${c.stage} | ${c.pct}% | ${fmt(total*c.pct/100)}\n`});
+  t+='\nEXPECTED RESULTS\n';
+  kpis().forEach(k=>{t+=`- ${k.label}: ${k.value}${k.suffix}\n`});
+  const b=new Blob([t],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='media_plan.txt';a.click();
+}
+
+function resetPlan(){
+  const a=acct();if(!a)return;
+  if(!confirm('Reset media plan to defaults?'))return;
+  const cur='EGP',obj='conversions';
+  a.mediaPlan={...a.mediaPlan,totalBudget:30000,currency:cur,duration:'3',objective:obj,campaigns:DCAMPS(),kpis:dKPIs(obj,cur)};
+  save();renderMain();setTimeout(recalc,60);
+}
+
+// ── RENDER ──
+function render(){renderTabs();renderSubBar();renderMain();updStats()}
+
+function renderTabs(){
+  const bar=document.getElementById('tabs-bar');
+  const addBtn=document.getElementById('add-tab-btn');
+  bar.innerHTML='';
+  db.accounts.forEach(a=>{
+    const pend=a.tasks.filter(t=>t.status!=='done').length;
+    const btn=document.createElement('button');
+    btn.className='tab-btn'+(a.id===db.active?' active':'');
+    btn.innerHTML=`<span>${esc(a.name)}</span><span class="tab-count">${pend}</span><button class="tab-x" title="Delete">×</button>`;
+    btn.onclick=()=>setAcc(a.id);
+    btn.querySelector('.tab-x').onclick=e=>{e.stopPropagation();delAcc(a.id)};
     bar.appendChild(btn);
   });
   bar.appendChild(addBtn);
 }
 
-function renderMain() {
-  const main = document.getElementById('main');
-  const a = acct();
+function renderSubBar(){
+  const el=document.getElementById('sub-tabs');
+  if(acct()){
+    el.classList.remove('hidden');
+    document.getElementById('st-tasks').classList.toggle('active',sub==='tasks');
+    document.getElementById('st-mp').classList.toggle('active',sub==='mp');
+  }else{el.classList.add('hidden')}
+}
 
-  if (!a) {
-    main.innerHTML = `
-      <div class="empty" style="margin-top:60px">
-        <div class="empty-icon">📋</div>
-        <h3>No Accounts Yet</h3>
-        <p>Click <strong>＋</strong> in the tab bar to create your first account.</p>
-      </div>`;
+function renderMain(){
+  const main=document.getElementById('main');
+  const a=acct();
+  if(!a){
+    main.innerHTML=`<div class="empty" style="margin-top:60px"><div class="ei">📋</div><h3>No Accounts Yet</h3><p>Click <strong>＋</strong> in the tab bar to create your first account.</p></div>`;
     return;
   }
+  sub==='tasks'?renderTasks(main,a):renderMP(main,a);
+}
 
-  main.innerHTML = `
-    <div class="account-header">
-      <div>
-        <div class="account-name">${esc(a.name)}</div>
-        <div class="account-meta">
-          ${a.industry ? `<span>${esc(a.industry)}</span>` : ''}
-          ${a.platform ? `<span>${esc(a.platform)}</span>` : ''}
-          ${a.budget ? `<span>Budget: ${esc(a.budget)}</span>` : ''}
-          <span>${a.tasks.length} task${a.tasks.length !== 1 ? 's' : ''}</span>
-        </div>
+// ── TASKS VIEW ──
+function renderTasks(main,a){
+  let h=`<div style="margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+    <div>
+      <div style="font-size:22px;font-weight:800;color:var(--p)">${esc(a.name)}</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:3px">
+        ${a.industry?`<span>${esc(a.industry)}</span> · `:''}
+        ${a.platform?esc(a.platform):''}
+        ${a.budget?` · ${esc(a.budget)}`:''}
       </div>
     </div>
-    <div class="layout">
-      <div>
-        <div class="section-hd">
-          <div class="section-title">Content Requests</div>
-          <button class="btn btn-primary btn-sm" id="toggle-task-btn" onclick="toggleAddTask()">
-            ${addingTask ? '✕ Cancel' : '＋ New Request'}
-          </button>
+    <button class="btn btn-p btn-sm" onclick="togAddT()">${addT?'✕ Cancel':'＋ New Request'}</button>
+  </div>`;
+
+  if(addT){
+    h+=`<div class="task-panel">
+      <h4>New Content Request</h4>
+      <div class="frow"><div class="fg"><label>Content Idea *</label><textarea id="tf-idea" placeholder="Describe the content idea..." rows="2"></textarea></div></div>
+      <div class="g2">
+        <div class="fg"><label>Target Segment</label><input id="tf-seg" type="text" placeholder="e.g. Women 25–34, Cairo"/></div>
+        <div class="fg"><label>Reference Link</label><input id="tf-ref" type="url" placeholder="https://..."/></div>
+        <div class="fg"><label>Funnel Stage</label>
+          <select id="tf-fun">
+            <option value="">Select Stage</option>
+            <option value="TOFU">🌱 TOFU — Awareness</option>
+            <option value="MOFU">🔥 MOFU — Consideration</option>
+            <option value="BOFU">💎 BOFU — Conversion</option>
+            <option value="Retention">🔄 Retention</option>
+          </select>
         </div>
-        <div id="task-panel"></div>
+        <div class="fg"><label>Platform</label>
+          <select id="tf-plat">
+            <option value="">Select Platform</option>
+            ${ADPLATS.map(p=>`<option>${p}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg"><label>Deadline</label><input id="tf-dead" type="date"/></div>
       </div>
-      <div>
-        <div class="section-hd"><div class="section-title">Media Plan</div></div>
-        <div id="media-panel"></div>
+      <div class="frow"><div class="fg"><label>Notes</label><textarea id="tf-notes" placeholder="Requirements, context..." rows="2"></textarea></div></div>
+      <div class="ffoot">
+        <button class="btn btn-g btn-sm" onclick="togAddT()">Cancel</button>
+        <button class="btn btn-p btn-sm" onclick="submitT()">💾 Save Request</button>
       </div>
     </div>`;
+  }
 
-  renderTaskPanel();
-  renderMediaPanel();
-}
+  const cnt=s=>s==='all'?a.tasks.length:a.tasks.filter(t=>t.status===s).length;
+  h+=`<div class="filters">
+    <button class="filter${filt==='all'?' active':''}" onclick="setFilt('all')">All (${cnt('all')})</button>
+    <button class="filter${filt==='pending'?' active':''}" onclick="setFilt('pending')">📋 Pending (${cnt('pending')})</button>
+    <button class="filter${filt==='in-progress'?' active':''}" onclick="setFilt('in-progress')">⚡ In Progress (${cnt('in-progress')})</button>
+    <button class="filter${filt==='done'?' active':''}" onclick="setFilt('done')">✅ Done (${cnt('done')})</button>
+  </div>`;
 
-function renderTaskPanel() {
-  const el = document.getElementById('task-panel'); if (!el) return;
-  const a = acct(); if (!a) return;
-
-  // update toggle btn label
-  const tbtn = document.getElementById('toggle-task-btn');
-  if (tbtn) tbtn.textContent = addingTask ? '✕ Cancel' : '＋ New Request';
-
-  let html = '';
-
-  // ── ADD TASK FORM ──
-  if (addingTask) {
-    html += `
-      <div class="form-panel">
-        <h4>New Content Request</h4>
-        <div class="form-row"><div class="fg">
-          <label>Content Idea *</label>
-          <textarea id="tf-idea" placeholder="Describe the content idea in detail..." rows="2"></textarea>
-        </div></div>
-        <div class="grid-2">
-          <div class="fg"><label>Target Segment</label><input id="tf-segment" type="text" placeholder="e.g. Women 25–34, Cairo" /></div>
-          <div class="fg"><label>Reference Link</label><input id="tf-ref" type="url" placeholder="https://..." /></div>
-          <div class="fg">
-            <label>Funnel Stage</label>
-            <select id="tf-funnel">
-              <option value="">Select Stage</option>
-              ${FUNNELS.map(f => `<option value="${f.val}">${f.label}</option>`).join('')}
-            </select>
+  const tasks=filt==='all'?a.tasks:a.tasks.filter(t=>t.status===filt);
+  if(!tasks.length){
+    h+=`<div class="empty"><div class="ei">${a.tasks.length===0?'📝':'🔍'}</div><h3>${a.tasks.length===0?'No requests yet':'No matches'}</h3><p>${a.tasks.length===0?'Add your first content request above.':'Try a different filter.'}</p></div>`;
+  }else{
+    h+='<div class="tasks-list">';
+    tasks.forEach(t=>{
+      const ov=t.deadline&&new Date(t.deadline+'T00:00:00')<new Date()&&t.status!=='done';
+      const dl=t.deadline?new Date(t.deadline+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'';
+      h+=`<div class="tc ${t.status==='done'?'done':''}">
+        <div>
+          <div class="t-idea">${esc(t.idea)}</div>
+          <div class="tags">
+            ${t.funnel?`<span class="tag tf">${esc(t.funnel)}</span>`:''}
+            ${t.platform?`<span class="tag tp">${esc(t.platform)}</span>`:''}
+            ${t.segment?`<span class="tag ts">👥 ${esc(t.segment)}</span>`:''}
+            ${t.deadline?`<span class="tag td-tag${ov?' ov':''}">📅 ${dl}${ov?' ⚠️':''}</span>`:''}
+            ${t.refLink?`<span class="t-ref">🔗 <a href="${esc(t.refLink)}" target="_blank" rel="noopener">Reference</a></span>`:''}
           </div>
-          <div class="fg">
-            <label>Platform</label>
-            <select id="tf-platform">
-              <option value="">Select Platform</option>
-              ${PLATFORMS.map(p => `<option>${p}</option>`).join('')}
-            </select>
-          </div>
-          <div class="fg"><label>Deadline</label><input id="tf-deadline" type="date" /></div>
+          ${t.notes?`<div class="t-notes">${esc(t.notes)}</div>`:''}
         </div>
-        <div class="form-row"><div class="fg">
-          <label>Notes</label>
-          <textarea id="tf-notes" placeholder="Any requirements, references, or context..." rows="2"></textarea>
-        </div></div>
-        <div class="form-foot">
-          <button class="btn btn-ghost btn-sm" onclick="toggleAddTask()">Cancel</button>
-          <button class="btn btn-primary btn-sm" onclick="submitTask()">💾 Save Request</button>
+        <div class="t-ctrl">
+          <select class="ss" onchange="setTS('${a.id}','${t.id}',this.value)">
+            <option value="pending"${t.status==='pending'?' selected':''}>📋 Pending</option>
+            <option value="in-progress"${t.status==='in-progress'?' selected':''}>⚡ In Progress</option>
+            <option value="done"${t.status==='done'?' selected':''}>✅ Done</option>
+          </select>
+          <button class="btn btn-d btn-xs" onclick="delT('${a.id}','${t.id}')">Delete</button>
         </div>
       </div>`;
-  }
-
-  // ── FILTERS ──
-  const cnt = (s) => s === 'all' ? a.tasks.length : a.tasks.filter(t => t.status === s).length;
-  html += `
-    <div class="filters">
-      <button class="filter${taskFilter==='all'?' active':''}" onclick="setFilter('all')">All (${cnt('all')})</button>
-      <button class="filter${taskFilter==='pending'?' active':''}" onclick="setFilter('pending')">📋 Pending (${cnt('pending')})</button>
-      <button class="filter${taskFilter==='in-progress'?' active':''}" onclick="setFilter('in-progress')">⚡ In Progress (${cnt('in-progress')})</button>
-      <button class="filter${taskFilter==='done'?' active':''}" onclick="setFilter('done')">✅ Done (${cnt('done')})</button>
-    </div>`;
-
-  // ── TASK LIST ──
-  let tasks = taskFilter === 'all' ? a.tasks : a.tasks.filter(t => t.status === taskFilter);
-
-  if (tasks.length === 0) {
-    html += `<div class="empty"><div class="empty-icon">${a.tasks.length === 0 ? '📝' : '🔍'}</div>
-      <h3>${a.tasks.length === 0 ? 'No requests yet' : 'No matches'}</h3>
-      <p>${a.tasks.length === 0 ? 'Add your first content request above.' : 'Try a different filter.'}</p></div>`;
-  } else {
-    html += '<div class="tasks-list">';
-    tasks.forEach(t => {
-      const over = t.deadline && new Date(t.deadline + 'T00:00:00') < new Date() && t.status !== 'done';
-      const dlabel = t.deadline ? new Date(t.deadline + 'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
-      html += `
-        <div class="task-card ${t.status === 'done' ? 'done' : ''}">
-          <div>
-            <div class="task-idea">${esc(t.idea)}</div>
-            <div class="tags">
-              ${t.funnel ? `<span class="tag tag-funnel">${esc(t.funnel)}</span>` : ''}
-              ${t.platform ? `<span class="tag tag-platform">${esc(t.platform)}</span>` : ''}
-              ${t.segment ? `<span class="tag tag-segment">👥 ${esc(t.segment)}</span>` : ''}
-              ${t.deadline ? `<span class="tag tag-deadline${over?' overdue':''}">📅 ${dlabel}${over?' ⚠️':''}</span>` : ''}
-              ${t.refLink ? `<span class="tag-ref">🔗 <a href="${esc(t.refLink)}" target="_blank" rel="noopener">Reference</a></span>` : ''}
-            </div>
-            ${t.notes ? `<div class="task-notes">${esc(t.notes)}</div>` : ''}
-          </div>
-          <div class="task-controls">
-            <select class="status-sel" onchange="setTaskStatus('${a.id}','${t.id}',this.value)">
-              <option value="pending" ${t.status==='pending'?'selected':''}>📋 Pending</option>
-              <option value="in-progress" ${t.status==='in-progress'?'selected':''}>⚡ In Progress</option>
-              <option value="done" ${t.status==='done'?'selected':''}>✅ Done</option>
-            </select>
-            <button class="btn btn-danger btn-xs" onclick="deleteTask('${a.id}','${t.id}')">Delete</button>
-          </div>
-        </div>`;
     });
-    html += '</div>';
+    h+='</div>';
   }
-
-  el.innerHTML = html;
+  main.innerHTML=h;
 }
 
-function setFilter(f) { taskFilter = f; renderTaskPanel(); }
+// ── MEDIA PLAN VIEW ──
+function renderMP(main,a){
+  const m=a.mediaPlan;
+  main.innerHTML=`
+  <div class="card"><div class="card-body">
+    <div class="sec-t"><i class="ti ti-settings"></i> Plan Settings</div>
+    <div class="ctrl">
+      <label>Client</label>
+      <input type="text" id="mp-client" value="${esc(m.clientName||a.name)}" placeholder="Client / brand name" style="width:220px" onchange="saveMpS()">
+      <label style="min-width:50px">Logo</label>
+      <input type="file" id="mp-logo" accept="image/*" onchange="handleLogo(this)" style="font-size:13px">
+      <img id="mp-logo-prev" style="display:${m.logoBase64?'inline-block':'none'};height:32px;border-radius:4px;border:.5px solid var(--brd)" src="${m.logoBase64||''}">
+    </div>
+    <div class="ctrl">
+      <label>Total Budget</label>
+      <input type="number" id="mp-bud" value="${m.totalBudget||30000}" min="100" step="1000" onchange="saveMpS()" style="width:160px">
+      <select id="mp-cur" onchange="saveMpS()" style="width:90px">
+        ${['EGP','USD','SAR','AED','EUR','GBP'].map(c=>`<option value="${c}"${m.currency===c?' selected':''}>${c}</option>`).join('')}
+      </select>
+    </div>
+    <div class="ctrl">
+      <label>Duration</label>
+      <select id="mp-dur" onchange="saveMpS()" style="width:160px">
+        ${[1,2,3,6,12].map(n=>`<option value="${n}"${m.duration==n?' selected':''}>${n} month${n>1?'s':''}</option>`).join('')}
+      </select>
+      <label>Objective</label>
+      <select id="mp-obj" onchange="onObjCh()" style="width:180px">
+        <option value="conversions"${m.objective==='conversions'?' selected':''}>Conversions</option>
+        <option value="leads"${m.objective==='leads'?' selected':''}>Lead generation</option>
+        <option value="traffic"${m.objective==='traffic'?' selected':''}>Traffic</option>
+        <option value="awareness"${m.objective==='awareness'?' selected':''}>Brand awareness</option>
+      </select>
+    </div>
+  </div></div>
 
-function renderMediaPanel() {
-  const el = document.getElementById('media-panel'); if (!el) return;
-  const a = acct(); if (!a) return;
-  const mp = a.mediaPlan || {};
+  <div id="mp-met" class="metrics"></div>
 
-  el.innerHTML = `
-    <div class="card">
-      <div class="card-hd">Campaign Details</div>
-      <div class="card-body">
-        <div class="grid-2">
-          <div class="fg">
-            <label>Campaign Objective</label>
-            <select id="mp-obj">
-              <option value="">Select Objective</option>
-              ${OBJECTIVES.map(o => `<option${mp.objective===o?' selected':''}>${o}</option>`).join('')}
-            </select>
-          </div>
-          <div class="fg"><label>Total Budget</label><input id="mp-budget" type="text" placeholder="e.g. $5,000" value="${esc(mp.budget||'')}"/></div>
-          <div class="fg"><label>Start Date</label><input id="mp-start" type="date" value="${mp.startDate||''}"/></div>
-          <div class="fg"><label>End Date</label><input id="mp-end" type="date" value="${mp.endDate||''}"/></div>
-        </div>
-        <div class="form-row fg">
-          <label>Target Audience</label>
-          <textarea id="mp-audience" placeholder="Age, gender, location, interests, behaviors..." rows="2">${esc(mp.audience||'')}</textarea>
-        </div>
-        <div class="form-row fg">
-          <label>Active Platforms</label>
-          <div class="platform-grid" id="platform-grid">
-            ${PLATFORMS.map(p => `
-              <div class="plat-check${(mp.platforms||[]).includes(p)?' checked':''}" data-p="${p}" onclick="togglePlat(this)">
-                <input type="checkbox" ${(mp.platforms||[]).includes(p)?'checked':''}/>${p}
-              </div>`).join('')}
-          </div>
-        </div>
-        <div class="form-row fg">
-          <label>Strategy Notes &amp; KPIs</label>
-          <textarea id="mp-notes" placeholder="Key messages, KPIs, budget allocation, notes..." rows="3">${esc(mp.notes||'')}</textarea>
-        </div>
-        <div style="text-align:right">
-          <button class="btn btn-primary" id="mp-save-btn" onclick="saveMediaPlan()">💾 Save Plan</button>
-        </div>
-      </div>
-    </div>`;
+  <div class="card"><div class="card-body">
+    <div class="sec-t"><i class="ti ti-chart-pie"></i> Funnel Breakdown</div>
+    <div id="mp-fbar" class="funnel-bar"></div>
+    <div id="mp-flbl" class="funnel-labels"></div>
+  </div></div>
+
+  <div class="card"><div class="card-body">
+    <div class="sec-t"><i class="ti ti-list"></i> Campaigns</div>
+    <div class="toggles" id="mp-toggs"></div>
+    <div class="tbl-wrap">
+      <table><thead><tr id="mp-thead"></tr></thead><tbody id="mp-tbody"></tbody></table>
+    </div>
+    <button class="add-btn" onclick="addCamp()"><i class="ti ti-plus"></i> Add campaign</button>
+  </div></div>
+
+  <div class="card"><div class="card-body">
+    <div class="sec-t"><i class="ti ti-chart-bar"></i> Budget Distribution</div>
+    <div id="mp-pleg" class="plat-legend"></div>
+    <div class="chart-wrap"><canvas id="mp-chart"></canvas></div>
+  </div></div>
+
+  <div class="card"><div class="card-body">
+    <div class="sec-t"><i class="ti ti-target"></i> Expected Results</div>
+    <p style="font-size:13px;color:#888;margin-bottom:14px">Click any value to edit. Add or remove KPIs as needed.</p>
+    <div id="mp-kpis" class="kpi-grid"></div>
+    <button class="add-btn" onclick="addKPI()"><i class="ti ti-plus"></i> Add KPI</button>
+  </div></div>
+
+  <div class="act-bar">
+    <button onclick="expCSV()"><i class="ti ti-file-spreadsheet"></i> Export CSV</button>
+    <button onclick="expTXT()"><i class="ti ti-download"></i> Export TXT</button>
+    <button onclick="window.print()"><i class="ti ti-printer"></i> Print</button>
+    <button onclick="resetPlan()"><i class="ti ti-refresh"></i> Reset</button>
+  </div>`;
 }
 
-function togglePlat(el) { el.classList.toggle('checked'); }
-
-function updateStats() {
-  const all = db.accounts.flatMap(a => a.tasks);
-  document.getElementById('s-accounts').textContent = db.accounts.length;
-  document.getElementById('s-tasks').textContent = all.length;
-  document.getElementById('s-pending').textContent = all.filter(t => t.status === 'pending').length;
-  document.getElementById('s-done').textContent = all.filter(t => t.status === 'done').length;
+// ── STATS ──
+function updStats(){
+  const all=db.accounts.flatMap(a=>a.tasks);
+  document.getElementById('s-acc').textContent=db.accounts.length;
+  document.getElementById('s-tasks').textContent=all.length;
+  document.getElementById('s-pend').textContent=all.filter(t=>t.status==='pending').length;
+  document.getElementById('s-done').textContent=all.filter(t=>t.status==='done').length;
 }
 
-// ════════════════════════════════
-//  INIT
-// ════════════════════════════════
-load();
-render();
+// ── INIT ──
+load();render();
 </script>
 </body>
 </html>
