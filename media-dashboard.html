@@ -161,6 +161,12 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
 .ei{font-size:36px;margin-bottom:10px}
 .empty h3{font-size:16px;font-weight:700;margin-bottom:4px;color:var(--p)}
 
+/* SAVE INDICATOR */
+.save-ind{font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;transition:all .3s;white-space:nowrap;margin-left:auto}
+.save-ind.saving{color:var(--muted);background:transparent}
+.save-ind.saved{color:var(--s);background:rgba(12,184,125,.12)}
+.save-ind.unsaved{color:#f59e0b;background:rgba(245,158,11,.1)}
+
 /* REPORT */
 .rep-section{background:#fff;border-radius:12px;border:.5px solid var(--brd);margin-bottom:18px;box-shadow:0 1px 4px rgba(0,0,0,.04);overflow:hidden}
 .rep-sec-hd{background:var(--p);color:#fff;padding:12px 20px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;display:flex;align-items:center;gap:8px}
@@ -205,10 +211,11 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
   <button class="add-tab-btn" id="add-tab-btn" title="Add Account">＋</button>
 </div>
 
-<div class="sub-tabs hidden" id="sub-tabs">
+<div class="sub-tabs hidden" id="sub-tabs" style="align-items:center">
   <button class="sub-tab active" id="st-tasks" onclick="switchSub('tasks')"><i class="ti ti-clipboard-list"></i> Content Requests</button>
   <button class="sub-tab" id="st-mp" onclick="switchSub('mp')"><i class="ti ti-chart-dots-3"></i> Media Plan</button>
   <button class="sub-tab" id="st-rep" onclick="switchSub('rep')"><i class="ti ti-file-analytics"></i> Client Report</button>
+  <span class="save-ind hidden" id="save-ind"></span>
 </div>
 
 <main class="main" id="main"></main>
@@ -281,6 +288,60 @@ let chart=null;
 
 function load(){try{const s=localStorage.getItem('mbd_v3');if(s)db=JSON.parse(s)}catch(e){}}
 function save(){localStorage.setItem('mbd_v3',JSON.stringify(db))}
+
+// ── AUTO-SAVE SYSTEM ──
+let _st=null;
+
+function flushDOM(){
+  // Sync any unsaved DOM values into db before writing to localStorage
+  const a=acct();if(!a)return;
+  const g=id=>document.getElementById(id);
+  if(sub==='rep'){
+    if(g('rp-period'))  a.report.period       =g('rp-period').value;
+    if(g('rp-by'))      a.report.preparedBy   =g('rp-by').value;
+    if(g('rp-cur'))     a.report.currency      =g('rp-cur').value;
+    if(g('rp-btot'))    a.report.budgetTotal   =g('rp-btot').value;
+    if(g('rp-bspent'))  a.report.budgetSpent   =g('rp-bspent').value;
+    if(g('rp-wins'))    a.report.wins          =g('rp-wins').value;
+    if(g('rp-chal'))    a.report.challenges    =g('rp-chal').value;
+    if(g('rp-rec'))     a.report.recommendations=g('rp-rec').value;
+  }
+  if(sub==='mp'){
+    if(g('mp-client')) a.mediaPlan.clientName  =g('mp-client').value;
+    if(g('mp-bud'))    a.mediaPlan.totalBudget =parseFloat(g('mp-bud').value)||0;
+    if(g('mp-cur'))    a.mediaPlan.currency    =g('mp-cur').value;
+    if(g('mp-dur'))    a.mediaPlan.duration    =g('mp-dur').value;
+    if(g('mp-obj'))    a.mediaPlan.objective   =g('mp-obj').value;
+  }
+}
+
+function showSaveInd(state,text){
+  const el=document.getElementById('save-ind');if(!el)return;
+  el.classList.remove('hidden','saving','saved','unsaved');
+  el.classList.add(state);el.textContent=text;
+  if(state==='saved')setTimeout(()=>{el.classList.add('hidden')},2500);
+}
+
+function queueSave(){
+  showSaveInd('unsaved','● Unsaved');
+  clearTimeout(_st);
+  _st=setTimeout(()=>{
+    showSaveInd('saving','Saving…');
+    flushDOM();
+    save();
+    showSaveInd('saved','✓ Saved');
+  },600);
+}
+
+// Save on every keystroke/input anywhere in the page
+document.addEventListener('input',queueSave);
+document.addEventListener('change',queueSave);
+
+// Save before closing tab — never lose data
+window.addEventListener('beforeunload',()=>{flushDOM();save()});
+
+// Periodic save every 15 seconds as extra safety net
+setInterval(()=>{flushDOM();save()},15000);
 function acct(){return db.accounts.find(a=>a.id===db.active)||null}
 function mp(){return acct()?.mediaPlan||{}}
 function camps(){return mp().campaigns||[]}
