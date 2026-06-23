@@ -161,6 +161,25 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
 .ei{font-size:36px;margin-bottom:10px}
 .empty h3{font-size:16px;font-weight:700;margin-bottom:4px;color:var(--p)}
 
+/* REPORT */
+.rep-section{background:#fff;border-radius:12px;border:.5px solid var(--brd);margin-bottom:18px;box-shadow:0 1px 4px rgba(0,0,0,.04);overflow:hidden}
+.rep-sec-hd{background:var(--p);color:#fff;padding:12px 20px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;display:flex;align-items:center;gap:8px}
+.rep-sec-hd i{color:var(--s);font-size:16px}
+.rep-sec-body{padding:20px}
+.rep-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:0}
+.metric-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.metric-tbl th{background:#f0f7f4;color:#888;font-weight:600;text-align:left;padding:10px 12px;border-bottom:.5px solid var(--brd);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.metric-tbl td{padding:10px 12px;border-bottom:.5px solid var(--brd);vertical-align:middle}
+.metric-tbl tr:last-child td{border-bottom:none}
+.metric-tbl input{width:100%;border:.5px solid var(--brd);border-radius:7px;padding:6px 10px;font-size:13px;font-family:inherit;background:#fff}
+.metric-tbl input:focus{outline:none;border-color:var(--s)}
+.metric-tbl .del-btn{font-size:14px}
+.status-pill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.pill-green{background:#e6f4ee;color:#054930}
+.pill-red{background:#fee2e2;color:#ef4444}
+.pill-grey{background:#f3f4f6;color:#6b7280}
+.rep-preview-btn{background:var(--p);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:inherit;transition:background .15s}
+.rep-preview-btn:hover{background:var(--pd)}
 .hidden{display:none!important}
 
 @media(max-width:900px){.hdr-stats{display:none}.g3{grid-template-columns:1fr 1fr}}
@@ -189,6 +208,7 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
 <div class="sub-tabs hidden" id="sub-tabs">
   <button class="sub-tab active" id="st-tasks" onclick="switchSub('tasks')"><i class="ti ti-clipboard-list"></i> Content Requests</button>
   <button class="sub-tab" id="st-mp" onclick="switchSub('mp')"><i class="ti ti-chart-dots-3"></i> Media Plan</button>
+  <button class="sub-tab" id="st-rep" onclick="switchSub('rep')"><i class="ti ti-file-analytics"></i> Client Report</button>
 </div>
 
 <main class="main" id="main"></main>
@@ -291,7 +311,8 @@ function addAcc(){
     platform:document.getElementById('na-plat').value,
     budget:document.getElementById('na-bud').value.trim(),
     tasks:[],
-    mediaPlan:{clientName:name,totalBudget:30000,currency:cur,duration:'3',objective:obj,campaigns:DCAMPS(),kpis:dKPIs(obj,cur),logoBase64:null,logoAspect:1}
+    mediaPlan:{clientName:name,totalBudget:30000,currency:cur,duration:'3',objective:obj,campaigns:DCAMPS(),kpis:dKPIs(obj,cur),logoBase64:null,logoAspect:1},
+    report:{period:'',preparedBy:'',currency:cur,budgetTotal:'',budgetSpent:'',metrics:[],campaigns:[],wins:'',challenges:'',recommendations:''}
   };
   db.accounts.push(a);db.active=a.id;save();closeM();
   addT=false;sub='tasks';filt='all';killChart();render();
@@ -315,6 +336,7 @@ function switchSub(s){
   sub=s;
   document.getElementById('st-tasks').classList.toggle('active',s==='tasks');
   document.getElementById('st-mp').classList.toggle('active',s==='mp');
+  document.getElementById('st-rep').classList.toggle('active',s==='rep');
   renderMain();
   if(s==='mp')setTimeout(recalc,60);
 }
@@ -564,6 +586,329 @@ function resetPlan(){
   save();renderMain();setTimeout(recalc,60);
 }
 
+// ── CLIENT REPORT ──
+function rpt(){return acct()?.report||{}}
+
+function saveRep(){
+  const a=acct();if(!a)return;
+  a.report.period=document.getElementById('rp-period').value;
+  a.report.preparedBy=document.getElementById('rp-by').value;
+  a.report.currency=document.getElementById('rp-cur').value;
+  a.report.budgetTotal=document.getElementById('rp-btot').value;
+  a.report.budgetSpent=document.getElementById('rp-bspent').value;
+  a.report.wins=document.getElementById('rp-wins').value;
+  a.report.challenges=document.getElementById('rp-chal').value;
+  a.report.recommendations=document.getElementById('rp-rec').value;
+  save();
+}
+
+function addRepMetric(){
+  rpt().metrics=rpt().metrics||[];
+  rpt().metrics.push({name:'',goal:'',actual:''});
+  save();renderMain();
+}
+function delRepMetric(i){rpt().metrics.splice(i,1);save();renderMain()}
+function updRepMetric(i,f,v){rpt().metrics[i][f]=v;save()}
+
+function addRepCamp(){
+  rpt().campaigns=rpt().campaigns||[];
+  rpt().campaigns.push({name:'',spend:'',impressions:'',clicks:'',result:'',notes:''});
+  save();renderMain();
+}
+function delRepCamp(i){rpt().campaigns.splice(i,1);save();renderMain()}
+function updRepCamp(i,f,v){rpt().campaigns[i][f]=v;save()}
+
+function renderRep(main,a){
+  const r=a.report||{};
+  const mets=r.metrics||[];
+  const cps=r.campaigns||[];
+  const cur=r.currency||'EGP';
+
+  // budget pacing calc
+  const tot=parseFloat(r.budgetTotal)||0;
+  const spent=parseFloat(r.budgetSpent)||0;
+  const rem=tot-spent;
+  const pace=tot?Math.round(spent/tot*100):0;
+  const paceColor=pace<80?'#0cb87d':pace<=100?'#f59e0b':'#ef4444';
+
+  main.innerHTML=`
+  <!-- Header Info -->
+  <div class="rep-section">
+    <div class="rep-sec-hd"><i class="ti ti-file-analytics"></i> Report Info</div>
+    <div class="rep-sec-body">
+      <div class="g2">
+        <div class="fg"><label>Reporting Period</label><input id="rp-period" type="text" placeholder="e.g. June 2026" value="${esc(r.period||'')}" onchange="saveRep()"/></div>
+        <div class="fg"><label>Prepared By</label><input id="rp-by" type="text" placeholder="Your name" value="${esc(r.preparedBy||'')}" onchange="saveRep()"/></div>
+        <div class="fg"><label>Currency</label>
+          <select id="rp-cur" onchange="saveRep()" style="height:38px;border:.5px solid var(--brd);border-radius:8px;padding:0 12px;font-size:14px;font-family:inherit">
+            ${['EGP','USD','SAR','AED','EUR','GBP'].map(c=>`<option value="${c}"${cur===c?' selected':''}>${c}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Budget Summary -->
+  <div class="rep-section">
+    <div class="rep-sec-hd"><i class="ti ti-wallet"></i> Budget Summary</div>
+    <div class="rep-sec-body">
+      <div class="g3" style="margin-bottom:16px">
+        <div class="fg"><label>Total Budget</label><input id="rp-btot" type="number" placeholder="0" value="${esc(r.budgetTotal||'')}" onchange="saveRep()"/></div>
+        <div class="fg"><label>Amount Spent</label><input id="rp-bspent" type="number" placeholder="0" value="${esc(r.budgetSpent||'')}" onchange="saveRep()"/></div>
+        <div class="fg"><label>Remaining</label><input type="text" value="${rem>0?rem.toLocaleString()+' '+cur:'—'}" readonly style="background:#f6fbf8;color:var(--p);font-weight:700"/></div>
+      </div>
+      ${tot>0?`
+      <div style="background:#f6fbf8;border-radius:10px;padding:14px;border:.5px solid var(--brd)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:13px;font-weight:600;color:var(--p)">Budget Pacing</span>
+          <span style="font-size:14px;font-weight:800;color:${paceColor}">${pace}% spent</span>
+        </div>
+        <div style="background:#e0e0e0;border-radius:20px;height:10px;overflow:hidden">
+          <div style="width:${Math.min(pace,100)}%;height:100%;background:${paceColor};border-radius:20px;transition:width .4s"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:#888">
+          <span>0</span><span>${tot.toLocaleString()} ${cur}</span>
+        </div>
+      </div>`:''}
+    </div>
+  </div>
+
+  <!-- Key Metrics -->
+  <div class="rep-section">
+    <div class="rep-sec-hd"><i class="ti ti-target"></i> Key Metrics — Planned vs. Actual</div>
+    <div class="rep-sec-body">
+      <div style="overflow-x:auto">
+        <table class="metric-tbl">
+          <thead><tr><th>Metric</th><th>Goal</th><th>Actual</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            ${mets.length===0?`<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">No metrics yet — add your first one below</td></tr>`:''}
+            ${mets.map((m,i)=>{
+              const g=parseFloat(m.goal),ac=parseFloat(m.actual);
+              let pill='<span class="status-pill pill-grey">—</span>';
+              if(m.goal&&m.actual){
+                const pct=Math.round((ac/g)*100);
+                const good=ac>=g;
+                pill=`<span class="status-pill ${good?'pill-green':'pill-red'}">${good?'✓':'✗'} ${pct}%</span>`;
+              }
+              return `<tr>
+                <td><input value="${esc(m.name)}" placeholder="e.g. CPM, ROAS, CPA" onchange="updRepMetric(${i},'name',this.value)"/></td>
+                <td><input value="${esc(m.goal)}" placeholder="Target" onchange="updRepMetric(${i},'goal',this.value)"/></td>
+                <td><input value="${esc(m.actual)}" placeholder="Actual" onchange="updRepMetric(${i},'actual',this.value)"/></td>
+                <td>${pill}</td>
+                <td><button class="del-btn" onclick="delRepMetric(${i})"><i class="ti ti-trash"></i></button></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+      <button class="add-btn" onclick="addRepMetric()"><i class="ti ti-plus"></i> Add Metric</button>
+    </div>
+  </div>
+
+  <!-- Campaign Performance -->
+  <div class="rep-section">
+    <div class="rep-sec-hd"><i class="ti ti-list"></i> Campaign Performance</div>
+    <div class="rep-sec-body">
+      <div style="overflow-x:auto">
+        <table class="metric-tbl">
+          <thead><tr><th>Campaign</th><th>Spend</th><th>Impressions</th><th>Clicks</th><th>Key Result</th><th>Notes</th><th></th></tr></thead>
+          <tbody>
+            ${cps.length===0?`<tr><td colspan="7" style="text-align:center;color:#888;padding:20px">No campaigns yet — add below</td></tr>`:''}
+            ${cps.map((c,i)=>`<tr>
+              <td><input value="${esc(c.name)}" placeholder="Campaign name" onchange="updRepCamp(${i},'name',this.value)"/></td>
+              <td><input value="${esc(c.spend)}" placeholder="0" onchange="updRepCamp(${i},'spend',this.value)"/></td>
+              <td><input value="${esc(c.impressions)}" placeholder="0" onchange="updRepCamp(${i},'impressions',this.value)"/></td>
+              <td><input value="${esc(c.clicks)}" placeholder="0" onchange="updRepCamp(${i},'clicks',this.value)"/></td>
+              <td><input value="${esc(c.result)}" placeholder="e.g. 120 leads / 3.2x ROAS" onchange="updRepCamp(${i},'result',this.value)"/></td>
+              <td><input value="${esc(c.notes)}" placeholder="Notes" onchange="updRepCamp(${i},'notes',this.value)"/></td>
+              <td><button class="del-btn" onclick="delRepCamp(${i})"><i class="ti ti-trash"></i></button></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <button class="add-btn" onclick="addRepCamp()"><i class="ti ti-plus"></i> Add Campaign</button>
+    </div>
+  </div>
+
+  <!-- Insights -->
+  <div class="rep-section">
+    <div class="rep-sec-hd"><i class="ti ti-bulb"></i> Insights & Recommendations</div>
+    <div class="rep-sec-body">
+      <div class="g3">
+        <div class="fg"><label>✅ What Worked</label><textarea id="rp-wins" rows="4" placeholder="Top performing creatives, audiences, campaigns..." onchange="saveRep()">${esc(r.wins||'')}</textarea></div>
+        <div class="fg"><label>⚠️ Challenges</label><textarea id="rp-chal" rows="4" placeholder="What didn't perform, blockers, issues..." onchange="saveRep()">${esc(r.challenges||'')}</textarea></div>
+        <div class="fg"><label>🚀 Recommendations</label><textarea id="rp-rec" rows="4" placeholder="Next month action plan, budget shifts, tests..." onchange="saveRep()">${esc(r.recommendations||'')}</textarea></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview Button -->
+  <div style="display:flex;justify-content:flex-end;padding:8px 0 24px">
+    <button class="rep-preview-btn" onclick="previewReport()">
+      <i class="ti ti-eye"></i> Preview & Print Report
+    </button>
+  </div>`;
+}
+
+function previewReport(){
+  saveRep();
+  const a=acct();if(!a)return;
+  const r=a.report||{};
+  const m=a.mediaPlan||{};
+  const mets=r.metrics||[];
+  const cps=r.campaigns||[];
+  const cur=r.currency||'EGP';
+  const tot=parseFloat(r.budgetTotal)||0;
+  const spent=parseFloat(r.budgetSpent)||0;
+  const rem=tot-spent;
+  const pace=tot?Math.round(spent/tot*100):0;
+  const paceColor=pace<=100?'#0cb87d':'#ef4444';
+  const today=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+
+  const logo=m.logoBase64?`<img src="${m.logoBase64}" style="height:48px;object-fit:contain;margin-bottom:12px">`:'' ;
+
+  const metricsRows=mets.map(met=>{
+    const g=parseFloat(met.goal),ac=parseFloat(met.actual);
+    let status='—',sColor='#888';
+    if(met.goal&&met.actual){
+      const pct=Math.round((ac/g)*100);
+      status=(ac>=g?'✓ ':'✗ ')+pct+'%';
+      sColor=ac>=g?'#054930':'#ef4444';
+    }
+    return `<tr>
+      <td style="padding:10px 14px;border-bottom:1px solid #e8f4ee;font-weight:600">${esc(met.name)}</td>
+      <td style="padding:10px 14px;border-bottom:1px solid #e8f4ee;color:#666">${esc(met.goal)||'—'}</td>
+      <td style="padding:10px 14px;border-bottom:1px solid #e8f4ee;font-weight:700;color:#054930">${esc(met.actual)||'—'}</td>
+      <td style="padding:10px 14px;border-bottom:1px solid #e8f4ee;font-weight:700;color:${sColor}">${status}</td>
+    </tr>`;
+  }).join('');
+
+  const campRows=cps.map(c=>`<tr>
+    <td style="padding:10px 14px;border-bottom:1px solid #e8f4ee;font-weight:600">${esc(c.name)||'—'}</td>
+    <td style="padding:10px 14px;border-bottom:1px solid #e8f4ee">${c.spend?Number(c.spend).toLocaleString()+' '+cur:'—'}</td>
+    <td style="padding:10px 14px;border-bottom:1px solid #e8f4ee">${c.impressions?Number(c.impressions).toLocaleString():'—'}</td>
+    <td style="padding:10px 14px;border-bottom:1px solid #e8f4ee">${c.clicks?Number(c.clicks).toLocaleString():'—'}</td>
+    <td style="padding:10px 14px;border-bottom:1px solid #e8f4ee;font-weight:600;color:#054930">${esc(c.result)||'—'}</td>
+    <td style="padding:10px 14px;border-bottom:1px solid #e8f4ee;color:#666;font-size:12px">${esc(c.notes)||''}</td>
+  </tr>`).join('');
+
+  const insightBlock=(icon,title,text,bg)=>text?`
+    <div style="background:${bg};border-radius:10px;padding:18px;flex:1;min-width:200px">
+      <div style="font-size:13px;font-weight:800;color:#054930;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">${icon} ${title}</div>
+      <div style="font-size:13px;color:#444;line-height:1.7;white-space:pre-wrap">${esc(text)}</div>
+    </div>`:'';
+
+  const html=`<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Report — ${esc(a.name)} — ${esc(r.period||today)}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f5f5f5;color:#1a1a1a}
+.page{max-width:900px;margin:30px auto;background:#fff;box-shadow:0 4px 40px rgba(0,0,0,.12);border-radius:16px;overflow:hidden}
+.cover{background:linear-gradient(135deg,#054930 0%,#076644 100%);color:#fff;padding:48px 48px 40px;text-align:center}
+.cover .badge{display:inline-block;background:rgba(12,184,125,.2);color:#0cb87d;border:1px solid rgba(12,184,125,.4);border-radius:20px;padding:4px 16px;font-size:12px;font-weight:700;letter-spacing:.5px;margin-bottom:16px;text-transform:uppercase}
+.cover h1{font-size:32px;font-weight:800;margin-bottom:8px}
+.cover .sub{opacity:.75;font-size:15px;margin-bottom:24px}
+.cover .meta{display:flex;gap:24px;justify-content:center;flex-wrap:wrap}
+.cover .meta-item{background:rgba(255,255,255,.1);border-radius:8px;padding:10px 20px;font-size:13px}
+.cover .meta-item strong{display:block;font-size:11px;opacity:.7;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.sec{padding:32px 48px;border-bottom:1px solid #e8f4ee}
+.sec:last-child{border-bottom:none}
+.sec-title{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:800;color:#054930;margin-bottom:20px;padding-bottom:10px;border-bottom:2px solid #0cb87d}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:0}
+.kpi-box{background:#f0f7f4;border-radius:10px;padding:16px;border:1px solid #c8e2d6}
+.kpi-box .lbl{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;font-weight:700}
+.kpi-box .val{font-size:22px;font-weight:800;color:#054930}
+.pacing-bar{background:#e0e7e4;border-radius:20px;height:12px;overflow:hidden;margin:10px 0}
+.pacing-fill{height:100%;border-radius:20px}
+tbl{width:100%;border-collapse:collapse}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f0f7f4;color:#888;font-weight:700;text-align:left;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #c8e2d6}
+.insights{display:flex;gap:16px;flex-wrap:wrap}
+.footer{background:#054930;color:rgba(255,255,255,.6);text-align:center;padding:16px;font-size:12px}
+.footer strong{color:#0cb87d}
+@media print{
+  body{background:#fff}
+  .page{margin:0;box-shadow:none;border-radius:0;max-width:100%}
+  .no-print{display:none}
+  .sec{page-break-inside:avoid}
+}
+</style></head><body>
+<div class="no-print" style="position:fixed;top:0;left:0;right:0;background:#054930;color:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;z-index:99;font-size:13px;font-weight:600">
+  <span>📄 Report Preview</span>
+  <div style="display:flex;gap:10px">
+    <button onclick="window.print()" style="background:#0cb87d;color:#fff;border:none;border-radius:7px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer">🖨️ Print / Save PDF</button>
+    <button onclick="window.close()" style="background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:7px;padding:8px 14px;font-size:13px;cursor:pointer">✕ Close</button>
+  </div>
+</div>
+<div style="height:52px" class="no-print"></div>
+<div class="page">
+
+  <!-- COVER -->
+  <div class="cover">
+    ${logo}
+    <div class="badge">Performance Report</div>
+    <h1>${esc(a.name)}</h1>
+    <div class="sub">${esc(r.period||today)}</div>
+    <div class="meta">
+      ${r.preparedBy?`<div class="meta-item"><strong>Prepared by</strong>${esc(r.preparedBy)}</div>`:''}
+      <div class="meta-item"><strong>Generated</strong>${today}</div>
+      ${m.objective?`<div class="meta-item"><strong>Objective</strong>${esc(m.objective)}</div>`:''}
+    </div>
+  </div>
+
+  <!-- BUDGET OVERVIEW -->
+  ${tot>0?`<div class="sec">
+    <div class="sec-title">💰 Budget Overview</div>
+    <div class="kpi-grid">
+      <div class="kpi-box"><div class="lbl">Total Budget</div><div class="val">${tot.toLocaleString()} ${cur}</div></div>
+      <div class="kpi-box"><div class="lbl">Amount Spent</div><div class="val">${spent.toLocaleString()} ${cur}</div></div>
+      <div class="kpi-box"><div class="lbl">Remaining</div><div class="val">${rem.toLocaleString()} ${cur}</div></div>
+      <div class="kpi-box"><div class="lbl">Budget Used</div><div class="val" style="color:${paceColor}">${pace}%</div></div>
+    </div>
+    <div style="margin-top:16px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:#888;margin-bottom:6px"><span>Pacing</span><span style="color:${paceColor}">Spent ${pace}% of total</span></div>
+      <div class="pacing-bar"><div class="pacing-fill" style="width:${Math.min(pace,100)}%;background:${paceColor}"></div></div>
+    </div>
+  </div>`:''}
+
+  <!-- KEY METRICS -->
+  ${mets.length>0?`<div class="sec">
+    <div class="sec-title">📊 Key Metrics — Planned vs. Actual</div>
+    <table>
+      <thead><tr><th>Metric</th><th>Goal</th><th>Actual</th><th>Status</th></tr></thead>
+      <tbody>${metricsRows}</tbody>
+    </table>
+  </div>`:''}
+
+  <!-- CAMPAIGN PERFORMANCE -->
+  ${cps.length>0?`<div class="sec">
+    <div class="sec-title">🎯 Campaign Performance</div>
+    <table>
+      <thead><tr><th>Campaign</th><th>Spend</th><th>Impressions</th><th>Clicks</th><th>Key Result</th><th>Notes</th></tr></thead>
+      <tbody>${campRows}</tbody>
+    </table>
+  </div>`:''}
+
+  <!-- INSIGHTS -->
+  ${(r.wins||r.challenges||r.recommendations)?`<div class="sec">
+    <div class="sec-title">💡 Insights & Recommendations</div>
+    <div class="insights">
+      ${insightBlock('✅','What Worked',r.wins,'#f0faf5')}
+      ${insightBlock('⚠️','Challenges',r.challenges,'#fffbf0')}
+      ${insightBlock('🚀','Recommendations',r.recommendations,'#f0f4ff')}
+    </div>
+  </div>`:''}
+
+  <div class="footer">Prepared by <strong>${esc(r.preparedBy||'Media Buyer')}</strong> · ${esc(a.name)} · ${esc(r.period||today)}</div>
+</div>
+</body></html>`;
+
+  const w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+}
+
 // ── RENDER ──
 function render(){renderTabs();renderSubBar();renderMain();updStats()}
 
@@ -589,6 +934,7 @@ function renderSubBar(){
     el.classList.remove('hidden');
     document.getElementById('st-tasks').classList.toggle('active',sub==='tasks');
     document.getElementById('st-mp').classList.toggle('active',sub==='mp');
+    document.getElementById('st-rep').classList.toggle('active',sub==='rep');
   }else{el.classList.add('hidden')}
 }
 
@@ -599,7 +945,9 @@ function renderMain(){
     main.innerHTML=`<div class="empty" style="margin-top:60px"><div class="ei">📋</div><h3>No Accounts Yet</h3><p>Click <strong>＋</strong> in the tab bar to create your first account.</p></div>`;
     return;
   }
-  sub==='tasks'?renderTasks(main,a):renderMP(main,a);
+  if(sub==='tasks')renderTasks(main,a);
+  else if(sub==='mp')renderMP(main,a);
+  else renderRep(main,a);
 }
 
 // ── TASKS VIEW ──
@@ -774,7 +1122,12 @@ function updStats(){
 }
 
 // ── INIT ──
-load();render();
+load();
+// migrate old accounts that don't have report field
+db.accounts.forEach(a=>{
+  if(!a.report)a.report={period:'',preparedBy:'',currency:'EGP',budgetTotal:'',budgetSpent:'',metrics:[],campaigns:[],wins:'',challenges:'',recommendations:''};
+});
+render();
 </script>
 </body>
 </html>
