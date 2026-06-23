@@ -161,6 +161,27 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
 .ei{font-size:36px;margin-bottom:10px}
 .empty h3{font-size:16px;font-weight:700;margin-bottom:4px;color:var(--p)}
 
+/* BRIEF CARDS */
+.brief-list{display:flex;flex-direction:column;gap:14px}
+.brief-card{background:#fff;border:1px solid var(--brd);border-radius:12px;overflow:hidden;transition:box-shadow .15s,border-color .15s}
+.brief-card:hover{box-shadow:0 3px 16px rgba(5,73,48,.09);border-color:#a8d5c0}
+.brief-hd{background:#f0f7f4;padding:13px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--brd)}
+.brief-hd input{flex:1;border:none;background:transparent;font-size:15px;font-weight:700;color:var(--p);font-family:inherit;outline:none;min-width:0}
+.brief-hd input::placeholder{color:#aaa;font-weight:400}
+.brief-body{padding:18px;display:flex;flex-direction:column;gap:14px}
+.brief-row{display:grid;gap:12px}
+.brief-field{display:flex;flex-direction:column;gap:4px}
+.brief-label{font-size:10px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:.6px}
+.brief-input{border:.5px solid var(--brd);border-radius:7px;padding:7px 11px;font-size:13px;font-family:inherit;background:#fff;color:var(--txt);width:100%;height:36px}
+.brief-input:focus{outline:none;border-color:var(--s);box-shadow:0 0 0 2px rgba(12,184,125,.1)}
+.brief-sel{border:.5px solid var(--brd);border-radius:7px;padding:7px 11px;font-size:13px;font-family:inherit;background:#fff;color:var(--txt);width:100%;height:36px}
+.brief-sel:focus{outline:none;border-color:var(--s)}
+.brief-ta{border:.5px solid var(--brd);border-radius:7px;padding:8px 11px;font-size:13px;font-family:inherit;background:#fff;color:var(--txt);width:100%;resize:vertical;min-height:64px}
+.brief-ta:focus{outline:none;border-color:var(--s);box-shadow:0 0 0 2px rgba(12,184,125,.1)}
+.brief-divider{border:none;border-top:1px dashed var(--brd);margin:0}
+.preview-brief-btn{background:var(--p);color:#fff;border:none;border-radius:7px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;transition:background .15s;white-space:nowrap}
+.preview-brief-btn:hover{background:var(--pd)}
+
 /* AUDIENCE CARDS */
 .aud-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
 .aud-card{background:#fff;border:1px solid var(--brd);border-radius:12px;overflow:hidden;transition:box-shadow .15s,border-color .15s}
@@ -240,6 +261,7 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
   <button class="sub-tab" id="st-mp" onclick="switchSub('mp')"><i class="ti ti-chart-dots-3"></i> Media Plan</button>
   <button class="sub-tab" id="st-rep" onclick="switchSub('rep')"><i class="ti ti-file-analytics"></i> Client Report</button>
   <button class="sub-tab" id="st-aud" onclick="switchSub('aud')"><i class="ti ti-users"></i> Audiences</button>
+  <button class="sub-tab" id="st-brief" onclick="switchSub('brief')"><i class="ti ti-pencil"></i> Creative Briefs</button>
   <span class="save-ind hidden" id="save-ind"></span>
 </div>
 
@@ -399,7 +421,8 @@ function addAcc(){
     tasks:[],
     mediaPlan:{clientName:name,totalBudget:30000,currency:cur,duration:'3',objective:obj,campaigns:DCAMPS(),kpis:dKPIs(obj,cur),logoBase64:null,logoAspect:1},
     report:{period:'',preparedBy:'',currency:cur,budgetTotal:'',budgetSpent:'',metrics:[],campaigns:[],topAds:[],campCols:defCampCols(),wins:'',challenges:'',recommendations:''},
-    audiences:[]
+    audiences:[],
+    briefs:[]
   };
   db.accounts.push(a);db.active=a.id;save();closeM();
   addT=false;sub='tasks';filt='all';killChart();render();
@@ -425,6 +448,7 @@ function switchSub(s){
   document.getElementById('st-mp').classList.toggle('active',s==='mp');
   document.getElementById('st-rep').classList.toggle('active',s==='rep');
   document.getElementById('st-aud').classList.toggle('active',s==='aud');
+  document.getElementById('st-brief').classList.toggle('active',s==='brief');
   renderMain();
   if(s==='mp')setTimeout(recalc,60);
 }
@@ -1197,6 +1221,238 @@ function renderAud(main,a){
   </div>`;
 }
 
+// ── CREATIVE BRIEFS ──
+function addBrief(){
+  const a=acct();if(!a)return;
+  a.briefs.unshift({
+    id:uid(),campaignName:'',platform:'',adType:'',format:'',duration:'',deadline:'',
+    objective:'',targetAudience:'',keyMessage:'',hook:'',cta:'',
+    tone:'',dos:'',donts:'',references:'',notes:'',
+    status:'draft',createdAt:new Date().toISOString()
+  });
+  save();renderMain();
+}
+function delBrief(id){const a=acct();if(!a)return;a.briefs=a.briefs.filter(x=>x.id!==id);save();renderMain()}
+function updBrief(id,field,val){const a=acct();if(!a)return;const b=a.briefs.find(x=>x.id===id);if(b){b[field]=val;save()}}
+
+function renderBrief(main,a){
+  const briefs=a.briefs||[];
+  main.innerHTML=`
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px">
+    <div>
+      <div style="font-size:22px;font-weight:800;color:var(--p)">${esc(a.name)} — Creative Briefs</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:3px">${briefs.length} brief${briefs.length!==1?'s':''}</div>
+    </div>
+    <button class="btn btn-p btn-sm" onclick="addBrief()">＋ New Brief</button>
+  </div>
+  ${briefs.length===0?`
+    <div class="empty" style="margin-top:40px">
+      <div class="ei">✏️</div>
+      <h3>No briefs yet</h3>
+      <p>Create your first creative brief to send to the design team.</p>
+    </div>`
+  :`<div class="brief-list">${briefs.map(b=>briefCard(b,a)).join('')}</div>`}`;
+}
+
+function briefCard(b,a){
+  const statusOpts=[
+    {val:'draft',label:'📝 Draft',bg:'#f3f4f6',color:'#6b7280'},
+    {val:'sent',label:'📤 Sent',bg:'#dbeafe',color:'#1d4ed8'},
+    {val:'in-review',label:'👀 In Review',bg:'#fef3c7',color:'#d97706'},
+    {val:'done',label:'✅ Done',bg:'#d1fae5',color:'#065f46'}
+  ];
+  const adTypes=['Video','Image','Carousel','Story','Reel','Collection','GIF'];
+  const formats=['1:1 (1080×1080)','9:16 (1080×1920)','16:9 (1920×1080)','4:5 (1080×1350)','1.91:1 (1200×628)'];
+  const durations=['6s','15s','30s','45s','60s','90s+'];
+  const tones=['Professional','Fun & Energetic','Emotional','Urgent','Educational','Inspirational','Conversational'];
+  const objectives=['Brand Awareness','Reach','Traffic','Engagement','Lead Generation','Conversions','App Installs','Video Views','Sales'];
+
+  return `<div class="brief-card">
+    <div class="brief-hd">
+      <i class="ti ti-pencil" style="color:var(--s);font-size:16px;flex-shrink:0"></i>
+      <input value="${esc(b.campaignName)}" placeholder="Campaign / Brief name..." oninput="updBrief('${b.id}','campaignName',this.value)"/>
+      <select class="brief-sel" style="width:auto;flex-shrink:0" oninput="updBrief('${b.id}','status',this.value)">
+        ${statusOpts.map(o=>`<option value="${o.val}"${b.status===o.val?' selected':''}>${o.label}</option>`).join('')}
+      </select>
+      <button class="preview-brief-btn" onclick="previewBrief('${b.id}')"><i class="ti ti-eye"></i> Preview</button>
+      <button class="btn btn-d btn-xs" onclick="delBrief('${b.id}')"><i class="ti ti-trash"></i></button>
+    </div>
+    <div class="brief-body">
+
+      <div class="brief-row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr">
+        <div class="brief-field"><div class="brief-label">Platform</div>
+          <select class="brief-sel" oninput="updBrief('${b.id}','platform',this.value)">
+            <option value="">Select</option>
+            ${ADPLATS.map(p=>`<option value="${p}"${b.platform===p?' selected':''}>${p}</option>`).join('')}
+          </select>
+        </div>
+        <div class="brief-field"><div class="brief-label">Ad Type</div>
+          <select class="brief-sel" oninput="updBrief('${b.id}','adType',this.value)">
+            <option value="">Select</option>
+            ${adTypes.map(t=>`<option value="${t}"${b.adType===t?' selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+        <div class="brief-field"><div class="brief-label">Format / Dimensions</div>
+          <select class="brief-sel" oninput="updBrief('${b.id}','format',this.value)">
+            <option value="">Select</option>
+            ${formats.map(f=>`<option value="${f}"${b.format===f?' selected':''}>${f}</option>`).join('')}
+          </select>
+        </div>
+        <div class="brief-field"><div class="brief-label">Duration (Video)</div>
+          <select class="brief-sel" oninput="updBrief('${b.id}','duration',this.value)">
+            <option value="">N/A</option>
+            ${durations.map(d=>`<option value="${d}"${b.duration===d?' selected':''}>${d}</option>`).join('')}
+          </select>
+        </div>
+        <div class="brief-field"><div class="brief-label">Deadline</div>
+          <input type="date" class="brief-input" value="${esc(b.deadline)}" oninput="updBrief('${b.id}','deadline',this.value)"/>
+        </div>
+      </div>
+
+      <hr class="brief-divider"/>
+
+      <div class="brief-row" style="grid-template-columns:1fr 1fr">
+        <div class="brief-field"><div class="brief-label">Objective</div>
+          <select class="brief-sel" oninput="updBrief('${b.id}','objective',this.value)">
+            <option value="">Select</option>
+            ${objectives.map(o=>`<option value="${o}"${b.objective===o?' selected':''}>${o}</option>`).join('')}
+          </select>
+        </div>
+        <div class="brief-field"><div class="brief-label">Tone & Style</div>
+          <select class="brief-sel" oninput="updBrief('${b.id}','tone',this.value)">
+            <option value="">Select</option>
+            ${tones.map(t=>`<option value="${t}"${b.tone===t?' selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+
+      <div class="brief-field">
+        <div class="brief-label">Target Audience — Who will see this ad?</div>
+        <input class="brief-input" value="${esc(b.targetAudience)}" placeholder="e.g. Women 25–40, Cairo, interested in skincare, retargeting website visitors" oninput="updBrief('${b.id}','targetAudience',this.value)"/>
+      </div>
+
+      <div class="brief-field">
+        <div class="brief-label">Key Message — What's the ONE thing they should understand?</div>
+        <input class="brief-input" value="${esc(b.keyMessage)}" placeholder="e.g. Our product solves X problem 3x faster than competitors" oninput="updBrief('${b.id}','keyMessage',this.value)"/>
+      </div>
+
+      <div class="brief-row" style="grid-template-columns:1fr 1fr">
+        <div class="brief-field">
+          <div class="brief-label">Hook — First 3 seconds</div>
+          <textarea class="brief-ta" placeholder="e.g. Open with a bold question: 'Still wasting money on ads that don't convert?'" oninput="updBrief('${b.id}','hook',this.value)">${esc(b.hook)}</textarea>
+        </div>
+        <div class="brief-field">
+          <div class="brief-label">CTA — Call to Action</div>
+          <textarea class="brief-ta" placeholder="e.g. 'Shop Now' button → product page. Mention limited offer in last 3 seconds." oninput="updBrief('${b.id}','cta',this.value)">${esc(b.cta)}</textarea>
+        </div>
+      </div>
+
+      <hr class="brief-divider"/>
+
+      <div class="brief-row" style="grid-template-columns:1fr 1fr">
+        <div class="brief-field">
+          <div class="brief-label">✅ Do's — Must Include</div>
+          <textarea class="brief-ta" placeholder="- Show product in use&#10;- Include social proof&#10;- Arabic subtitles&#10;- Brand colors only" oninput="updBrief('${b.id}','dos',this.value)">${esc(b.dos)}</textarea>
+        </div>
+        <div class="brief-field">
+          <div class="brief-label">🚫 Don'ts — Must Avoid</div>
+          <textarea class="brief-ta" placeholder="- No competitor mentions&#10;- No white backgrounds&#10;- No text-heavy visuals&#10;- No stock footage" oninput="updBrief('${b.id}','donts',this.value)">${esc(b.donts)}</textarea>
+        </div>
+      </div>
+
+      <div class="brief-field">
+        <div class="brief-label">Reference Ads — Links or descriptions of similar ads for inspiration</div>
+        <textarea class="brief-ta" style="min-height:50px" placeholder="https://... or describe: 'Similar to Nike's Run Club ad — fast cuts, upbeat music, product shots'" oninput="updBrief('${b.id}','references',this.value)">${esc(b.references)}</textarea>
+      </div>
+
+      <div class="brief-field">
+        <div class="brief-label">Additional Notes</div>
+        <textarea class="brief-ta" style="min-height:50px" placeholder="Any extra context, brand guidelines, file format requirements..." oninput="updBrief('${b.id}','notes',this.value)">${esc(b.notes)}</textarea>
+      </div>
+
+    </div>
+  </div>`;
+}
+
+function previewBrief(id){
+  const a=acct();if(!a)return;
+  const b=a.briefs.find(x=>x.id===id);if(!b)return;
+  const today=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const dl=b.deadline?new Date(b.deadline+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'—';
+
+  const row=(label,val)=>val?`
+    <tr>
+      <td style="padding:10px 14px;font-weight:700;color:#054930;font-size:12px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;width:160px;border-bottom:1px solid #e8f4ee;vertical-align:top">${label}</td>
+      <td style="padding:10px 14px;border-bottom:1px solid #e8f4ee;font-size:14px;line-height:1.6;white-space:pre-wrap">${esc(val)}</td>
+    </tr>`:'';
+
+  const section=(title,icon,rows)=>`
+    <div style="margin-bottom:28px">
+      <div style="font-size:16px;font-weight:800;color:#054930;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #0cb87d;display:flex;align-items:center;gap:8px">${icon} ${title}</div>
+      <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e8f4ee">${rows}</table>
+    </div>`;
+
+  const html=`<!DOCTYPE html><html><head>
+<meta charset="UTF-8"><title>Creative Brief — ${esc(b.campaignName||'Untitled')}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f5f5f5;color:#1a1a1a}
+.page{max-width:820px;margin:30px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 40px rgba(0,0,0,.12)}
+@media print{body{background:#fff}.page{margin:0;box-shadow:none;border-radius:0;max-width:100%}.no-print{display:none}}
+</style></head><body>
+<div class="no-print" style="position:fixed;top:0;left:0;right:0;background:#054930;color:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;z-index:99;font-size:13px;font-weight:600">
+  <span>✏️ Creative Brief</span>
+  <div style="display:flex;gap:10px">
+    <button onclick="window.print()" style="background:#0cb87d;color:#fff;border:none;border-radius:7px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer">🖨️ Print / Save PDF</button>
+    <button onclick="window.close()" style="background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:7px;padding:8px 14px;font-size:13px;cursor:pointer">✕ Close</button>
+  </div>
+</div>
+<div style="height:52px" class="no-print"></div>
+<div class="page">
+
+  <div style="background:linear-gradient(135deg,#054930,#076644);color:#fff;padding:40px 48px">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:.7;margin-bottom:8px">Creative Brief</div>
+    <div style="font-size:28px;font-weight:800;margin-bottom:4px">${esc(b.campaignName||'Untitled Brief')}</div>
+    <div style="font-size:14px;opacity:.75;margin-bottom:20px">${esc(a.name)} · ${today}</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      ${b.platform?`<span style="background:rgba(12,184,125,.2);border:1px solid rgba(12,184,125,.4);color:#0cb87d;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700">${esc(b.platform)}</span>`:''}
+      ${b.adType?`<span style="background:rgba(255,255,255,.15);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700">${esc(b.adType)}</span>`:''}
+      ${b.format?`<span style="background:rgba(255,255,255,.15);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700">${esc(b.format)}</span>`:''}
+      ${b.duration?`<span style="background:rgba(255,255,255,.15);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700">${esc(b.duration)}</span>`:''}
+      ${b.deadline?`<span style="background:rgba(239,68,68,.25);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700">📅 Deadline: ${dl}</span>`:''}
+    </div>
+  </div>
+
+  <div style="padding:36px 48px">
+    ${section('Campaign Info','🎯',
+      row('Objective', b.objective)+
+      row('Target Audience', b.targetAudience)+
+      row('Tone & Style', b.tone)
+    )}
+    ${section('The Message','💬',
+      row('Key Message', b.keyMessage)+
+      row('Hook (First 3s)', b.hook)+
+      row('Call to Action', b.cta)
+    )}
+    ${(b.dos||b.donts||b.references)?section('Creative Direction','🎨',
+      row("✅ Do's", b.dos)+
+      row("🚫 Don'ts", b.donts)+
+      row('References', b.references)
+    ):''}
+    ${b.notes?section('Additional Notes','📝', row('Notes', b.notes)):''}
+  </div>
+
+  <div style="background:#054930;color:rgba(255,255,255,.6);text-align:center;padding:14px;font-size:12px">
+    <strong style="color:#0cb87d">${esc(a.name)}</strong> · Creative Brief · ${today}
+  </div>
+</div>
+</body></html>`;
+
+  const w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+}
+
 // ── RENDER ──
 function render(){renderTabs();renderSubBar();renderMain();updStats()}
 
@@ -1224,6 +1480,7 @@ function renderSubBar(){
     document.getElementById('st-mp').classList.toggle('active',sub==='mp');
     document.getElementById('st-rep').classList.toggle('active',sub==='rep');
     document.getElementById('st-aud').classList.toggle('active',sub==='aud');
+    document.getElementById('st-brief').classList.toggle('active',sub==='brief');
   }else{el.classList.add('hidden')}
 }
 
@@ -1237,7 +1494,8 @@ function renderMain(){
   if(sub==='tasks')renderTasks(main,a);
   else if(sub==='mp')renderMP(main,a);
   else if(sub==='rep')renderRep(main,a);
-  else renderAud(main,a);
+  else if(sub==='aud')renderAud(main,a);
+  else renderBrief(main,a);
 }
 
 // ── TASKS VIEW ──
@@ -1419,6 +1677,7 @@ db.accounts.forEach(a=>{
   if(!a.report.topAds)a.report.topAds=[];
   if(!a.report.campCols)a.report.campCols=defCampCols();
   if(!a.audiences)a.audiences=[];
+  if(!a.briefs)a.briefs=[];
 });
 render();
 </script>
