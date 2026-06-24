@@ -492,6 +492,13 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
 </div>
 
 <!-- DIRECTION MODAL -->
+<!-- AI GENERATE MODAL -->
+<div class="dir-modal-overlay hidden" id="ai-gen-overlay" onclick="if(event.target===this)closeAIGenModal()">
+  <div class="dir-modal-box" style="max-width:500px;width:100%" onclick="event.stopPropagation()">
+    <div id="ai-gen-modal-content"></div>
+  </div>
+</div>
+
 <div class="dir-modal-overlay hidden" id="dir-modal-overlay" onclick="closeDirModal(event)">
   <div class="dir-modal-box" onclick="event.stopPropagation()">
     <div id="dir-modal-content"></div>
@@ -2605,79 +2612,175 @@ async function aiGenerate(prompt,onResult){
   }
 }
 
-async function aiGenerateUSPs(){
+// ── AI GENERATE MODAL ──
+const AI_GEN_STAR='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+
+let _aiGenType=null;
+
+function openAIGenModal(type){
+  if(!aiKey()){openSettings();return}
+  _aiGenType=type;
   const a=acct();if(!a)return;
-  const btn=document.getElementById('ai-usp-btn');
-  if(btn){btn.disabled=true;btn.innerHTML='⏳ Generating...'}
-  const prompt=`أنت خبير media buying. أعطني 5 USPs (unique selling points) مهمة وعملية للحساب "${a.name}" في قطاع "${a.industry||'غير محدد'}" على منصة "${a.platform||'غير محدد'}".
-لكل USP اكتب جملة واحدة موجزة وقوية.
-الشكل المطلوب (رقم - نقطة فقط):
-1. ...
-2. ...
-3. ...
-4. ...
-5. ...`;
-  await aiGenerate(prompt,text=>{
-    const lines=text.split('\n').filter(l=>/^\d+\./.test(l.trim()));
-    lines.forEach(l=>{
-      const t=l.replace(/^\d+\.\s*/,'').trim();
-      if(t&&a.strategy){a.strategy.usps.push({id:uid(),text:t,notes:''})}
-    });
-    if(lines.length>0){save();renderMain()}
-    else alert('لم يتم التعرف على الـ USPs. جرب مرة أخرى.');
-  });
-  if(btn){btn.disabled=false;btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> AI Generate'}
+  const overlay=document.getElementById('ai-gen-overlay');
+  const box=document.getElementById('ai-gen-modal-content');
+
+  const configs={
+    usps:{
+      title:'🎯 Generate USPs',
+      subtitle:'أدخل تفاصيل المنتج وهجنريتلك أهم الـ unique selling points',
+      fields:[
+        {id:'ag-product',   label:'المنتج / الخدمة',        placeholder:'وصف مختصر للمنتج أو الخدمة...',type:'textarea'},
+        {id:'ag-audience',  label:'الجمهور المستهدف',       placeholder:'مثال: شباب 18-35، أمهات، رجال أعمال...',type:'text'},
+        {id:'ag-problem',   label:'المشكلة اللي بيحلها',     placeholder:'ما هي المشكلة أو الاحتياج الذي يحله منتجك؟',type:'textarea'},
+        {id:'ag-count',     label:'عدد الـ USPs',           type:'select',options:['3','5','7','10'],default:'5'},
+      ]
+    },
+    angles:{
+      title:'💡 Generate Ad Angles',
+      subtitle:'أدخل التفاصيل وهجنريتلك angles إعلانية مختلفة ومبتكرة',
+      fields:[
+        {id:'ag-product',   label:'المنتج / الخدمة',        placeholder:'وصف مختصر...',type:'textarea'},
+        {id:'ag-audience',  label:'الجمهور المستهدف',       placeholder:'مثال: شباب 18-35، أمهات...',type:'text'},
+        {id:'ag-competitors',label:'المنافسين الرئيسيين',   placeholder:'مثال: Nike, Adidas... (اختياري)',type:'text'},
+        {id:'ag-platform',  label:'المنصة الإعلانية',       type:'select',options:['Meta (Facebook/Instagram)','TikTok','Google','Snapchat','YouTube'],default:a.platform||'Meta (Facebook/Instagram)'},
+        {id:'ag-count',     label:'عدد الـ Angles',         type:'select',options:['3','5','7','10'],default:'5'},
+      ]
+    },
+    hooks:{
+      title:'🎣 Generate Hooks (First 3 Seconds)',
+      subtitle:'أدخل التفاصيل وهجنريتلك hooks قوية تجذب الانتباه فوراً',
+      fields:[
+        {id:'ag-product',   label:'المنتج / الخدمة',        placeholder:'وصف مختصر...',type:'textarea'},
+        {id:'ag-audience',  label:'الجمهور المستهدف',       placeholder:'مثال: شباب 18-35...',type:'text'},
+        {id:'ag-objective', label:'الـ Objective من الإعلان',type:'select',options:['Brand Awareness','Traffic','Conversions','App Installs','Lead Generation','Sales'],default:'Conversions'},
+        {id:'ag-tone',      label:'الـ Tone',               type:'select',options:['مباشر وعاجل','عاطفي','مضحك وخفيف','تعليمي','استفزازي','إلهامي'],default:'مباشر وعاجل'},
+        {id:'ag-lang',      label:'لغة الـ Hook',           type:'select',options:['عربي','إنجليزي','عربي وإنجليزي (مزيج)'],default:'عربي'},
+        {id:'ag-count',     label:'عدد الـ Hooks',          type:'select',options:['3','5','7','10'],default:'5'},
+      ]
+    }
+  };
+
+  const cfg=configs[type];
+  const fieldsHtml=cfg.fields.map(f=>{
+    if(f.type==='textarea')return`<div class="fg"><label>${f.label}</label><textarea id="${f.id}" placeholder="${f.placeholder||''}" rows="2" style="resize:vertical;min-height:60px"></textarea></div>`;
+    if(f.type==='text')return`<div class="fg"><label>${f.label}</label><input id="${f.id}" type="text" placeholder="${f.placeholder||''}"/></div>`;
+    if(f.type==='select'){
+      const opts=f.options.map(o=>`<option value="${o}"${o===(f.default||f.options[0])?'selected':''}>${o}</option>`).join('');
+      return`<div class="fg"><label>${f.label}</label><select id="${f.id}">${opts}</select></div>`;
+    }
+    return'';
+  }).join('');
+
+  // Pre-fill account info if available
+  box.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div style="font-size:17px;font-weight:800;color:var(--p)">${cfg.title}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px">${cfg.subtitle}</div>
+      </div>
+      <button onclick="closeAIGenModal()" style="background:#f3f4f6;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;color:#6b7280">✕</button>
+    </div>
+    <div style="background:#f0f9f4;border:1px solid #bbf0d9;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--p)">
+      <strong>الحساب:</strong> ${esc(a.name)} &nbsp;|&nbsp; <strong>القطاع:</strong> ${esc(a.industry||'غير محدد')} &nbsp;|&nbsp; <strong>الميزانية:</strong> ${esc(a.budget||'غير محدد')}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px">${fieldsHtml}</div>
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
+      <button class="btn btn-g" onclick="closeAIGenModal()">إلغاء</button>
+      <button onclick="runAIGen()" id="ai-gen-run-btn" style="background:linear-gradient(135deg,#f55036,#e8431e);color:#fff;border:none;border-radius:8px;padding:10px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:7px">
+        ${AI_GEN_STAR} Generate
+      </button>
+    </div>
+  `;
+
+  // auto-fill product field from account name/industry hint
+  const pf=document.getElementById('ag-product');
+  if(pf&&!pf.value){pf.placeholder=`مثال: ${a.name} - ${a.industry||'منتج أو خدمة'}`}
+
+  overlay.classList.remove('hidden');
+  setTimeout(()=>{const f=box.querySelector('textarea,input');if(f)f.focus()},80);
 }
 
-async function aiGenerateAngles(){
+function closeAIGenModal(){document.getElementById('ai-gen-overlay').classList.add('hidden')}
+
+async function runAIGen(){
   const a=acct();if(!a)return;
-  const btn=document.getElementById('ai-ang-btn');
+  const btn=document.getElementById('ai-gen-run-btn');
   if(btn){btn.disabled=true;btn.innerHTML='⏳ Generating...'}
-  const uspsText=(a.strategy?.usps||[]).map(u=>u.text).filter(Boolean).join(', ')||'غير محددة';
-  const prompt=`أنت خبير media buying. اقترح 5 ad angles مختلفة ومبتكرة لحساب "${a.name}" (${a.industry||'غير محدد'}).
-USPs الموجودة: ${uspsText}
-لكل angle: اكتب اسم الـ angle فقط (5-8 كلمات وصفية).
-الشكل:
+
+  const v=id=>document.getElementById(id)?.value?.trim()||'';
+  const count=v('ag-count')||'5';
+
+  let prompt='';
+  if(_aiGenType==='usps'){
+    const product=v('ag-product');
+    const audience=v('ag-audience');
+    const problem=v('ag-problem');
+    prompt=`أنت خبير copywriting وmedia buying.
+الحساب: "${a.name}" | القطاع: ${a.industry||'غير محدد'} | المنصة: ${a.platform||'غير محدد'}
+${product?`المنتج/الخدمة: ${product}`:''}
+${audience?`الجمهور المستهدف: ${audience}`:''}
+${problem?`المشكلة التي يحلها: ${problem}`:''}
+اكتب ${count} USPs (unique selling points) قوية وعملية. كل USP جملة واحدة مختصرة ومقنعة.
+الشكل فقط (أرقام):
 1. ...
-2. ...
-3. ...
-4. ...
-5. ...`;
+2. ...`;
+  }else if(_aiGenType==='angles'){
+    const product=v('ag-product');
+    const audience=v('ag-audience');
+    const competitors=v('ag-competitors');
+    const platform=v('ag-platform');
+    const uspsText=(a.strategy?.usps||[]).map(u=>u.text).filter(Boolean).join(', ');
+    prompt=`أنت خبير media buying ومتخصص في إعلانات ${platform}.
+الحساب: "${a.name}" | القطاع: ${a.industry||'غير محدد'}
+${product?`المنتج: ${product}`:''}
+${audience?`الجمهور: ${audience}`:''}
+${competitors?`المنافسين: ${competitors}`:''}
+${uspsText?`USPs المتاحة: ${uspsText}`:''}
+اقترح ${count} ad angles مختلفة ومبتكرة. كل angle: اسم وصفي (5-8 كلمات).
+الشكل فقط (أرقام):
+1. ...
+2. ...`;
+  }else if(_aiGenType==='hooks'){
+    const product=v('ag-product');
+    const audience=v('ag-audience');
+    const objective=v('ag-objective');
+    const tone=v('ag-tone');
+    const lang=v('ag-lang');
+    prompt=`أنت خبير copywriting متخصص في إعلانات الـ social media.
+الحساب: "${a.name}" | القطاع: ${a.industry||'غير محدد'}
+${product?`المنتج: ${product}`:''}
+${audience?`الجمهور: ${audience}`:''}
+الـ Objective: ${objective||'Conversions'}
+الـ Tone: ${tone||'مباشر وعاجل'}
+اللغة: ${lang||'عربي'}
+اكتب ${count} hooks قوية لأول 3 ثواني من الإعلان. كل hook يجذب الانتباه فوراً ويوقف الـ scroll.
+الشكل فقط (أرقام، الـ hook بالكامل):
+1. ...
+2. ...`;
+  }
+
   await aiGenerate(prompt,text=>{
-    const lines=text.split('\n').filter(l=>/^\d+\./.test(l.trim()));
-    lines.forEach(l=>{
-      const n=l.replace(/^\d+\.\s*/,'').trim();
-      if(n&&a.strategy){a.strategy.angles.unshift({id:uid(),name:n,angleType:'',hypothesis:'',funnel:'top',status:'to-test',notes:''})}
-    });
-    if(lines.length>0){save();renderMain()}
-    else alert('لم يتم التعرف على الـ angles. جرب مرة أخرى.');
+    const lines=text.split('\n').filter(l=>/^\d+[\.\-\)]/.test(l.trim()));
+    if(_aiGenType==='usps'){
+      lines.forEach(l=>{const t=l.replace(/^\d+[\.\-\)]\s*/,'').trim();if(t)a.strategy.usps.push({id:uid(),text:t,notes:''})});
+    }else if(_aiGenType==='angles'){
+      lines.forEach(l=>{const n=l.replace(/^\d+[\.\-\)]\s*/,'').trim();if(n)a.strategy.angles.unshift({id:uid(),name:n,angleType:'',hypothesis:'',funnel:'top',status:'to-test',notes:''})});
+    }else if(_aiGenType==='hooks'){
+      lines.forEach(l=>{const f=l.replace(/^\d+[\.\-\)]\s*/,'').replace(/^\[|\]$/g,'').trim();if(f)a.strategy.hooks.unshift({id:uid(),formula:f,example:'',funnel:'top',status:'to-test'})});
+    }
+    if(lines.length>0){save();closeAIGenModal();renderMain()}
+    else{
+      if(btn){btn.disabled=false;btn.innerHTML=AI_GEN_STAR+' Generate'}
+      if(!aiOpen)toggleAI();
+      showAIStatus('⚠️ ما قدرتش أفهم الـ response. جرب تاني أو غيّر التفاصيل.');
+    }
   });
-  if(btn){btn.disabled=false;btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> AI Generate'}
+  if(btn){btn.disabled=false;btn.innerHTML=AI_GEN_STAR+' Generate'}
 }
 
-async function aiGenerateHooks(){
-  const a=acct();if(!a)return;
-  const btn=document.getElementById('ai-hook-btn');
-  if(btn){btn.disabled=true;btn.innerHTML='⏳ Generating...'}
-  const prompt=`أنت خبير في كتابة إعلانات رقمية. اكتب 5 hook formulas قوية لأول 3 ثواني لإعلانات "${a.name}" (${a.industry||'غير محدد'}).
-كل hook يجب أن يجذب الانتباه فوراً.
-الشكل:
-1. [الـ hook بالكامل - جملة أو سؤال مباشر]
-2. ...
-3. ...
-4. ...
-5. ...`;
-  await aiGenerate(prompt,text=>{
-    const lines=text.split('\n').filter(l=>/^\d+\./.test(l.trim()));
-    lines.forEach(l=>{
-      const f=l.replace(/^\d+\.\s*/,'').replace(/^\[|\]$/g,'').trim();
-      if(f&&a.strategy){a.strategy.hooks.unshift({id:uid(),formula:f,example:'',funnel:'top',status:'to-test'})}
-    });
-    if(lines.length>0){save();renderMain()}
-    else alert('لم يتم التعرف على الـ hooks. جرب مرة أخرى.');
-  });
-  if(btn){btn.disabled=false;btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> AI Generate'}
-}
+function aiGenerateUSPs(){openAIGenModal('usps')}
+function aiGenerateAngles(){openAIGenModal('angles')}
+function aiGenerateHooks(){openAIGenModal('hooks')}
 
 // ── RENDER ──
 function render(){renderTabs();renderSubBar();renderMain();updStats()}
