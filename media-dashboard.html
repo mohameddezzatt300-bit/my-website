@@ -1872,6 +1872,41 @@ function renderStrategy(main,a){
     </div>
   </div>
 
+  <!-- Campaign Names -->
+  <div class="strat-section">
+    <div class="strat-section-hd">
+      <div class="strat-section-title">📛 Campaign Names</div>
+      <div style="display:flex;gap:7px;align-items:center">
+        <button class="ai-gen-btn" onclick="aiGenerateCampNames()" id="ai-camp-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> AI Generate</button>
+        <button class="btn btn-p btn-xs" onclick="addCampName()">＋ Add</button>
+      </div>
+    </div>
+    <div class="strat-section-body" style="padding:${s.campNames&&s.campNames.length?'10px 16px':'18px'}">
+      ${!s.campNames||s.campNames.length===0
+        ?`<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px 0">اجنريت أسماء للحملات أو أضف يدوي</div>`
+        :`<div style="display:flex;flex-direction:column;gap:8px">
+          ${s.campNames.map(cn=>`
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f9fafb;border:1px solid var(--brd);border-radius:10px;transition:background .15s" onmouseover="this.style.background='#f0f7f4'" onmouseout="this.style.background='#f9fafb'">
+              <div style="flex:1;font-size:13px;font-weight:700;color:#111;direction:rtl">${esc(cn.name)}</div>
+              ${cn.theme?`<div style="font-size:11px;color:var(--muted);background:#f3f4f6;border-radius:6px;padding:3px 8px;white-space:nowrap;flex-shrink:0">${esc(cn.theme)}</div>`:''}
+              <select onchange="updCampName('${cn.id}','status',this.value)"
+                style="border:1px solid var(--brd);border-radius:7px;padding:4px 8px;font-size:11px;font-weight:700;font-family:inherit;outline:none;background:${cn.status==='active'?'#d1fae5':cn.status==='used'?'#dbeafe':'#f3f4f6'};color:${cn.status==='active'?'#065f46':cn.status==='used'?'#1e40af':'#6b7280'};cursor:pointer;flex-shrink:0">
+                <option value="idea"${cn.status==='idea'?' selected':''}>💡 Idea</option>
+                <option value="active"${cn.status==='active'?' selected':''}>✅ Active</option>
+                <option value="used"${cn.status==='used'?' selected':''}>📌 Used</option>
+                <option value="archived"${cn.status==='archived'?' selected':''}>🗄️ Archived</option>
+              </select>
+              <button onclick="copyCampName('${cn.id}')" id="copy-cn-${cn.id}"
+                style="background:#f0f4ff;border:1px solid #c7d9f5;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;color:#4285f4;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .12s;flex-shrink:0"
+                onmouseover="this.style.background='#e0ebff'" onmouseout="this.style.background='#f0f4ff'">📋 Copy</button>
+              <button onclick="delCampName('${cn.id}')"
+                style="background:transparent;border:none;color:#d1d5db;cursor:pointer;font-size:15px;padding:4px;flex-shrink:0;transition:color .12s;line-height:1"
+                onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#d1d5db'">✕</button>
+            </div>`).join('')}
+          </div>`}
+    </div>
+  </div>
+
   <!-- Notes Grid -->
   <div class="strat-grid2" style="gap:16px">
     <div class="strat-section">
@@ -2657,6 +2692,18 @@ function openAIGenModal(type){
         {id:'ag-lang',      label:'لغة الـ Hook',           type:'select',options:['عربي','إنجليزي','عربي وإنجليزي (مزيج)'],default:'عربي'},
         {id:'ag-count',     label:'عدد الـ Hooks',          type:'select',options:['3','5','7','10'],default:'5'},
       ]
+    },
+    campnames:{
+      title:'📛 Campaign Name Generator',
+      subtitle:'اكتب تفاصيل الحملة وهجنريتلك أسماء إبداعية ومميزة',
+      fields:[
+        {id:'ag-objective', label:'الـ Objective من الحملة', type:'select',options:['Sales / Conversions','Brand Awareness','Lead Generation','Engagement','App Installs','Traffic','Retargeting'],default:'Sales / Conversions'},
+        {id:'ag-product',   label:'المنتج / الخدمة',         placeholder:'مثال: كريم للعناية بالبشرة، تطبيق توصيل، كورس أونلاين...',type:'text'},
+        {id:'ag-theme',     label:'الـ Theme أو الفكرة',     placeholder:'مثال: رمضان، خصم 50%، إطلاق منتج جديد، موسم الصيف...',type:'text'},
+        {id:'ag-tone',      label:'الـ Tone',                type:'select',options:['Bold & Direct','Playful & Fun','Professional','Inspiring','Urgent','Minimal & Clean'],default:'Bold & Direct'},
+        {id:'ag-lang',      label:'لغة الاسم',               type:'select',options:['عربي','إنجليزي','عربي وإنجليزي (مزيج)'],default:'عربي'},
+        {id:'ag-count',     label:'عدد الأسماء',             type:'select',options:['5','10','15'],default:'10'},
+      ]
     }
   };
 
@@ -2719,9 +2766,9 @@ function openAIGenModal(type){
     return'';
   }
 
-  const icons={usps:'🎯',angles:'💡',hooks:'🎣'};
-  const gradients={usps:'135deg,#054930,#0cb87d',angles:'135deg,#1a1a2e,#16213e,#0f3460',hooks:'135deg,#7c3aed,#4f46e5'};
-  const accentColors={usps:'#0cb87d',angles:'#4285f4',hooks:'#7c3aed'};
+  const icons={usps:'🎯',angles:'💡',hooks:'🎣',campnames:'📛'};
+  const gradients={usps:'135deg,#054930,#0cb87d',angles:'135deg,#1a1a2e,#16213e,#0f3460',hooks:'135deg,#7c3aed,#4f46e5',campnames:'135deg,#b45309,#d97706,#f59e0b'};
+  const accentColors={usps:'#0cb87d',angles:'#4285f4',hooks:'#7c3aed',campnames:'#d97706'};
   const accent=accentColors[type]||'#0cb87d';
   const grad=gradients[type]||gradients.usps;
 
@@ -2842,6 +2889,29 @@ ${audience?`الجمهور: ${audience}`:''}
 الشكل فقط (أرقام، الـ hook بالكامل):
 1. ...
 2. ...`;
+  }else if(_aiGenType==='campnames'){
+    const product=v('ag-product');
+    const theme=v('ag-theme');
+    const objective=v('ag-objective');
+    const tone=v('ag-tone');
+    const lang=v('ag-lang');
+    prompt=`أنت خبير في تسمية الحملات الإعلانية وتطوير المحتوى.
+الحساب: "${a.name}" | القطاع: ${a.industry||'غير محدد'}
+${product?`المنتج / الخدمة: ${product}`:''}
+${theme?`الـ Theme أو المناسبة: ${theme}`:''}
+الـ Objective: ${objective||'Sales'}
+الـ Tone المطلوب: ${tone||'Bold & Direct'}
+اللغة: ${lang||'عربي'}
+
+اجنريت ${count} اسم حملة إعلانية مبدعة ومميزة. كل اسم يكون:
+- قصير (2-5 كلمات)
+- سهل التذكر
+- يعبر عن الـ tone والـ objective
+- يصلح كـ campaign name في Meta/TikTok/Google
+
+الشكل فقط (أرقام - الاسم فقط بدون شرح):
+1. ...
+2. ...`;
   }
 
   await aiGenerate(prompt,text=>{
@@ -2852,6 +2922,9 @@ ${audience?`الجمهور: ${audience}`:''}
       lines.forEach(l=>{const n=l.replace(/^\d+[\.\-\)]\s*/,'').trim();if(n)a.strategy.angles.unshift({id:uid(),name:n,angleType:'',hypothesis:'',funnel:'top',status:'to-test',notes:''})});
     }else if(_aiGenType==='hooks'){
       lines.forEach(l=>{const f=l.replace(/^\d+[\.\-\)]\s*/,'').replace(/^\[|\]$/g,'').trim();if(f)a.strategy.hooks.unshift({id:uid(),formula:f,example:'',funnel:'top',status:'to-test'})});
+    }else if(_aiGenType==='campnames'){
+      const themeVal=document.getElementById('ag-theme')?.value?.trim()||'';
+      lines.forEach(l=>{const n=l.replace(/^\d+[\.\-\)]\s*/,'').replace(/["*]/g,'').trim();if(n)a.strategy.campNames.push({id:uid(),name:n,theme:themeVal,status:'idea'})});
     }
     if(lines.length>0){save();closeAIGenModal();renderMain()}
     else{
@@ -2866,6 +2939,25 @@ ${audience?`الجمهور: ${audience}`:''}
 function aiGenerateUSPs(){openAIGenModal('usps')}
 function aiGenerateAngles(){openAIGenModal('angles')}
 function aiGenerateHooks(){openAIGenModal('hooks')}
+function aiGenerateCampNames(){openAIGenModal('campnames')}
+
+function addCampName(){
+  const a=acct();if(!a)return;
+  const name=prompt('اسم الحملة:','');
+  if(!name||!name.trim())return;
+  a.strategy.campNames.push({id:uid(),name:name.trim(),theme:'',status:'idea'});
+  save();renderMain();
+}
+function delCampName(id){const a=acct();if(!a)return;a.strategy.campNames=a.strategy.campNames.filter(x=>x.id!==id);save();renderMain()}
+function updCampName(id,f,v){const a=acct();if(!a)return;const c=a.strategy.campNames.find(x=>x.id===id);if(c){c[f]=v;save()}}
+function copyCampName(id){
+  const a=acct();if(!a)return;
+  const c=a.strategy.campNames.find(x=>x.id===id);if(!c)return;
+  navigator.clipboard.writeText(c.name).then(()=>{
+    const btn=document.getElementById('copy-cn-'+id);
+    if(btn){const orig=btn.innerHTML;btn.innerHTML='✅ Copied!';setTimeout(()=>{btn.innerHTML=orig},1500)}
+  });
+}
 
 // ── RENDER ──
 function render(){renderTabs();renderSubBar();renderMain();updStats()}
@@ -3146,6 +3238,7 @@ db.accounts.forEach(a=>{
   if(!a.strategy.usps)a.strategy.usps=[];
   if(!a.strategy.angles)a.strategy.angles=[];
   if(!a.strategy.hooks)a.strategy.hooks=[];
+  if(!a.strategy.campNames)a.strategy.campNames=[];
   if(!a.directions)a.directions=[];
   if(!a.acctTasks)a.acctTasks=[];
 });
