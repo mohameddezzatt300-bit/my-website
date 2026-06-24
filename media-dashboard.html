@@ -1872,38 +1872,63 @@ function renderStrategy(main,a){
     </div>
   </div>
 
-  <!-- Campaign Names -->
+  <!-- Campaign Name Generator -->
   <div class="strat-section">
     <div class="strat-section-hd">
-      <div class="strat-section-title">📛 Campaign Names</div>
-      <div style="display:flex;gap:7px;align-items:center">
-        <button class="ai-gen-btn" onclick="aiGenerateCampNames()" id="ai-camp-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> AI Generate</button>
-        <button class="btn btn-p btn-xs" onclick="addCampName()">＋ Add</button>
-      </div>
+      <div class="strat-section-title">📛 Campaign Name Generator</div>
+      <div style="font-size:11px;color:var(--muted);font-weight:500">منظم للتحليل</div>
     </div>
-    <div class="strat-section-body" style="padding:${s.campNames&&s.campNames.length?'10px 16px':'18px'}">
-      ${!s.campNames||s.campNames.length===0
-        ?`<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px 0">اجنريت أسماء للحملات أو أضف يدوي</div>`
-        :`<div style="display:flex;flex-direction:column;gap:8px">
-          ${s.campNames.map(cn=>`
-            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f9fafb;border:1px solid var(--brd);border-radius:10px;transition:background .15s" onmouseover="this.style.background='#f0f7f4'" onmouseout="this.style.background='#f9fafb'">
-              <div style="flex:1;font-size:13px;font-weight:700;color:#111;direction:rtl">${esc(cn.name)}</div>
-              ${cn.theme?`<div style="font-size:11px;color:var(--muted);background:#f3f4f6;border-radius:6px;padding:3px 8px;white-space:nowrap;flex-shrink:0">${esc(cn.theme)}</div>`:''}
-              <select onchange="updCampName('${cn.id}','status',this.value)"
-                style="border:1px solid var(--brd);border-radius:7px;padding:4px 8px;font-size:11px;font-weight:700;font-family:inherit;outline:none;background:${cn.status==='active'?'#d1fae5':cn.status==='used'?'#dbeafe':'#f3f4f6'};color:${cn.status==='active'?'#065f46':cn.status==='used'?'#1e40af':'#6b7280'};cursor:pointer;flex-shrink:0">
-                <option value="idea"${cn.status==='idea'?' selected':''}>💡 Idea</option>
-                <option value="active"${cn.status==='active'?' selected':''}>✅ Active</option>
-                <option value="used"${cn.status==='used'?' selected':''}>📌 Used</option>
-                <option value="archived"${cn.status==='archived'?' selected':''}>🗄️ Archived</option>
-              </select>
-              <button onclick="copyCampName('${cn.id}')" id="copy-cn-${cn.id}"
-                style="background:#f0f4ff;border:1px solid #c7d9f5;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;color:#4285f4;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .12s;flex-shrink:0"
-                onmouseover="this.style.background='#e0ebff'" onmouseout="this.style.background='#f0f4ff'">📋 Copy</button>
-              <button onclick="delCampName('${cn.id}')"
-                style="background:transparent;border:none;color:#d1d5db;cursor:pointer;font-size:15px;padding:4px;flex-shrink:0;transition:color .12s;line-height:1"
-                onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#d1d5db'">✕</button>
-            </div>`).join('')}
+    <div class="strat-section-body" style="padding:0">
+      <!-- Builder -->
+      <div style="padding:16px 18px;border-bottom:1px solid var(--brd)">
+        <!-- Live Preview -->
+        <div style="background:linear-gradient(135deg,#054930,#0a7a50);border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+          <div style="flex:1;font-family:monospace;font-size:14px;font-weight:800;color:#fff;letter-spacing:.5px;word-break:break-all" id="cn-preview">—</div>
+          <button onclick="saveCampName()" title="حفظ في التاريخ"
+            style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;transition:background .15s;flex-shrink:0"
+            onmouseover="this.style.background='rgba(255,255,255,.25)'" onmouseout="this.style.background='rgba(255,255,255,.15)'">💾 Save</button>
+          <button onclick="copyPreviewName()" id="cn-copy-btn"
+            style="background:#0cb87d;border:none;color:#fff;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .15s;flex-shrink:0"
+            onmouseover="this.style.background='#0aa06c'" onmouseout="this.style.background='#0cb87d'">📋 Copy</button>
+        </div>
+        <!-- Tokens Grid -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px" id="cn-tokens">
+          ${renderCNTokens(a)}
+        </div>
+        <div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--muted)">الفاصل:</span>
+          ${['_','|','-','/'].map(sep=>`
+            <button onclick="setCNSep('${sep}')" data-sep="${sep}"
+              style="padding:4px 12px;border-radius:6px;border:1.5px solid ${(a.cnSettings?.sep||'_')===sep?'var(--s)':'var(--brd)'};background:${(a.cnSettings?.sep||'_')===sep?'#e6faf3':'#fff'};color:${(a.cnSettings?.sep||'_')===sep?'var(--p)':'var(--muted)'};font-family:monospace;font-size:13px;font-weight:700;cursor:pointer;transition:all .12s">
+              ${sep==='_'?'_':sep==='|'?'|':sep==='-'?'-':'/'}
+            </button>`).join('')}
+          <button onclick="clearCNBuilder()" style="margin-left:auto;background:transparent;border:1px solid var(--brd);color:var(--muted);border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .12s" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="this.style.borderColor='var(--brd)';this.style.color='var(--muted)'">🗑 Clear All</button>
+        </div>
+      </div>
+      <!-- History -->
+      <div style="padding:12px 18px">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">History</div>
+        ${!s.campNames||s.campNames.length===0
+          ?`<div style="color:var(--muted);font-size:12px;text-align:center;padding:8px 0">اضغط Save بعد ما تبني الاسم</div>`
+          :`<div style="display:flex;flex-direction:column;gap:6px">
+            ${s.campNames.map(cn=>`
+              <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f9fafb;border:1px solid var(--brd);border-radius:8px">
+                <div style="flex:1;font-family:monospace;font-size:12px;font-weight:700;color:#111;word-break:break-all">${esc(cn.name)}</div>
+                <select onchange="updCampName('${cn.id}','status',this.value)"
+                  style="border:1px solid var(--brd);border-radius:6px;padding:3px 7px;font-size:10px;font-weight:700;font-family:inherit;outline:none;background:${cn.status==='active'?'#d1fae5':cn.status==='used'?'#dbeafe':'#f3f4f6'};color:${cn.status==='active'?'#065f46':cn.status==='used'?'#1e40af':'#6b7280'};cursor:pointer;flex-shrink:0">
+                  <option value="draft"${cn.status==='draft'?' selected':''}>Draft</option>
+                  <option value="active"${cn.status==='active'?' selected':''}>✅ Active</option>
+                  <option value="used"${cn.status==='used'?' selected':''}>📌 Used</option>
+                  <option value="archived"${cn.status==='archived'?' selected':''}>Archived</option>
+                </select>
+                <button onclick="copyCampName('${cn.id}')" id="copy-cn-${cn.id}"
+                  style="background:#f0f4ff;border:1px solid #c7d9f5;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;color:#4285f4;cursor:pointer;font-family:inherit;transition:all .12s;flex-shrink:0">📋</button>
+                <button onclick="delCampName('${cn.id}')"
+                  style="background:transparent;border:none;color:#d1d5db;cursor:pointer;font-size:14px;padding:2px 4px;flex-shrink:0;line-height:1"
+                  onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#d1d5db'">✕</button>
+              </div>`).join('')}
           </div>`}
+      </div>
     </div>
   </div>
 
@@ -2936,16 +2961,156 @@ ${theme?`الـ Theme أو المناسبة: ${theme}`:''}
   if(btn){btn.disabled=false;btn.innerHTML=AI_GEN_STAR+' Generate'}
 }
 
+// ── CAMPAIGN NAME BUILDER ──
+const CN_TOKENS=[
+  {key:'brand',    label:'Brand',        type:'text',    placeholder:'e.g. ROOSTER'},
+  {key:'platform', label:'Platform',     type:'pills',   options:['META','TIK','GOOG','SNAP','YT','LI']},
+  {key:'country',  label:'Country',      type:'pills',   options:['EG','SA','UAE','KW','QA','JO','ALL']},
+  {key:'objective',label:'Objective',    type:'pills',   options:['CONV','TRAF','AWA','LEAD','ENG','INST','RET']},
+  {key:'audience', label:'Audience',     type:'text',    placeholder:'e.g. M25-35, WARM, LAL'},
+  {key:'creative', label:'Creative Type',type:'pills',   options:['VID','CAR','IMG','REEL','STORY','COL']},
+  {key:'funnel',   label:'Funnel',       type:'pills',   options:['TOFU','MOFU','BOFU']},
+  {key:'date',     label:'Date',         type:'pills',   options:['AUTO','YYMM','YY-QN','NONE'], special:'date'},
+  {key:'version',  label:'Version',      type:'pills',   options:['v1','v2','v3','v4','A','B','C']},
+  {key:'custom',   label:'Custom Token', type:'text',    placeholder:'أي نص إضافي...'},
+];
+
+function getCNSettings(a){
+  if(!a.cnSettings)a.cnSettings={sep:'_',tokens:{}};
+  return a.cnSettings;
+}
+
+function renderCNTokens(a){
+  const cfg=getCNSettings(a);
+  return CN_TOKENS.map(t=>{
+    const val=cfg.tokens[t.key]||'';
+    if(t.type==='text'){
+      return`<div style="display:flex;flex-direction:column;gap:4px">
+        <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">${t.label}</label>
+        <input value="${esc(val)}" placeholder="${t.placeholder||''}"
+          oninput="setCNToken('${t.key}',this.value)"
+          style="border:1.5px solid ${val?'var(--s)':'var(--brd)'};border-radius:8px;padding:7px 10px;font-size:12px;font-family:monospace;font-weight:700;color:var(--p);background:${val?'#f0faf6':'#fafafa'};outline:none;transition:all .15s;width:100%;box-sizing:border-box"
+          onfocus="this.style.borderColor='var(--s)';this.style.background='#fff'"
+          onblur="this.style.borderColor=this.value?'var(--s)':'var(--brd)';this.style.background=this.value?'#f0faf6':'#fafafa'"/>
+      </div>`;
+    }
+    if(t.type==='pills'){
+      const pills=t.options.map(o=>{
+        const active=val===o;
+        return`<button onclick="setCNToken('${t.key}','${o}')" data-tk="${t.key}" data-val="${o}"
+          style="padding:4px 9px;border-radius:6px;border:1.5px solid ${active?'var(--s)':'var(--brd)'};background:${active?'#e6faf3':'#fff'};color:${active?'var(--p)':'var(--muted)'};font-size:10px;font-weight:800;cursor:pointer;transition:all .12s;font-family:monospace;white-space:nowrap"
+          onmouseover="if(this.dataset.val!=='${val}'){this.style.borderColor='#9ca3af';this.style.color='#374151'}"
+          onmouseout="if(this.dataset.val!=='${val}'){this.style.borderColor='var(--brd)';this.style.color='var(--muted)'}">
+          ${o==='AUTO'?'📅 Auto':o}
+        </button>`;
+      }).join('');
+      return`<div style="display:flex;flex-direction:column;gap:5px">
+        <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">${t.label}</label>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">${pills}</div>
+      </div>`;
+    }
+    return'';
+  }).join('');
+}
+
+function setCNToken(key,val){
+  const a=acct();if(!a)return;
+  const cfg=getCNSettings(a);
+  // toggle off if same value clicked
+  if(cfg.tokens[key]===val)cfg.tokens[key]='';
+  else cfg.tokens[key]=val;
+  save();
+  updateCNPreview();
+  // re-highlight pills
+  document.querySelectorAll(`[data-tk="${key}"]`).forEach(b=>{
+    const active=b.dataset.val===cfg.tokens[key];
+    b.style.borderColor=active?'var(--s)':'var(--brd)';
+    b.style.background=active?'#e6faf3':'#fff';
+    b.style.color=active?'var(--p)':'var(--muted)';
+  });
+  // re-style text input
+  const inp=document.querySelector(`input[oninput*="setCNToken('${key}'"]`);
+  if(inp){inp.style.borderColor=val?'var(--s)':'var(--brd)';inp.style.background=val?'#f0faf6':'#fafafa'}
+}
+
+function setCNSep(sep){
+  const a=acct();if(!a)return;
+  getCNSettings(a).sep=sep;
+  save();updateCNPreview();
+  document.querySelectorAll('[data-sep]').forEach(b=>{
+    const active=b.dataset.sep===sep;
+    b.style.borderColor=active?'var(--s)':'var(--brd)';
+    b.style.background=active?'#e6faf3':'#fff';
+    b.style.color=active?'var(--p)':'var(--muted)';
+  });
+}
+
+function buildCNName(a){
+  const cfg=getCNSettings(a);
+  const sep=cfg.sep||'_';
+  const tokens=cfg.tokens||{};
+  const now=new Date();
+  const parts=CN_TOKENS.map(t=>{
+    let v=tokens[t.key]||'';
+    if(t.key==='date'&&v==='AUTO'){
+      const y=String(now.getFullYear()).slice(2);
+      const m=String(now.getMonth()+1).padStart(2,'0');
+      v=y+m;
+    }else if(t.key==='date'&&v==='YYMM'){
+      const y=String(now.getFullYear()).slice(2);
+      const m=String(now.getMonth()+1).padStart(2,'0');
+      v=y+m;
+    }else if(t.key==='date'&&v==='YY-QN'){
+      const y=String(now.getFullYear()).slice(2);
+      const q=Math.ceil((now.getMonth()+1)/3);
+      v=y+'-Q'+q;
+    }else if(t.key==='date'&&v==='NONE'){
+      v='';
+    }
+    return v.trim().replace(/\s+/g,sep);
+  }).filter(Boolean);
+  return parts.join(sep);
+}
+
+function updateCNPreview(){
+  const a=acct();if(!a)return;
+  const name=buildCNName(a);
+  const el=document.getElementById('cn-preview');
+  if(el)el.textContent=name||'—';
+}
+
+function copyPreviewName(){
+  const el=document.getElementById('cn-preview');
+  if(!el||el.textContent==='—')return;
+  navigator.clipboard.writeText(el.textContent).then(()=>{
+    const btn=document.getElementById('cn-copy-btn');
+    if(btn){const o=btn.innerHTML;btn.innerHTML='✅ Copied!';setTimeout(()=>{btn.innerHTML=o},1500)}
+  });
+}
+
+function saveCampName(){
+  const a=acct();if(!a)return;
+  const name=buildCNName(a);
+  if(!name)return;
+  if(!a.strategy.campNames)a.strategy.campNames=[];
+  a.strategy.campNames.unshift({id:uid(),name,status:'draft'});
+  save();renderMain();
+}
+
+function clearCNBuilder(){
+  const a=acct();if(!a)return;
+  getCNSettings(a).tokens={};
+  save();renderMain();
+}
+
 function aiGenerateUSPs(){openAIGenModal('usps')}
 function aiGenerateAngles(){openAIGenModal('angles')}
 function aiGenerateHooks(){openAIGenModal('hooks')}
-function aiGenerateCampNames(){openAIGenModal('campnames')}
-
 function addCampName(){
   const a=acct();if(!a)return;
   const name=prompt('اسم الحملة:','');
   if(!name||!name.trim())return;
-  a.strategy.campNames.push({id:uid(),name:name.trim(),theme:'',status:'idea'});
+  a.strategy.campNames.push({id:uid(),name:name.trim(),status:'draft'});
   save();renderMain();
 }
 function delCampName(id){const a=acct();if(!a)return;a.strategy.campNames=a.strategy.campNames.filter(x=>x.id!==id);save();renderMain()}
@@ -3239,6 +3404,7 @@ db.accounts.forEach(a=>{
   if(!a.strategy.angles)a.strategy.angles=[];
   if(!a.strategy.hooks)a.strategy.hooks=[];
   if(!a.strategy.campNames)a.strategy.campNames=[];
+  if(!a.cnSettings)a.cnSettings={sep:'_',tokens:{}};
   if(!a.directions)a.directions=[];
   if(!a.acctTasks)a.acctTasks=[];
 });
