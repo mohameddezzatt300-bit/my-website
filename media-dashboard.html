@@ -2827,6 +2827,23 @@ const KPI_COLS=[
   {key:'revenue',label:'Revenue',      lower:false, fmt:v=>parseFloat(v).toLocaleString()},
   {key:'conv',   label:'Conversions',  lower:false, fmt:v=>parseInt(v).toLocaleString()},
 ];
+function weekToRange(w){
+  if(!w)return '—';
+  const m=w.match(/^(\d{4})-W(\d{2})$/);
+  if(m){
+    const year=parseInt(m[1]),week=parseInt(m[2]);
+    // ISO week: Jan 4 is always in week 1
+    const jan4=new Date(year,0,4);
+    const dow=(jan4.getDay()||7);
+    const mon=new Date(jan4);
+    mon.setDate(jan4.getDate()-dow+1+(week-1)*7);
+    const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+    const fmt=d=>d.toISOString().slice(0,10);
+    return fmt(mon)+' - '+fmt(sun);
+  }
+  if(w.includes(' - ')||w.includes(' — '))return w;
+  return w;
+}
 function renderKPI(main,a){
   const kpis=[...(a.kpis||[])].sort((a,b)=>b.week.localeCompare(a.week));
   main.innerHTML=`
@@ -2869,7 +2886,10 @@ function renderKPI(main,a){
             ${kpis.map((k,i)=>{
               const prev=kpis[i+1];
               return`<tr>
-                <td><input type="week" value="${k.week||''}" onchange="updKPI('${k.id}','week',this.value)" style="border:1px solid var(--brd);border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;outline:none"/></td>
+                <td style="min-width:190px">
+                  <div style="font-size:12px;font-weight:700;color:var(--p);letter-spacing:-.2px">${weekToRange(k.week)}</div>
+                  <input type="week" value="${k.week||''}" onchange="updKPI('${k.id}','week',this.value);renderMain()" style="margin-top:4px;border:1px solid var(--brd);border-radius:6px;padding:3px 7px;font-size:11px;font-family:inherit;outline:none;color:var(--muted);width:100%"/>
+                </td>
                 ${KPI_COLS.map(c=>`<td>
                   <input class="kpi-input" type="number" value="${k[c.key]||''}" placeholder="—" oninput="updKPI('${k.id}','${c.key}',this.value)"/>
                   ${prev&&k[c.key]&&prev[c.key]?`<div style="margin-top:2px">${delta(parseFloat(k[c.key]),parseFloat(prev[c.key]),c.lower)}</div>`:''}
