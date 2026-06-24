@@ -358,6 +358,7 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
   <button class="sub-tab" id="st-brief" onclick="switchSub('brief')"><i class="ti ti-pencil"></i> Creative Briefs</button>
   <button class="sub-tab" id="st-strat" onclick="switchSub('strat')"><i class="ti ti-bulb"></i> Creative Strategy</button>
   <button class="sub-tab" id="st-dir" onclick="switchSub('dir')"><i class="ti ti-palette"></i> Creative Direction</button>
+  <button class="sub-tab" id="st-atasks" onclick="switchSub('atasks')"><i class="ti ti-layout-kanban"></i> Task Board</button>
   <span class="save-ind hidden" id="save-ind"></span>
 </div>
 
@@ -528,7 +529,8 @@ function addAcc(){
     audiences:[],
     briefs:[],
     strategy:{usps:[],angles:[],hooks:[],testingPlan:'',funnelNotes:'',fatigueRules:'',winningPatterns:''},
-    directions:[]
+    directions:[],
+    acctTasks:[]
   };
   db.accounts.push(a);db.active=a.id;save();closeM();
   addT=false;sub='tasks';filt='all';killChart();render();
@@ -558,6 +560,7 @@ function switchSub(s){
   document.getElementById('st-brief').classList.toggle('active',s==='brief');
   document.getElementById('st-strat').classList.toggle('active',s==='strat');
   document.getElementById('st-dir').classList.toggle('active',s==='dir');
+  document.getElementById('st-atasks').classList.toggle('active',s==='atasks');
   renderMain();
   if(s==='mp')setTimeout(recalc,60);
 }
@@ -2068,6 +2071,99 @@ function dirListRow(d){
   </div>`;
 }
 
+// ── ACCOUNT TASK BOARD ──
+function addAcctTask(){
+  const a=acct();if(!a)return;
+  const title=(document.getElementById('at-title')||{}).value||'';
+  if(!title.trim())return;
+  const pri=(document.getElementById('at-pri')||{}).value||'medium';
+  const cat=(document.getElementById('at-cat')||{}).value||'';
+  const due=(document.getElementById('at-due')||{}).value||'';
+  a.acctTasks.unshift({id:uid(),title:title.trim(),priority:pri,category:cat,dueDate:due,status:'todo',notes:'',createdAt:new Date().toISOString()});
+  save();renderMain();
+}
+function delAcctTask(id){const a=acct();if(!a)return;a.acctTasks=a.acctTasks.filter(x=>x.id!==id);save();renderMain()}
+function moveAcctTask(id,dir){
+  const a=acct();if(!a)return;
+  const t=a.acctTasks.find(x=>x.id===id);if(!t)return;
+  const order=['todo','doing','done'];
+  const i=order.indexOf(t.status)+dir;
+  if(i<0||i>2)return;
+  t.status=order[i];save();renderMain();
+}
+function updAcctTask(id,f,v){const a=acct();if(!a)return;const t=a.acctTasks.find(x=>x.id===id);if(t){t[f]=v;save()}}
+function togAcctTaskNotes(id){const el=document.getElementById('atn-'+id);if(el)el.classList.toggle('hidden')}
+
+function renderAcctTasks(main,a){
+  const tasks=a.acctTasks||[];
+  const today=new Date().toISOString().slice(0,10);
+  const overdue=tasks.filter(t=>t.dueDate&&t.dueDate<today&&t.status!=='done').length;
+
+  main.innerHTML=`
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px">
+    <div>
+      <div style="font-size:22px;font-weight:800;color:var(--p)">${esc(a.name)} — Task Board</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:2px">
+        ${tasks.filter(t=>t.status!=='done').length} open · ${tasks.filter(t=>t.status==='done').length} done
+        ${overdue?`<span style="color:#ef4444;font-weight:700;margin-left:8px">· ${overdue} overdue</span>`:''}
+      </div>
+    </div>
+  </div>
+
+  <div class="task-add-bar">
+    <input id="at-title" class="task-add-input" placeholder="New task for ${esc(a.name)}..." onkeydown="if(event.key==='Enter')addAcctTask()"/>
+    <select id="at-pri" class="task-add-sel">
+      <option value="high">🔴 High</option>
+      <option value="medium" selected>🟡 Medium</option>
+      <option value="low">🟢 Low</option>
+    </select>
+    <select id="at-cat" class="task-add-sel">
+      <option value="">Category</option>
+      ${MT_CATS.map(c=>`<option value="${c}">${c}</option>`).join('')}
+    </select>
+    <input id="at-due" type="date" class="task-add-sel" style="width:auto"/>
+    <button class="btn btn-p btn-sm" onclick="addAcctTask()">＋ Add</button>
+  </div>
+
+  <div class="kanban">
+    ${MT_COLS.map(col=>{
+      const colTasks=tasks.filter(t=>t.status===col.key);
+      return `<div class="k-col" style="background:${col.bg}">
+        <div class="k-col-hd" style="color:${col.hd}">
+          <span>${col.label}</span>
+          <span class="k-count" style="background:${col.cnt_bg};color:${col.cnt_color}">${colTasks.length}</span>
+        </div>
+        <div class="k-cards">
+          ${colTasks.length===0?`<div style="text-align:center;color:#aaa;font-size:12px;padding:20px 0">Empty</div>`
+          :colTasks.map(t=>{
+            const pri=MT_PRI[t.priority]||MT_PRI.medium;
+            const isOverdue=t.dueDate&&t.dueDate<today&&t.status!=='done';
+            const dl=t.dueDate?new Date(t.dueDate+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
+            return `<div class="k-card${t.status==='done'?' done-card':''}" style="border-left-color:${pri.border}">
+              <div class="k-card-title${t.status==='done'?' done-title':''}" contenteditable="true" spellcheck="false" onblur="updAcctTask('${t.id}','title',this.textContent.trim())">${esc(t.title)}</div>
+              <div class="k-card-meta">
+                <span class="k-tag" style="background:${pri.bg};color:${pri.color}">${pri.label}</span>
+                ${t.category?`<span class="k-tag" style="background:#f0f7f4;color:#054930">${esc(t.category)}</span>`:''}
+                ${dl?`<span class="k-tag" style="background:${isOverdue?'#fee2e2':'#f3f4f6'};color:${isOverdue?'#991b1b':'#6b7280'}${isOverdue?';font-weight:800':''}">📅 ${dl}${isOverdue?' ⚠️':''}</span>`:''}
+              </div>
+              ${t.notes&&!document.getElementById('atn-'+t.id)?`<div class="k-card-notes">${esc(t.notes)}</div>`:''}
+              <div id="atn-${t.id}" class="${t.notes?'':'hidden'}" style="margin-bottom:6px">
+                <textarea style="width:100%;border:.5px solid var(--brd);border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;resize:vertical;min-height:48px" placeholder="Notes..." oninput="updAcctTask('${t.id}','notes',this.value)">${esc(t.notes)}</textarea>
+              </div>
+              <div class="k-card-actions">
+                ${col.key!=='todo'?`<button class="k-mv-btn" onclick="moveAcctTask('${t.id}',-1)">← Back</button>`:''}
+                ${col.key!=='done'?`<button class="k-mv-btn" onclick="moveAcctTask('${t.id}',1)">${col.key==='todo'?'Start →':'Done →'}</button>`:''}
+                <button class="k-mv-btn" onclick="togAcctTaskNotes('${t.id}')" style="margin-left:auto">📝</button>
+                <button class="k-mv-btn" onclick="delAcctTask('${t.id}')" style="color:#ef4444;border-color:#fecaca">🗑</button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
 // ── MY TASKS ──
 const MT_CATS=['Campaign Launch','Client Report','Client Call','Budget Review','Creative Review','Research','Admin','Follow-up','Personal','Other'];
 const MT_PRI={high:{label:'🔴 High',bg:'#fee2e2',color:'#991b1b',border:'#ef4444'},medium:{label:'🟡 Medium',bg:'#fef3c7',color:'#92400e',border:'#f59e0b'},low:{label:'🟢 Low',bg:'#dcfce7',color:'#166534',border:'#22c55e'}};
@@ -2209,6 +2305,7 @@ function renderSubBar(){
     document.getElementById('st-brief').classList.toggle('active',sub==='brief');
     document.getElementById('st-strat').classList.toggle('active',sub==='strat');
     document.getElementById('st-dir').classList.toggle('active',sub==='dir');
+    document.getElementById('st-atasks').classList.toggle('active',sub==='atasks');
   }else{el.classList.add('hidden')}
 }
 
@@ -2226,7 +2323,8 @@ function renderMain(){
   else if(sub==='aud')renderAud(main,a);
   else if(sub==='brief')renderBrief(main,a);
   else if(sub==='strat')renderStrategy(main,a);
-  else renderDirection(main,a);
+  else if(sub==='dir')renderDirection(main,a);
+  else renderAcctTasks(main,a);
 }
 
 // ── TASKS VIEW ──
@@ -2414,6 +2512,7 @@ db.accounts.forEach(a=>{
   if(!a.strategy.angles)a.strategy.angles=[];
   if(!a.strategy.hooks)a.strategy.hooks=[];
   if(!a.directions)a.directions=[];
+  if(!a.acctTasks)a.acctTasks=[];
 });
 if(!db.myTasks)db.myTasks=[];
 render();
