@@ -6,6 +6,7 @@
 <title>Media Buying Dashboard</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{--p:#054930;--pd:#033320;--s:#0cb87d;--sd:#09a06b;--sl:#d4f5e9;--bg:#f0f4f2;--sur:#fff;--brd:#c8e2d6;--txt:#1a1a1a;--muted:#6b7280;--red:#ef4444;--redbg:#fee2e2}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -413,6 +414,25 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
     <div class="mfoot">
       <button class="btn btn-g" onclick="closeM()">Cancel</button>
       <button class="btn btn-p" onclick="addAcc()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- KPI EXCEL IMPORT -->
+<input type="file" id="kpi-xl-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="kpiXLLoad(this)">
+<div class="dir-modal-overlay hidden" id="kpi-xl-overlay" onclick="if(event.target===this)kpiXLClose()">
+  <div class="dir-modal-box" style="max-width:760px;width:100%;padding:0;overflow:hidden;max-height:90vh;display:flex;flex-direction:column" onclick="event.stopPropagation()">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <div>
+        <div style="font-size:17px;font-weight:800;color:var(--p);display:flex;align-items:center;gap:8px"><i class="ti ti-file-spreadsheet" style="color:#0cb87d"></i> Import Excel → KPI</div>
+        <div id="kpi-xl-fname" style="font-size:12px;color:var(--muted);margin-top:2px"></div>
+      </div>
+      <button onclick="kpiXLClose()" style="background:#f3f4f6;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;color:#6b7280">✕</button>
+    </div>
+    <div id="kpi-xl-body" style="padding:20px 24px;overflow-y:auto;flex:1"></div>
+    <div id="kpi-xl-foot" style="padding:14px 24px;border-top:1px solid var(--brd);display:flex;justify-content:flex-end;gap:10px;flex-shrink:0">
+      <button class="btn btn-g" onclick="kpiXLClose()">إلغاء</button>
+      <button id="kpi-xl-import-btn" class="btn btn-p" onclick="kpiXLConfirm()">✔ Import</button>
     </div>
   </div>
 </div>
@@ -2829,9 +2849,12 @@ function renderKPI(main,a){
 
     <!-- Table -->
     <div style="background:#fff;border:1px solid var(--brd);border-radius:14px;overflow:hidden">
-      <div style="padding:14px 20px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between">
+      <div style="padding:14px 20px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <div style="font-size:14px;font-weight:800;color:var(--p)">Weekly KPI Log</div>
-        <button onclick="addKPIWeek()" class="btn btn-p btn-xs">＋ Add Week</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button onclick="document.getElementById('kpi-xl-input').click()" class="btn btn-xs" style="background:#f0fdf4;border:1.5px solid #0cb87d;color:#054930;font-weight:700;display:flex;align-items:center;gap:5px"><i class="ti ti-file-spreadsheet" style="font-size:14px"></i> Import Excel</button>
+          <button onclick="addKPIWeek()" class="btn btn-p btn-xs">＋ Add Week</button>
+        </div>
       </div>
       ${kpis.length===0?`<div style="text-align:center;padding:48px;color:var(--muted)"><div style="font-size:36px;margin-bottom:10px">📊</div><div style="font-size:13px">لا توجد بيانات — اضغط Add Week وأدخل الأرقام</div></div>`
       :`<div style="overflow-x:auto">
@@ -2871,6 +2894,136 @@ function addKPIWeek(){
 }
 function updKPI(id,f,v){const a=acct();if(!a)return;const k=a.kpis.find(x=>x.id===id);if(k){k[f]=v;save()}}
 function delKPI(id){const a=acct();if(!a)return;a.kpis=a.kpis.filter(x=>x.id!==id);save();renderMain()}
+
+// ── KPI EXCEL IMPORT ──
+let _kpiXLRows=[];   // raw parsed rows
+let _kpiXLMap={};    // {kpi_key: excel_col_index}
+
+const KPI_XL_SYNONYMS={
+  week:    ['week','date','period','reporting period','time','יום','أسبوع','week of'],
+  roas:    ['roas','return on ad spend','purchase roas','purchase roas (return on ad spend)','عائد'],
+  cpa:     ['cpa','cost per acquisition','cost per conversion','cost per result','تكلفة لكل نتيجة','cost per purchase'],
+  ctr:     ['ctr','click-through rate','click through rate','ctr (all)','نسبة النقر'],
+  cpm:     ['cpm','cost per 1,000 impressions','cost per mille','cost per thousand','تكلفة لكل 1000'],
+  spend:   ['spend','amount spent','cost','total cost','budget spent','إجمالي الإنفاق','spending'],
+  revenue: ['revenue','purchase value','conversion value','value','purchase conversion value','إجمالي قيمة التحويل'],
+  conv:    ['conversions','conv','purchases','results','leads','installs','نتائج','مشتريات','تحويلات'],
+  notes:   ['notes','note','comments','remarks','ملاحظات'],
+};
+
+function kpiXLClose(){document.getElementById('kpi-xl-overlay').classList.add('hidden');_kpiXLRows=[];_kpiXLMap={}}
+
+function kpiXLLoad(input){
+  const file=input.files[0];if(!file)return;
+  if(typeof XLSX==='undefined'){alert('مكتبة Excel لم تتحمل — جرب كمان مرة بعد ثانية');return}
+  input.value='';
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      if(!raw||raw.length<2){document.getElementById('kpi-xl-body').innerHTML='<div style="color:var(--red);text-align:center;padding:40px">الملف فاضي أو مش عارف يقرأه</div>';document.getElementById('kpi-xl-overlay').classList.remove('hidden');return}
+
+      const headers=raw[0].map(h=>String(h).trim());
+      const dataRows=raw.slice(1).filter(r=>r.some(c=>c!==''));
+      _kpiXLRows=dataRows;
+
+      // auto-detect mapping
+      _kpiXLMap={};
+      Object.entries(KPI_XL_SYNONYMS).forEach(([key,syns])=>{
+        const idx=headers.findIndex(h=>syns.some(s=>h.toLowerCase().includes(s.toLowerCase())));
+        if(idx>=0)_kpiXLMap[key]=idx;
+      });
+
+      document.getElementById('kpi-xl-fname').textContent=file.name+' — '+headers.length+' columns, '+dataRows.length+' rows';
+      kpiXLRenderMapper(headers,dataRows.slice(0,3));
+      document.getElementById('kpi-xl-overlay').classList.remove('hidden');
+    }catch(err){alert('خطأ في قراءة الملف: '+err.message)}
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function kpiXLRenderMapper(headers,preview){
+  const KPI_LABELS={week:'Week',roas:'ROAS',cpa:'CPA',ctr:'CTR %',cpm:'CPM',spend:'Spend',revenue:'Revenue',conv:'Conversions',notes:'Notes'};
+  const opts=`<option value="">— skip —</option>`+headers.map((h,i)=>`<option value="${i}">${h}</option>`).join('');
+
+  let html=`
+  <div style="margin-bottom:18px">
+    <div style="font-size:13px;font-weight:700;color:var(--p);margin-bottom:10px">ربط أعمدة الـ Excel بالـ KPI</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    ${Object.entries(KPI_LABELS).map(([key,label])=>{
+      const detected=_kpiXLMap[key]!=null;
+      const selVal=_kpiXLMap[key]??'';
+      return`<div style="display:flex;align-items:center;gap:8px;background:${detected?'#f0fdf4':'#f9fafb'};border:1px solid ${detected?'#86efac':'var(--brd)'};border-radius:8px;padding:8px 12px">
+        <span style="font-size:12px;font-weight:700;color:${detected?'#054930':'var(--muted)'};min-width:80px">${label} ${detected?'<span style="color:#0cb87d;font-size:10px">✓ auto</span>':''}</span>
+        <select id="kxl-${key}" style="flex:1;border:1px solid var(--brd);border-radius:6px;padding:4px 7px;font-size:12px;font-family:inherit;outline:none;background:#fff" onchange="kpiXLUpdateMap('${key}',this.value)">
+          ${opts.replace(`value="${selVal}"`,`value="${selVal}" selected`)}
+        </select>
+      </div>`;
+    }).join('')}
+    </div>
+  </div>`;
+
+  if(preview.length>0){
+    html+=`<div style="font-size:13px;font-weight:700;color:var(--p);margin-bottom:8px">معاينة (أول ${preview.length} صفوف)</div>
+    <div style="overflow-x:auto;border-radius:10px;border:1px solid var(--brd)">
+      <table style="width:100%;border-collapse:collapse;font-size:11px">
+        <thead><tr>${headers.map(h=>`<th style="background:#f0f4f2;padding:7px 10px;text-align:left;white-space:nowrap;font-weight:700;color:var(--p)">${esc(String(h))}</th>`).join('')}</tr></thead>
+        <tbody>${preview.map(row=>`<tr>${headers.map((_,i)=>`<td style="padding:6px 10px;border-top:1px solid var(--brd);white-space:nowrap">${esc(String(row[i]??''))}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+  }
+
+  document.getElementById('kpi-xl-body').innerHTML=html;
+}
+
+function kpiXLUpdateMap(key,val){if(val==='')delete _kpiXLMap[key];else _kpiXLMap[key]=parseInt(val)}
+
+function kpiXLConfirm(){
+  const a=acct();if(!a)return;
+  if(!_kpiXLRows.length){kpiXLClose();return}
+
+  const imported=[];
+  _kpiXLRows.forEach(row=>{
+    const entry={id:uid(),week:'',roas:'',cpa:'',ctr:'',cpm:'',spend:'',revenue:'',conv:'',notes:''};
+    let hasData=false;
+
+    Object.entries(_kpiXLMap).forEach(([key,colIdx])=>{
+      const raw=row[colIdx];
+      if(raw===''||raw==null)return;
+      hasData=true;
+
+      if(key==='week'){
+        if(raw instanceof Date){
+          // convert date → YYYY-Www
+          const d=new Date(raw);
+          const y=d.getFullYear();
+          const start=new Date(y,0,1);
+          const wn=Math.ceil(((d-start)/86400000+start.getDay()+1)/7);
+          entry.week=`${y}-W${String(wn).padStart(2,'0')}`;
+        }else{
+          // try to keep as-is if already week format, else store as notes fallback
+          const s=String(raw).trim();
+          entry.week=s;
+        }
+      }else if(key==='notes'){
+        entry.notes=String(raw).trim();
+      }else{
+        const num=parseFloat(String(raw).replace(/[^0-9.\-]/g,''));
+        if(!isNaN(num))entry[key]=String(num);
+      }
+    });
+
+    if(hasData)imported.push(entry);
+  });
+
+  if(!imported.length){alert('مفيش بيانات اتعرفت — تأكد من الـ mapping');return}
+  if(!a.kpis)a.kpis=[];
+  a.kpis.push(...imported);
+  save();kpiXLClose();renderMain();
+  setTimeout(()=>alert(`✅ تم استيراد ${imported.length} صف بنجاح`),100);
+}
 
 // ── CAMPAIGN NAME GENERATOR TAB ──
 function renderCampGen(main,a){
