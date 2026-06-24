@@ -24,9 +24,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 /* TABS */
 .tabs-bar{background:var(--pd);padding:0 24px;display:flex;align-items:stretch;gap:2px;overflow-x:auto;scrollbar-width:none;min-height:46px}
 .tabs-bar::-webkit-scrollbar{display:none}
-.tab-btn{padding:0 20px;border:none;background:transparent;color:rgba(255,255,255,.55);cursor:pointer;font-size:13px;font-weight:600;border-bottom:3px solid transparent;white-space:nowrap;transition:all .18s;display:flex;align-items:center;gap:8px}
+.tab-btn{padding:0 20px;border:none;background:transparent;color:rgba(255,255,255,.55);cursor:grab;font-size:13px;font-weight:600;border-bottom:3px solid transparent;white-space:nowrap;transition:all .18s;display:flex;align-items:center;gap:8px;user-select:none}
 .tab-btn:hover{color:#fff;background:rgba(255,255,255,.06)}
 .tab-btn.active{color:var(--s);border-bottom-color:var(--s)}
+.tab-btn.dragging{opacity:.35;background:rgba(255,255,255,.04)}
+.tab-btn.drag-over{background:rgba(12,184,125,.18);border-bottom-color:var(--s);color:#fff}
 .tab-count{background:rgba(255,255,255,.12);border-radius:10px;padding:1px 7px;font-size:11px}
 .tab-btn.active .tab-count{background:rgba(12,184,125,.2);color:var(--s)}
 .tab-x{width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;flex-shrink:0}
@@ -41,6 +43,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .sub-tab{padding:11px 16px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:12.5px;font-weight:600;border-bottom:2px solid transparent;transition:all .15s;display:flex;align-items:center;gap:6px;font-family:inherit;white-space:nowrap;flex-shrink:0}
 .sub-tab:hover{color:var(--p)}
 .sub-tab.active{color:var(--p);border-bottom-color:var(--s)}
+.sub-tab{cursor:grab;user-select:none}
+.sub-tab.dragging{opacity:.3}
+.sub-tab.drag-over{border-left:3px solid var(--s);background:#f0fdf8;color:var(--p)}
 
 /* MAIN */
 .main{padding:24px 28px;max-width:1440px;margin:0 auto}
@@ -351,14 +356,6 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
 </div>
 
 <div class="sub-tabs hidden" id="sub-tabs" style="align-items:center">
-  <button class="sub-tab active" id="st-tasks" onclick="switchSub('tasks')"><i class="ti ti-clipboard-list"></i> Content Requests</button>
-  <button class="sub-tab" id="st-mp" onclick="switchSub('mp')"><i class="ti ti-chart-dots-3"></i> Media Plan</button>
-  <button class="sub-tab" id="st-rep" onclick="switchSub('rep')"><i class="ti ti-file-analytics"></i> Client Report</button>
-  <button class="sub-tab" id="st-aud" onclick="switchSub('aud')"><i class="ti ti-users"></i> Audiences</button>
-  <button class="sub-tab" id="st-brief" onclick="switchSub('brief')"><i class="ti ti-pencil"></i> Creative Briefs</button>
-  <button class="sub-tab" id="st-strat" onclick="switchSub('strat')"><i class="ti ti-bulb"></i> Creative Strategy</button>
-  <button class="sub-tab" id="st-dir" onclick="switchSub('dir')"><i class="ti ti-palette"></i> Creative Direction</button>
-  <button class="sub-tab" id="st-atasks" onclick="switchSub('atasks')"><i class="ti ti-layout-kanban"></i> Task Board</button>
   <span class="save-ind hidden" id="save-ind"></span>
 </div>
 
@@ -430,13 +427,28 @@ function dKPIs(obj,cur){
   return[{label:'CPM',value:e?'25':'4',suffix:' '+cur},{label:'Reach',value:'500000',suffix:''},{label:'Frequency',value:'2.5',suffix:'x'}];
 }
 
+// ── SUB-TAB DEFINITIONS ──
+const ALL_SUB_TABS=[
+  {key:'tasks',  icon:'ti-clipboard-list', label:'Content Requests'},
+  {key:'mp',     icon:'ti-chart-dots-3',   label:'Media Plan'},
+  {key:'rep',    icon:'ti-file-analytics', label:'Client Report'},
+  {key:'aud',    icon:'ti-users',          label:'Audiences'},
+  {key:'brief',  icon:'ti-pencil',         label:'Creative Briefs'},
+  {key:'strat',  icon:'ti-bulb',           label:'Creative Strategy'},
+  {key:'dir',    icon:'ti-palette',        label:'Creative Direction'},
+  {key:'atasks', icon:'ti-layout-kanban',  label:'Task Board'},
+];
+const DEFAULT_SUB_ORDER=ALL_SUB_TABS.map(t=>t.key);
+
 // ── STATE ──
-let db={accounts:[],active:null,myTasks:[]};
+let db={accounts:[],active:null,myTasks:[],subTabOrder:[...DEFAULT_SUB_ORDER]};
 let sub='tasks';
 let addT=false;
 let filt='all';
 let chart=null;
 let gview=null; // null | 'mytasks'
+let dragAccId=null;
+let dragSubKey=null;
 
 function load(){try{const s=localStorage.getItem('mbd_v3');if(s)db=JSON.parse(s)}catch(e){}}
 function save(){localStorage.setItem('mbd_v3',JSON.stringify(db))}
@@ -553,14 +565,7 @@ function openMyTasks(){gview='mytasks';killChart();render()}
 function switchSub(s){
   if(s!=='mp')killChart();
   sub=s;
-  document.getElementById('st-tasks').classList.toggle('active',s==='tasks');
-  document.getElementById('st-mp').classList.toggle('active',s==='mp');
-  document.getElementById('st-rep').classList.toggle('active',s==='rep');
-  document.getElementById('st-aud').classList.toggle('active',s==='aud');
-  document.getElementById('st-brief').classList.toggle('active',s==='brief');
-  document.getElementById('st-strat').classList.toggle('active',s==='strat');
-  document.getElementById('st-dir').classList.toggle('active',s==='dir');
-  document.getElementById('st-atasks').classList.toggle('active',s==='atasks');
+  renderSubBar();
   renderMain();
   if(s==='mp')setTimeout(recalc,60);
 }
@@ -2282,6 +2287,7 @@ function renderTabs(){
   tasksBtn.classList.toggle('active',gview==='mytasks');
   const open=(db.myTasks||[]).filter(t=>t.status!=='done').length;
   document.getElementById('my-tasks-badge').textContent=open;
+
   db.accounts.forEach(a=>{
     const pend=a.tasks.filter(t=>t.status!=='done').length;
     const btn=document.createElement('button');
@@ -2289,6 +2295,21 @@ function renderTabs(){
     btn.innerHTML=`<span>${esc(a.name)}</span><span class="tab-count">${pend}</span><button class="tab-x" title="Delete">×</button>`;
     btn.onclick=()=>setAcc(a.id);
     btn.querySelector('.tab-x').onclick=e=>{e.stopPropagation();delAcc(a.id)};
+    // drag-to-reorder accounts
+    btn.draggable=true;
+    btn.ondragstart=e=>{dragAccId=a.id;btn.classList.add('dragging');e.dataTransfer.effectAllowed='move'};
+    btn.ondragend=()=>{dragAccId=null;document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('dragging','drag-over'))};
+    btn.ondragover=e=>{e.preventDefault();if(dragAccId&&dragAccId!==a.id)btn.classList.add('drag-over')};
+    btn.ondragleave=()=>btn.classList.remove('drag-over');
+    btn.ondrop=e=>{
+      e.preventDefault();btn.classList.remove('drag-over');
+      if(!dragAccId||dragAccId===a.id)return;
+      const fi=db.accounts.findIndex(x=>x.id===dragAccId);
+      const ti=db.accounts.findIndex(x=>x.id===a.id);
+      const [moved]=db.accounts.splice(fi,1);
+      db.accounts.splice(ti,0,moved);
+      save();renderTabs();
+    };
     bar.appendChild(btn);
   });
   bar.appendChild(addBtn);
@@ -2296,16 +2317,36 @@ function renderTabs(){
 
 function renderSubBar(){
   const el=document.getElementById('sub-tabs');
+  const saveInd=document.getElementById('save-ind');
   if(acct()&&gview!=='mytasks'){
     el.classList.remove('hidden');
-    document.getElementById('st-tasks').classList.toggle('active',sub==='tasks');
-    document.getElementById('st-mp').classList.toggle('active',sub==='mp');
-    document.getElementById('st-rep').classList.toggle('active',sub==='rep');
-    document.getElementById('st-aud').classList.toggle('active',sub==='aud');
-    document.getElementById('st-brief').classList.toggle('active',sub==='brief');
-    document.getElementById('st-strat').classList.toggle('active',sub==='strat');
-    document.getElementById('st-dir').classList.toggle('active',sub==='dir');
-    document.getElementById('st-atasks').classList.toggle('active',sub==='atasks');
+    // rebuild buttons in current order
+    el.innerHTML='';
+    const order=db.subTabOrder||DEFAULT_SUB_ORDER;
+    order.forEach(key=>{
+      const def=ALL_SUB_TABS.find(t=>t.key===key);if(!def)return;
+      const btn=document.createElement('button');
+      btn.className='sub-tab'+(sub===key?' active':'');
+      btn.id='st-'+key;
+      btn.innerHTML=`<i class="ti ${def.icon}"></i> ${def.label}`;
+      btn.onclick=()=>switchSub(key);
+      btn.draggable=true;
+      btn.ondragstart=e=>{dragSubKey=key;btn.classList.add('dragging');e.dataTransfer.effectAllowed='move'};
+      btn.ondragend=()=>{dragSubKey=null;document.querySelectorAll('.sub-tab').forEach(b=>b.classList.remove('dragging','drag-over'))};
+      btn.ondragover=e=>{e.preventDefault();if(dragSubKey&&dragSubKey!==key)btn.classList.add('drag-over')};
+      btn.ondragleave=()=>btn.classList.remove('drag-over');
+      btn.ondrop=e=>{
+        e.preventDefault();btn.classList.remove('drag-over');
+        if(!dragSubKey||dragSubKey===key)return;
+        const ord=[...(db.subTabOrder||DEFAULT_SUB_ORDER)];
+        const fi=ord.indexOf(dragSubKey),ti=ord.indexOf(key);
+        if(fi<0||ti<0)return;
+        ord.splice(fi,1);ord.splice(ti,0,dragSubKey);
+        db.subTabOrder=ord;save();renderSubBar();
+      };
+      el.appendChild(btn);
+    });
+    el.appendChild(saveInd);
   }else{el.classList.add('hidden')}
 }
 
@@ -2515,6 +2556,7 @@ db.accounts.forEach(a=>{
   if(!a.acctTasks)a.acctTasks=[];
 });
 if(!db.myTasks)db.myTasks=[];
+if(!db.subTabOrder||db.subTabOrder.length!==DEFAULT_SUB_ORDER.length)db.subTabOrder=[...DEFAULT_SUB_ORDER];
 render();
 </script>
 </body>
