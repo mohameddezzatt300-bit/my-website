@@ -2169,7 +2169,7 @@ function renderAcctTasks(main,a){
   </div>`;
 }
 
-// ── MY TASKS ──
+// ── MY TASKS (GLOBAL AGGREGATED VIEW) ──
 const MT_CATS=['Campaign Launch','Client Report','Client Call','Budget Review','Creative Review','Research','Admin','Follow-up','Personal','Other'];
 const MT_PRI={high:{label:'🔴 High',bg:'#fee2e2',color:'#991b1b',border:'#ef4444'},medium:{label:'🟡 Medium',bg:'#fef3c7',color:'#92400e',border:'#f59e0b'},low:{label:'🟢 Low',bg:'#dcfce7',color:'#166534',border:'#22c55e'}};
 const MT_COLS=[
@@ -2177,68 +2177,93 @@ const MT_COLS=[
   {key:'doing',label:'⚡ In Progress',bg:'#eff6ff',hd:'#1e40af',cnt_bg:'#dbeafe',cnt_color:'#1e40af'},
   {key:'done',label:'✅ Done',bg:'#f0fdf4',hd:'#065f46',cnt_bg:'#bbf7d0',cnt_color:'#065f46'}
 ];
+const ACC_COLORS=['#054930','#1e40af','#7c2d12','#4c1d95','#065f46','#92400e','#1e3a5f','#3b0764'];
+function accColor(accId){
+  if(accId==='__personal__')return'#6b7280';
+  const i=db.accounts.findIndex(a=>a.id===accId);
+  return ACC_COLORS[Math.max(0,i)%ACC_COLORS.length];
+}
 
-let mtNewTitle='';let mtNewPri='medium';let mtNewCat='';let mtNewDue='';
+function getAllTasks(){
+  const all=[];
+  db.accounts.forEach(a=>{(a.acctTasks||[]).forEach(t=>all.push({...t,_accId:a.id,_accName:a.name}))});
+  (db.myTasks||[]).forEach(t=>all.push({...t,_accId:'__personal__',_accName:'Personal'}));
+  return all;
+}
 
-function addMyTask(){
-  const title=(document.getElementById('mt-title')||{}).value||mtNewTitle;
+function addGlobalTask(){
+  const title=(document.getElementById('gt-title')||{}).value||'';
   if(!title.trim())return;
-  const pri=(document.getElementById('mt-pri')||{}).value||mtNewPri;
-  const cat=(document.getElementById('mt-cat')||{}).value||mtNewCat;
-  const due=(document.getElementById('mt-due')||{}).value||mtNewDue;
-  db.myTasks.unshift({id:uid(),title:title.trim(),priority:pri,category:cat,dueDate:due,status:'todo',notes:'',createdAt:new Date().toISOString()});
+  const accId=(document.getElementById('gt-acc')||{}).value||'__personal__';
+  const pri=(document.getElementById('gt-pri')||{}).value||'medium';
+  const cat=(document.getElementById('gt-cat')||{}).value||'';
+  const due=(document.getElementById('gt-due')||{}).value||'';
+  const t={id:uid(),title:title.trim(),priority:pri,category:cat,dueDate:due,status:'todo',notes:'',createdAt:new Date().toISOString()};
+  if(accId==='__personal__'){db.myTasks.unshift(t);}
+  else{const a=db.accounts.find(x=>x.id===accId);if(a){if(!a.acctTasks)a.acctTasks=[];a.acctTasks.unshift(t);}}
   save();renderMain();renderTabs();
 }
-function delMyTask(id){db.myTasks=db.myTasks.filter(x=>x.id!==id);save();renderMain();renderTabs()}
-function moveTask(id,dir){
-  const t=db.myTasks.find(x=>x.id===id);if(!t)return;
-  const order=['todo','doing','done'];
-  const i=order.indexOf(t.status)+dir;
+function delGlobalTask(accId,taskId){
+  if(accId==='__personal__')db.myTasks=db.myTasks.filter(x=>x.id!==taskId);
+  else{const a=db.accounts.find(x=>x.id===accId);if(a)a.acctTasks=(a.acctTasks||[]).filter(x=>x.id!==taskId);}
+  save();renderMain();renderTabs();
+}
+function moveGlobalTask(accId,taskId,dir){
+  let t;
+  if(accId==='__personal__')t=db.myTasks.find(x=>x.id===taskId);
+  else{const a=db.accounts.find(x=>x.id===accId);if(a)t=(a.acctTasks||[]).find(x=>x.id===taskId);}
+  if(!t)return;
+  const ord=['todo','doing','done'],i=ord.indexOf(t.status)+dir;
   if(i<0||i>2)return;
-  t.status=order[i];save();renderMain();renderTabs();
+  t.status=ord[i];save();renderMain();renderTabs();
 }
-function updMyTask(id,f,v){const t=db.myTasks.find(x=>x.id===id);if(t){t[f]=v;save();renderTabs()}}
-function togTaskNotes(id){
-  const el=document.getElementById('mt-notes-'+id);
-  if(el)el.classList.toggle('hidden');
+function updGlobalTask(accId,taskId,f,v){
+  let t;
+  if(accId==='__personal__')t=db.myTasks.find(x=>x.id===taskId);
+  else{const a=db.accounts.find(x=>x.id===accId);if(a)t=(a.acctTasks||[]).find(x=>x.id===taskId);}
+  if(t){t[f]=v;save();}
 }
+function togGlobalTaskNotes(eid){const el=document.getElementById('gtn-'+eid);if(el)el.classList.toggle('hidden')}
 
 function renderMyTasks(main){
-  const tasks=db.myTasks||[];
+  const all=getAllTasks();
   const today=new Date().toISOString().slice(0,10);
-  const overdue=tasks.filter(t=>t.dueDate&&t.dueDate<today&&t.status!=='done').length;
+  const open=all.filter(t=>t.status!=='done').length;
+  const overdue=all.filter(t=>t.dueDate&&t.dueDate<today&&t.status!=='done').length;
 
   main.innerHTML=`
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px">
     <div>
-      <div style="font-size:22px;font-weight:800;color:var(--p)">My Tasks</div>
+      <div style="font-size:22px;font-weight:800;color:var(--p)">All Tasks</div>
       <div style="font-size:13px;color:var(--muted);margin-top:2px">
-        ${tasks.filter(t=>t.status!=='done').length} open · ${tasks.filter(t=>t.status==='done').length} done
+        ${open} open · ${all.filter(t=>t.status==='done').length} done · across ${db.accounts.length} account${db.accounts.length!==1?'s':''}
         ${overdue?`<span style="color:#ef4444;font-weight:700;margin-left:8px">· ${overdue} overdue</span>`:''}
       </div>
     </div>
   </div>
 
-  <!-- Quick Add -->
   <div class="task-add-bar">
-    <input id="mt-title" class="task-add-input" placeholder="New task..." onkeydown="if(event.key==='Enter')addMyTask()"/>
-    <select id="mt-pri" class="task-add-sel">
+    <input id="gt-title" class="task-add-input" placeholder="New task..." onkeydown="if(event.key==='Enter')addGlobalTask()"/>
+    <select id="gt-acc" class="task-add-sel">
+      ${db.accounts.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('')}
+      <option value="__personal__">📌 Personal</option>
+    </select>
+    <select id="gt-pri" class="task-add-sel">
       <option value="high">🔴 High</option>
       <option value="medium" selected>🟡 Medium</option>
       <option value="low">🟢 Low</option>
     </select>
-    <select id="mt-cat" class="task-add-sel">
+    <select id="gt-cat" class="task-add-sel">
       <option value="">Category</option>
       ${MT_CATS.map(c=>`<option value="${c}">${c}</option>`).join('')}
     </select>
-    <input id="mt-due" type="date" class="task-add-sel" style="width:auto"/>
-    <button class="btn btn-p btn-sm" onclick="addMyTask()">＋ Add</button>
+    <input id="gt-due" type="date" class="task-add-sel" style="width:auto"/>
+    <button class="btn btn-p btn-sm" onclick="addGlobalTask()">＋ Add</button>
   </div>
 
-  <!-- Kanban -->
   <div class="kanban">
     ${MT_COLS.map(col=>{
-      const colTasks=tasks.filter(t=>t.status===col.key);
+      const colTasks=all.filter(t=>t.status===col.key);
       return `<div class="k-col" style="background:${col.bg}">
         <div class="k-col-hd" style="color:${col.hd}">
           <span>${col.label}</span>
@@ -2250,22 +2275,26 @@ function renderMyTasks(main){
             const pri=MT_PRI[t.priority]||MT_PRI.medium;
             const isOverdue=t.dueDate&&t.dueDate<today&&t.status!=='done';
             const dl=t.dueDate?new Date(t.dueDate+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
+            const aColor=accColor(t._accId);
+            const eid=t._accId+'__'+t.id;
             return `<div class="k-card${t.status==='done'?' done-card':''}" style="border-left-color:${pri.border}">
-              <div class="k-card-title${t.status==='done'?' done-title':''}" contenteditable="true" spellcheck="false" onblur="updMyTask('${t.id}','title',this.textContent.trim())">${esc(t.title)}</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+                <span style="background:${aColor};color:#fff;border-radius:10px;padding:2px 8px;font-size:10px;font-weight:700;flex-shrink:0">${esc(t._accName)}</span>
+              </div>
+              <div class="k-card-title${t.status==='done'?' done-title':''}" contenteditable="true" spellcheck="false" onblur="updGlobalTask('${t._accId}','${t.id}','title',this.textContent.trim())">${esc(t.title)}</div>
               <div class="k-card-meta">
                 <span class="k-tag" style="background:${pri.bg};color:${pri.color}">${pri.label}</span>
                 ${t.category?`<span class="k-tag" style="background:#f0f7f4;color:#054930">${esc(t.category)}</span>`:''}
                 ${dl?`<span class="k-tag" style="background:${isOverdue?'#fee2e2':'#f3f4f6'};color:${isOverdue?'#991b1b':'#6b7280'}${isOverdue?';font-weight:800':''}">📅 ${dl}${isOverdue?' ⚠️':''}</span>`:''}
               </div>
-              ${t.notes?`<div class="k-card-notes">${esc(t.notes)}</div>`:''}
-              <div id="mt-notes-${t.id}" class="hidden" style="margin-bottom:6px">
-                <textarea style="width:100%;border:.5px solid var(--brd);border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;resize:vertical;min-height:48px" placeholder="Notes..." oninput="updMyTask('${t.id}','notes',this.value)">${esc(t.notes)}</textarea>
+              <div id="gtn-${eid}" class="${t.notes?'':'hidden'}" style="margin-bottom:6px">
+                <textarea style="width:100%;border:.5px solid var(--brd);border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;resize:vertical;min-height:48px" placeholder="Notes..." oninput="updGlobalTask('${t._accId}','${t.id}','notes',this.value)">${esc(t.notes)}</textarea>
               </div>
               <div class="k-card-actions">
-                ${col.key!=='todo'?`<button class="k-mv-btn" onclick="moveTask('${t.id}',-1)">← Back</button>`:''}
-                ${col.key!=='done'?`<button class="k-mv-btn" onclick="moveTask('${t.id}',1)">${col.key==='todo'?'Start →':'Done →'}</button>`:''}
-                <button class="k-mv-btn" onclick="togTaskNotes('${t.id}')" style="margin-left:auto">📝</button>
-                <button class="k-mv-btn" onclick="delMyTask('${t.id}')" style="color:#ef4444;border-color:#fecaca">🗑</button>
+                ${col.key!=='todo'?`<button class="k-mv-btn" onclick="moveGlobalTask('${t._accId}','${t.id}',-1)">← Back</button>`:''}
+                ${col.key!=='done'?`<button class="k-mv-btn" onclick="moveGlobalTask('${t._accId}','${t.id}',1)">${col.key==='todo'?'Start →':'Done →'}</button>`:''}
+                <button class="k-mv-btn" onclick="togGlobalTaskNotes('${eid}')" style="margin-left:auto">📝</button>
+                <button class="k-mv-btn" onclick="delGlobalTask('${t._accId}','${t.id}')" style="color:#ef4444;border-color:#fecaca">🗑</button>
               </div>
             </div>`;
           }).join('')}
@@ -2285,7 +2314,7 @@ function renderTabs(){
   bar.innerHTML='';
   bar.appendChild(tasksBtn);
   tasksBtn.classList.toggle('active',gview==='mytasks');
-  const open=(db.myTasks||[]).filter(t=>t.status!=='done').length;
+  const open=getAllTasks().filter(t=>t.status!=='done').length;
   document.getElementById('my-tasks-badge').textContent=open;
 
   db.accounts.forEach(a=>{
