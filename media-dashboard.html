@@ -36,8 +36,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .add-tab-btn:hover{opacity:.7}
 
 /* SUB-TABS */
-.sub-tabs{background:#fff;border-bottom:1px solid var(--brd);padding:0 28px;display:flex;gap:0}
-.sub-tab{padding:12px 20px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;font-weight:600;border-bottom:2px solid transparent;transition:all .15s;display:flex;align-items:center;gap:7px;font-family:inherit}
+.sub-tabs{background:#fff;border-bottom:1px solid var(--brd);padding:0 28px;display:flex;gap:0;overflow-x:auto;scrollbar-width:none}
+.sub-tabs::-webkit-scrollbar{display:none}
+.sub-tab{padding:11px 16px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:12.5px;font-weight:600;border-bottom:2px solid transparent;transition:all .15s;display:flex;align-items:center;gap:6px;font-family:inherit;white-space:nowrap;flex-shrink:0}
 .sub-tab:hover{color:var(--p)}
 .sub-tab.active{color:var(--p);border-bottom-color:var(--s)}
 
@@ -182,6 +183,56 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
 .preview-brief-btn{background:var(--p);color:#fff;border:none;border-radius:7px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;transition:background .15s;white-space:nowrap}
 .preview-brief-btn:hover{background:var(--pd)}
 
+/* STRATEGY & DIRECTION SHARED */
+.strat-section{background:#fff;border:1px solid var(--brd);border-radius:12px;overflow:hidden;margin-bottom:20px}
+.strat-section-hd{background:#f0f7f4;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--brd)}
+.strat-section-title{font-size:14px;font-weight:800;color:var(--p);display:flex;align-items:center;gap:8px}
+.strat-section-body{padding:18px}
+.strat-grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.strat-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.strat-input{border:.5px solid var(--brd);border-radius:7px;padding:7px 11px;font-size:13px;font-family:inherit;background:#fff;color:var(--txt);width:100%;height:36px}
+.strat-input:focus{outline:none;border-color:var(--s);box-shadow:0 0 0 2px rgba(12,184,125,.1)}
+.strat-sel{border:.5px solid var(--brd);border-radius:7px;padding:7px 11px;font-size:13px;font-family:inherit;background:#fff;color:var(--txt);width:100%;height:36px}
+.strat-sel:focus{outline:none;border-color:var(--s)}
+.strat-ta{border:.5px solid var(--brd);border-radius:7px;padding:8px 11px;font-size:13px;font-family:inherit;background:#fff;color:var(--txt);width:100%;resize:vertical;min-height:100px}
+.strat-ta:focus{outline:none;border-color:var(--s);box-shadow:0 0 0 2px rgba(12,184,125,.1)}
+.strat-label{font-size:10px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:block}
+.strat-field{display:flex;flex-direction:column}
+/* USP list */
+.usp-item{display:flex;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:1px dashed var(--brd)}
+.usp-item:last-child{border-bottom:none}
+.usp-num{background:var(--s);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;margin-top:7px}
+/* Angle cards */
+.angle-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.angle-card{background:#f9fafb;border:1px solid var(--brd);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.angle-card-hd{display:flex;align-items:center;gap:8px}
+.angle-card-hd input{flex:1;border:none;background:transparent;font-size:14px;font-weight:700;color:var(--p);font-family:inherit;outline:none;min-width:0}
+.angle-status{font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px;border:none;cursor:pointer;font-family:inherit}
+.angle-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+/* Hook list */
+.hook-item{background:#f9fafb;border:1px solid var(--brd);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.hook-item-hd{display:flex;align-items:center;gap:8px}
+.hook-item-hd input{flex:1;border:none;background:transparent;font-size:13px;font-weight:700;color:var(--p);font-family:inherit;outline:none;min-width:0}
+/* Direction cards */
+.dir-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:16px}
+.dir-card{background:#fff;border:1px solid var(--brd);border-radius:12px;overflow:hidden;transition:box-shadow .15s,border-color .15s}
+.dir-card:hover{box-shadow:0 3px 16px rgba(5,73,48,.09);border-color:#a8d5c0}
+.dir-hd{background:#f0f7f4;padding:13px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--brd)}
+.dir-hd input{flex:1;border:none;background:transparent;font-size:14px;font-weight:700;color:var(--p);font-family:inherit;outline:none;min-width:0}
+.dir-body{padding:16px;display:flex;flex-direction:column;gap:12px}
+.dir-field{display:flex;flex-direction:column;gap:4px}
+.dir-label{font-size:10px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:.5px}
+.dir-sel{border:.5px solid var(--brd);border-radius:7px;padding:6px 10px;font-size:13px;font-family:inherit;background:#fff;color:var(--txt);width:100%;height:34px}
+.dir-sel:focus{outline:none;border-color:var(--s)}
+.dir-input{border:.5px solid var(--brd);border-radius:7px;padding:6px 10px;font-size:13px;font-family:inherit;background:#fff;color:var(--txt);width:100%;height:34px}
+.dir-input:focus{outline:none;border-color:var(--s);box-shadow:0 0 0 2px rgba(12,184,125,.1)}
+.dir-ta{border:.5px solid var(--brd);border-radius:7px;padding:8px 10px;font-size:13px;font-family:inherit;background:#fff;color:var(--txt);width:100%;resize:vertical;min-height:56px}
+.dir-ta:focus{outline:none;border-color:var(--s);box-shadow:0 0 0 2px rgba(12,184,125,.1)}
+.color-swatch{width:28px;height:28px;border-radius:6px;border:2px solid var(--brd);cursor:pointer;padding:0;flex-shrink:0}
+.format-checks{display:flex;flex-wrap:wrap;gap:8px}
+.format-check{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--txt);cursor:pointer}
+.format-check input{accent-color:var(--s);width:14px;height:14px}
+
 /* AUDIENCE CARDS */
 .aud-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
 .aud-card{background:#fff;border:1px solid var(--brd);border-radius:12px;overflow:hidden;transition:box-shadow .15s,border-color .15s}
@@ -262,6 +313,8 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
   <button class="sub-tab" id="st-rep" onclick="switchSub('rep')"><i class="ti ti-file-analytics"></i> Client Report</button>
   <button class="sub-tab" id="st-aud" onclick="switchSub('aud')"><i class="ti ti-users"></i> Audiences</button>
   <button class="sub-tab" id="st-brief" onclick="switchSub('brief')"><i class="ti ti-pencil"></i> Creative Briefs</button>
+  <button class="sub-tab" id="st-strat" onclick="switchSub('strat')"><i class="ti ti-bulb"></i> Creative Strategy</button>
+  <button class="sub-tab" id="st-dir" onclick="switchSub('dir')"><i class="ti ti-palette"></i> Creative Direction</button>
   <span class="save-ind hidden" id="save-ind"></span>
 </div>
 
@@ -422,7 +475,9 @@ function addAcc(){
     mediaPlan:{clientName:name,totalBudget:30000,currency:cur,duration:'3',objective:obj,campaigns:DCAMPS(),kpis:dKPIs(obj,cur),logoBase64:null,logoAspect:1},
     report:{period:'',preparedBy:'',currency:cur,budgetTotal:'',budgetSpent:'',metrics:[],campaigns:[],topAds:[],campCols:defCampCols(),wins:'',challenges:'',recommendations:''},
     audiences:[],
-    briefs:[]
+    briefs:[],
+    strategy:{usps:[],angles:[],hooks:[],testingPlan:'',funnelNotes:'',fatigueRules:'',winningPatterns:''},
+    directions:[]
   };
   db.accounts.push(a);db.active=a.id;save();closeM();
   addT=false;sub='tasks';filt='all';killChart();render();
@@ -449,6 +504,8 @@ function switchSub(s){
   document.getElementById('st-rep').classList.toggle('active',s==='rep');
   document.getElementById('st-aud').classList.toggle('active',s==='aud');
   document.getElementById('st-brief').classList.toggle('active',s==='brief');
+  document.getElementById('st-strat').classList.toggle('active',s==='strat');
+  document.getElementById('st-dir').classList.toggle('active',s==='dir');
   renderMain();
   if(s==='mp')setTimeout(recalc,60);
 }
@@ -1453,6 +1510,284 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f5f5f5;color:#1a1a1
   w.document.close();
 }
 
+// ── CREATIVE STRATEGY ──
+const ANGLE_TYPES=['Problem / Solution','Social Proof','Before & After','Fear / Risk','FOMO / Urgency','Humor','Educational','Testimonial','How It Works','Comparison','UGC / Raw','Seasonal'];
+const ANGLE_STATUS=[
+  {val:'to-test',label:'🧪 To Test',bg:'#ede9fe',color:'#5b21b6'},
+  {val:'testing',label:'⏳ Testing',bg:'#fef3c7',color:'#92400e'},
+  {val:'winner',label:'🏆 Winner',bg:'#d1fae5',color:'#065f46'},
+  {val:'loser',label:'❌ Loser',bg:'#fee2e2',color:'#991b1b'},
+  {val:'paused',label:'⏸ Paused',bg:'#f3f4f6',color:'#6b7280'}
+];
+const HOOK_STATUS=[
+  {val:'to-test',label:'🧪 To Test',bg:'#ede9fe',color:'#5b21b6'},
+  {val:'tested',label:'✅ Tested',bg:'#d1fae5',color:'#065f46'},
+  {val:'top',label:'🔥 Top Hook',bg:'#fef3c7',color:'#92400e'}
+];
+const FORMATS=['1:1 (Square)','9:16 (Story/Reel)','16:9 (Landscape)','4:5 (Portrait)','2:3','1.91:1 (Feed)'];
+const VIS_STYLES=['Lifestyle / Real People','UGC / Raw','Minimal / Clean','Bold / High Contrast','Animated / Motion Graphics','Testimonial / Talking Head','Product Demo','Before & After','Text-Forward','Documentary Style'];
+
+function strat(){const a=acct();return a?a.strategy:null}
+
+function addUSP(){const a=acct();if(!a)return;a.strategy.usps.push({id:uid(),text:'',notes:''});save();renderMain()}
+function delUSP(id){const a=acct();if(!a)return;a.strategy.usps=a.strategy.usps.filter(x=>x.id!==id);save();renderMain()}
+function updUSP(id,f,v){const s=strat();if(!s)return;const u=s.usps.find(x=>x.id===id);if(u){u[f]=v;save()}}
+
+function addAngle(){const a=acct();if(!a)return;a.strategy.angles.unshift({id:uid(),name:'',angleType:'',hypothesis:'',funnel:'',status:'to-test',notes:''});save();renderMain()}
+function delAngle(id){const a=acct();if(!a)return;a.strategy.angles=a.strategy.angles.filter(x=>x.id!==id);save();renderMain()}
+function updAngle(id,f,v){const s=strat();if(!s)return;const u=s.angles.find(x=>x.id===id);if(u){u[f]=v;save();if(f==='status')renderMain()}}
+
+function addHook(){const a=acct();if(!a)return;a.strategy.hooks.unshift({id:uid(),formula:'',example:'',funnel:'',status:'to-test'});save();renderMain()}
+function delHook(id){const a=acct();if(!a)return;a.strategy.hooks=a.strategy.hooks.filter(x=>x.id!==id);save();renderMain()}
+function updHook(id,f,v){const s=strat();if(!s)return;const u=s.hooks.find(x=>x.id===id);if(u){u[f]=v;save();if(f==='status')renderMain()}}
+
+function updStratField(f,v){const s=strat();if(!s)return;s[f]=v;save()}
+
+function renderStrategy(main,a){
+  const s=a.strategy;
+  const angleStatusBadge=st=>{const o=ANGLE_STATUS.find(x=>x.val===st)||ANGLE_STATUS[0];return `<span style="background:${o.bg};color:${o.color};font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px">${o.label}</span>`};
+  const hookStatusBadge=st=>{const o=HOOK_STATUS.find(x=>x.val===st)||HOOK_STATUS[0];return `<span style="background:${o.bg};color:${o.color};font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px">${o.label}</span>`};
+
+  main.innerHTML=`
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:20px">
+    <div>
+      <div style="font-size:22px;font-weight:800;color:var(--p)">${esc(a.name)} — Creative Strategy</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:2px">${s.angles.length} angles · ${s.hooks.length} hooks · ${s.usps.length} USPs</div>
+    </div>
+  </div>
+
+  <!-- USPs -->
+  <div class="strat-section">
+    <div class="strat-section-hd">
+      <div class="strat-section-title">🎯 Unique Selling Points (USPs)</div>
+      <button class="btn btn-p btn-xs" onclick="addUSP()">＋ Add USP</button>
+    </div>
+    <div class="strat-section-body" style="padding:${s.usps.length?'12px 18px':'18px'}">
+      ${s.usps.length===0?`<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px 0">أضف أهم مميزات المنتج أو الخدمة هنا</div>`
+      :s.usps.map((u,i)=>`
+        <div class="usp-item">
+          <div class="usp-num">${i+1}</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+            <input class="strat-input" value="${esc(u.text)}" placeholder="e.g. Fastest delivery in Egypt — same day guaranteed" oninput="updUSP('${u.id}','text',this.value)"/>
+            <input class="strat-input" style="font-size:12px;color:var(--muted)" value="${esc(u.notes)}" placeholder="Notes / proof points (stats, testimonials, data...)" oninput="updUSP('${u.id}','notes',this.value)"/>
+          </div>
+          <button class="btn btn-d btn-xs" style="margin-top:4px" onclick="delUSP('${u.id}')"><i class="ti ti-trash"></i></button>
+        </div>`).join('')}
+    </div>
+  </div>
+
+  <!-- Ad Angles -->
+  <div class="strat-section">
+    <div class="strat-section-hd">
+      <div class="strat-section-title">💡 Ad Angles</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:12px;color:var(--muted)">${s.angles.filter(x=>x.status==='winner').length} winner${s.angles.filter(x=>x.status==='winner').length!==1?'s':''}</span>
+        <button class="btn btn-p btn-xs" onclick="addAngle()">＋ Add Angle</button>
+      </div>
+    </div>
+    <div class="strat-section-body">
+      ${s.angles.length===0?`<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px 0">ابدأ بإضافة الـ angles اللي عايز تختبرها</div>`
+      :`<div class="angle-grid">${s.angles.map(ang=>{
+        const st=ANGLE_STATUS.find(x=>x.val===ang.status)||ANGLE_STATUS[0];
+        return `<div class="angle-card" style="border-color:${ang.status==='winner'?'#0cb87d':ang.status==='loser'?'#fca5a5':'var(--brd)'}">
+          <div class="angle-card-hd">
+            <input value="${esc(ang.name)}" placeholder="Angle name..." oninput="updAngle('${ang.id}','name',this.value)"/>
+            <select style="background:${st.bg};color:${st.color};border:none;border-radius:20px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit" oninput="updAngle('${ang.id}','status',this.value)">
+              ${ANGLE_STATUS.map(o=>`<option value="${o.val}"${ang.status===o.val?' selected':''}>${o.label}</option>`).join('')}
+            </select>
+            <button class="btn btn-d btn-xs" onclick="delAngle('${ang.id}')"><i class="ti ti-trash"></i></button>
+          </div>
+          <div class="angle-row">
+            <div class="strat-field">
+              <span class="strat-label">Type</span>
+              <select class="strat-sel" oninput="updAngle('${ang.id}','angleType',this.value)">
+                <option value="">Select type</option>
+                ${ANGLE_TYPES.map(t=>`<option value="${t}"${ang.angleType===t?' selected':''}>${t}</option>`).join('')}
+              </select>
+            </div>
+            <div class="strat-field">
+              <span class="strat-label">Funnel Stage</span>
+              <select class="strat-sel" oninput="updAngle('${ang.id}','funnel',this.value)">
+                <option value="">Select</option>
+                ${['TOFU — Awareness','MOFU — Consideration','BOFU — Conversion','Retention'].map(f=>`<option value="${f}"${ang.funnel===f?' selected':''}>${f}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div class="strat-field">
+            <span class="strat-label">Hypothesis — Why should this angle work?</span>
+            <textarea class="strat-ta" style="min-height:58px" placeholder="e.g. Our audience struggles with X, so leading with that pain point before the offer should trigger recognition..." oninput="updAngle('${ang.id}','hypothesis',this.value)">${esc(ang.hypothesis)}</textarea>
+          </div>
+          <div class="strat-field">
+            <span class="strat-label">Notes / Results</span>
+            <textarea class="strat-ta" style="min-height:44px" placeholder="Test results, what worked, what to tweak..." oninput="updAngle('${ang.id}','notes',this.value)">${esc(ang.notes)}</textarea>
+          </div>
+        </div>`}).join('')}</div>`}
+    </div>
+  </div>
+
+  <!-- Hook Formulas -->
+  <div class="strat-section">
+    <div class="strat-section-hd">
+      <div class="strat-section-title">🎣 Hook Formulas (First 3 Seconds)</div>
+      <button class="btn btn-p btn-xs" onclick="addHook()">＋ Add Hook</button>
+    </div>
+    <div class="strat-section-body" style="display:flex;flex-direction:column;gap:10px">
+      ${s.hooks.length===0?`<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px 0">أضف الـ hooks اللي بتجذب attention الـ audience ده</div>`
+      :s.hooks.map(h=>{
+        const hst=HOOK_STATUS.find(x=>x.val===h.status)||HOOK_STATUS[0];
+        return `<div class="hook-item">
+          <div class="hook-item-hd">
+            <i class="ti ti-fish-hook" style="color:var(--s);flex-shrink:0"></i>
+            <input value="${esc(h.formula)}" placeholder="Hook formula or script..." oninput="updHook('${h.id}','formula',this.value)" style="flex:1;border:none;background:transparent;font-size:13px;font-weight:700;color:var(--p);font-family:inherit;outline:none"/>
+            <select style="background:${hst.bg};color:${hst.color};border:none;border-radius:20px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit" oninput="updHook('${h.id}','status',this.value)">
+              ${HOOK_STATUS.map(o=>`<option value="${o.val}"${h.status===o.val?' selected':''}>${o.label}</option>`).join('')}
+            </select>
+            <select class="strat-sel" style="width:auto;flex-shrink:0" oninput="updHook('${h.id}','funnel',this.value)">
+              <option value="">All Stages</option>
+              ${['TOFU','MOFU','BOFU'].map(f=>`<option value="${f}"${h.funnel===f?' selected':''}>${f}</option>`).join('')}
+            </select>
+            <button class="btn btn-d btn-xs" onclick="delHook('${h.id}')"><i class="ti ti-trash"></i></button>
+          </div>
+          <textarea class="strat-ta" style="min-height:48px" placeholder='Example script or visual: e.g. "Open on close-up of product. VO: If you've tried everything and still…"' oninput="updHook('${h.id}','example',this.value)">${esc(h.example)}</textarea>
+        </div>`}).join('')}
+    </div>
+  </div>
+
+  <!-- Notes Grid -->
+  <div class="strat-grid2" style="gap:16px">
+    <div class="strat-section">
+      <div class="strat-section-hd"><div class="strat-section-title">🧪 Testing Plan</div></div>
+      <div class="strat-section-body">
+        <textarea class="strat-ta" style="min-height:120px" placeholder="What will you test first? What's the priority order? How many ads per angle? Budget per test?..." oninput="updStratField('testingPlan',this.value)">${esc(s.testingPlan)}</textarea>
+      </div>
+    </div>
+    <div class="strat-section">
+      <div class="strat-section-hd"><div class="strat-section-title">🗺️ Funnel Mapping</div></div>
+      <div class="strat-section-body">
+        <textarea class="strat-ta" style="min-height:120px" placeholder="TOFU → angles X, Y, Z&#10;MOFU → retargeting angles, social proof&#10;BOFU → offer-heavy, objection handling, urgency" oninput="updStratField('funnelNotes',this.value)">${esc(s.funnelNotes)}</textarea>
+      </div>
+    </div>
+    <div class="strat-section">
+      <div class="strat-section-hd"><div class="strat-section-title">🔁 Creative Fatigue Rules</div></div>
+      <div class="strat-section-body">
+        <textarea class="strat-ta" style="min-height:120px" placeholder="e.g. Refresh creative when:&#10;- Frequency > 3.5&#10;- CTR drops below 1%&#10;- CPM increases 30% week-over-week" oninput="updStratField('fatigueRules',this.value)">${esc(s.fatigueRules)}</textarea>
+      </div>
+    </div>
+    <div class="strat-section">
+      <div class="strat-section-hd"><div class="strat-section-title">🏆 Winning Patterns</div></div>
+      <div class="strat-section-body">
+        <textarea class="strat-ta" style="min-height:120px" placeholder="What's been working for this client / niche? Common traits of winning ads (hooks, formats, offers, copy styles)..." oninput="updStratField('winningPatterns',this.value)">${esc(s.winningPatterns)}</textarea>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── CREATIVE DIRECTION ──
+function addDirection(){
+  const a=acct();if(!a)return;
+  a.directions.unshift({
+    id:uid(),name:'',visualStyle:'',colorNotes:'',colors:['#054930','#0cb87d','#ffffff'],
+    typography:'',mood:'',talentNotes:'',music:'',
+    formats:[],references:'',notes:'',createdAt:new Date().toISOString()
+  });
+  save();renderMain();
+}
+function delDirection(id){const a=acct();if(!a)return;a.directions=a.directions.filter(x=>x.id!==id);save();renderMain()}
+function updDir(id,f,v){const a=acct();if(!a)return;const d=a.directions.find(x=>x.id===id);if(d){d[f]=v;save()}}
+function togDirFormat(id,fmt){
+  const a=acct();if(!a)return;
+  const d=a.directions.find(x=>x.id===id);if(!d)return;
+  if(!d.formats)d.formats=[];
+  const i=d.formats.indexOf(fmt);
+  if(i===-1)d.formats.push(fmt);else d.formats.splice(i,1);
+  save();
+}
+
+function renderDirection(main,a){
+  const dirs=a.directions||[];
+  main.innerHTML=`
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px">
+    <div>
+      <div style="font-size:22px;font-weight:800;color:var(--p)">${esc(a.name)} — Creative Direction</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:2px">${dirs.length} direction doc${dirs.length!==1?'s':''}</div>
+    </div>
+    <button class="btn btn-p btn-sm" onclick="addDirection()">＋ New Direction</button>
+  </div>
+  ${dirs.length===0?`
+    <div class="empty" style="margin-top:40px">
+      <div class="ei">🎨</div>
+      <h3>No direction docs yet</h3>
+      <p>Create a creative direction document for each campaign or content type.</p>
+    </div>`
+  :`<div class="dir-grid">${dirs.map(d=>dirCard(d)).join('')}</div>`}`;
+}
+
+function dirCard(d){
+  const tones=['Professional','Fun & Energetic','Emotional','Urgent','Inspirational','Conversational','Bold & Direct'];
+  return `<div class="dir-card">
+    <div class="dir-hd">
+      <i class="ti ti-palette" style="color:var(--s);font-size:16px;flex-shrink:0"></i>
+      <input value="${esc(d.name)}" placeholder="Direction doc name (e.g. Ramadan Campaign, BOFU Ads)..." oninput="updDir('${d.id}','name',this.value)"/>
+      <button class="btn btn-d btn-xs" onclick="delDirection('${d.id}')"><i class="ti ti-trash"></i></button>
+    </div>
+    <div class="dir-body">
+      <div class="dir-field">
+        <div class="dir-label">Visual Style</div>
+        <select class="dir-sel" oninput="updDir('${d.id}','visualStyle',this.value)">
+          <option value="">Select style</option>
+          ${VIS_STYLES.map(s=>`<option value="${s}"${d.visualStyle===s?' selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="dir-field">
+          <div class="dir-label">Tone & Mood</div>
+          <select class="dir-sel" oninput="updDir('${d.id}','mood',this.value)">
+            <option value="">Select tone</option>
+            ${tones.map(t=>`<option value="${t}"${d.mood===t?' selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+        <div class="dir-field">
+          <div class="dir-label">Typography / Font</div>
+          <input class="dir-input" value="${esc(d.typography)}" placeholder="e.g. Cairo Bold for headers" oninput="updDir('${d.id}','typography',this.value)"/>
+        </div>
+      </div>
+      <div class="dir-field">
+        <div class="dir-label">Color Palette</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          ${(d.colors||['#054930','#0cb87d','#ffffff']).map((c,ci)=>`
+            <div style="display:flex;align-items:center;gap:4px">
+              <input type="color" class="color-swatch" value="${c}" oninput="(function(el){const a=acct();const dir=a.directions.find(x=>x.id==='${d.id}');if(dir){if(!dir.colors)dir.colors=['#054930','#0cb87d','#ffffff'];dir.colors[${ci}]=el.value;save()}})(this)"/>
+              <span style="font-size:12px;color:var(--muted);font-family:monospace">${c}</span>
+            </div>`).join('')}
+          <input class="dir-input" style="flex:1;min-width:160px" value="${esc(d.colorNotes)}" placeholder="Notes: brand colors only, avoid red..." oninput="updDir('${d.id}','colorNotes',this.value)"/>
+        </div>
+      </div>
+      <div class="dir-field">
+        <div class="dir-label">Required Formats</div>
+        <div class="format-checks">
+          ${FORMATS.map(f=>`<label class="format-check"><input type="checkbox" ${(d.formats||[]).includes(f)?'checked':''} onchange="togDirFormat('${d.id}','${f}')"/> ${f}</label>`).join('')}
+        </div>
+      </div>
+      <div class="dir-field">
+        <div class="dir-label">Talent / People Guidelines</div>
+        <textarea class="dir-ta" placeholder="e.g. Female presenter 25–35, casual Egyptian dialect, no heavy makeup, relatable home setting..." oninput="updDir('${d.id}','talentNotes',this.value)">${esc(d.talentNotes)}</textarea>
+      </div>
+      <div class="dir-field">
+        <div class="dir-label">Music & Sound Direction</div>
+        <textarea class="dir-ta" style="min-height:48px" placeholder="e.g. Upbeat background track, no lyrics. Fast cuts. Sound effects on key product moments. No voiceover." oninput="updDir('${d.id}','music',this.value)">${esc(d.music)}</textarea>
+      </div>
+      <div class="dir-field">
+        <div class="dir-label">Reference Links / Mood Board</div>
+        <textarea class="dir-ta" style="min-height:48px" placeholder="https://... or describe: similar to [brand]'s ad style in [campaign]" oninput="updDir('${d.id}','references',this.value)">${esc(d.references)}</textarea>
+      </div>
+      <div class="dir-field">
+        <div class="dir-label">Additional Notes</div>
+        <textarea class="dir-ta" style="min-height:48px" placeholder="Logo placement, watermarks, safe zones, file format requirements..." oninput="updDir('${d.id}','notes',this.value)">${esc(d.notes)}</textarea>
+      </div>
+    </div>
+  </div>`;
+}
+
 // ── RENDER ──
 function render(){renderTabs();renderSubBar();renderMain();updStats()}
 
@@ -1481,6 +1816,8 @@ function renderSubBar(){
     document.getElementById('st-rep').classList.toggle('active',sub==='rep');
     document.getElementById('st-aud').classList.toggle('active',sub==='aud');
     document.getElementById('st-brief').classList.toggle('active',sub==='brief');
+    document.getElementById('st-strat').classList.toggle('active',sub==='strat');
+    document.getElementById('st-dir').classList.toggle('active',sub==='dir');
   }else{el.classList.add('hidden')}
 }
 
@@ -1495,7 +1832,9 @@ function renderMain(){
   else if(sub==='mp')renderMP(main,a);
   else if(sub==='rep')renderRep(main,a);
   else if(sub==='aud')renderAud(main,a);
-  else renderBrief(main,a);
+  else if(sub==='brief')renderBrief(main,a);
+  else if(sub==='strat')renderStrategy(main,a);
+  else renderDirection(main,a);
 }
 
 // ── TASKS VIEW ──
@@ -1678,6 +2017,11 @@ db.accounts.forEach(a=>{
   if(!a.report.campCols)a.report.campCols=defCampCols();
   if(!a.audiences)a.audiences=[];
   if(!a.briefs)a.briefs=[];
+  if(!a.strategy)a.strategy={usps:[],angles:[],hooks:[],testingPlan:'',funnelNotes:'',fatigueRules:'',winningPatterns:''};
+  if(!a.strategy.usps)a.strategy.usps=[];
+  if(!a.strategy.angles)a.strategy.angles=[];
+  if(!a.strategy.hooks)a.strategy.hooks=[];
+  if(!a.directions)a.directions=[];
 });
 render();
 </script>
