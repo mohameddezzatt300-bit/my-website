@@ -2413,7 +2413,7 @@ async function testGemini(){
   const btn=document.getElementById('s-test-btn');
   btn.textContent='Testing...';btn.disabled=true;
   try{
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${k}`,{
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${k}`,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({contents:[{parts:[{text:'Say "OK" only'}]}]})
     });
@@ -2489,7 +2489,7 @@ async function sendAI(){
   :'أنت مساعد متخصص في media buying. رد بنفس لغة السؤال. كن عملياً وموجزاً.';
 
   try{
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,{
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         system_instruction:{parts:[{text:context}]},
@@ -2499,10 +2499,17 @@ async function sendAI(){
     const d=await r.json();
     const reply=d.candidates?.[0]?.content?.parts?.[0]?.text;
     loadEl.className='ai-msg ai';
-    loadEl.textContent=reply||('Error: '+(d.error?.message||'No response'));
+    if(reply){loadEl.textContent=reply}
+    else{
+      const msg=d.error?.message||'No response';
+      const isQuota=msg.toLowerCase().includes('quota');
+      loadEl.textContent=isQuota
+        ?'⚠️ انتهت الكوتا المجانية. روح Google AI Studio وفعّل Billing على الـ project بتاعك (مجاني لحد حد معين)، أو عمل API key جديد.'
+        :'❌ خطأ: '+msg;
+    }
   }catch(e){
     loadEl.className='ai-msg ai';
-    loadEl.textContent='❌ Network error. Check your connection.';
+    loadEl.textContent='❌ مشكلة في الاتصال. تأكد من الإنترنت وحاول تاني.';
   }
   aiLoading=false;
   document.getElementById('ai-send').disabled=false;
@@ -2515,15 +2522,28 @@ async function aiGenerate(prompt,onResult){
   const a=acct();
   const context=a?`أنت مساعد media buying متخصص للحساب "${a.name}". أجب بنفس لغة السؤال. كن موجزاً وعملياً.`:'أنت مساعد media buying.';
   try{
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,{
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({system_instruction:{parts:[{text:context}]},contents:[{parts:[{text:prompt}]}]})
     });
     const d=await r.json();
     const reply=d.candidates?.[0]?.content?.parts?.[0]?.text;
-    if(reply)onResult(reply);
-    else alert('No response from Gemini: '+(d.error?.message||'Unknown error'));
-  }catch(e){alert('Network error. Check your connection.')}
+    if(reply){onResult(reply)}
+    else{
+      const msg=d.error?.message||'Unknown error';
+      const isQuota=msg.toLowerCase().includes('quota');
+      if(isQuota){
+        if(!aiOpen)toggleAI();
+        showAIStatus('⚠️ انتهت الكوتا المجانية. روح Google AI Studio وفعّل Billing على الـ project، أو عمل API key جديد.');
+      }else{
+        if(!aiOpen)toggleAI();
+        showAIStatus('❌ خطأ من Gemini: '+msg);
+      }
+    }
+  }catch(e){
+    if(!aiOpen)toggleAI();
+    showAIStatus('❌ مشكلة في الاتصال. تأكد من الإنترنت وحاول تاني.');
+  }
 }
 
 async function aiGenerateUSPs(){
