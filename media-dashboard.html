@@ -183,6 +183,36 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
 .preview-brief-btn{background:var(--p);color:#fff;border:none;border-radius:7px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;transition:background .15s;white-space:nowrap}
 .preview-brief-btn:hover{background:var(--pd)}
 
+/* MY TASKS GLOBAL BTN */
+.my-tasks-btn{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.8);padding:0 16px;border-radius:0;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;height:100%;transition:all .15s;white-space:nowrap;flex-shrink:0;border-right:1px solid rgba(255,255,255,.1)}
+.my-tasks-btn:hover{background:rgba(255,255,255,.18);color:#fff}
+.my-tasks-btn.active{background:var(--s);color:#fff}
+.my-tasks-badge{background:rgba(255,255,255,.25);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:800}
+.my-tasks-btn.active .my-tasks-badge{background:rgba(255,255,255,.3)}
+/* KANBAN */
+.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start}
+.k-col{background:#f4f6f5;border-radius:12px;overflow:hidden}
+.k-col-hd{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:800}
+.k-col-hd .k-count{font-size:11px;font-weight:700;border-radius:20px;padding:2px 9px}
+.k-cards{padding:10px 10px 14px;display:flex;flex-direction:column;gap:8px;min-height:80px}
+.k-card{background:#fff;border-radius:9px;border:1px solid var(--brd);border-left:3px solid;padding:12px 13px;transition:box-shadow .15s;cursor:default}
+.k-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.09)}
+.k-card.done-card{opacity:.55}
+.k-card-title{font-size:13px;font-weight:700;color:var(--p);margin-bottom:7px;word-break:break-word}
+.k-card-title.done-title{text-decoration:line-through;color:var(--muted)}
+.k-card-meta{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.k-tag{font-size:10px;font-weight:700;border-radius:10px;padding:2px 8px}
+.k-card-notes{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:8px;white-space:pre-wrap}
+.k-card-actions{display:flex;align-items:center;gap:5px}
+.k-mv-btn{border:1px solid var(--brd);background:#fff;border-radius:6px;padding:3px 7px;font-size:11px;cursor:pointer;color:var(--muted);font-family:inherit;transition:all .12s}
+.k-mv-btn:hover{border-color:var(--s);color:var(--s)}
+/* TASK QUICK ADD */
+.task-add-bar{background:#fff;border:1px solid var(--brd);border-radius:10px;padding:14px 16px;margin-bottom:18px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.task-add-input{flex:1;min-width:200px;border:.5px solid var(--brd);border-radius:7px;padding:8px 12px;font-size:14px;font-family:inherit;background:#fff;color:var(--txt)}
+.task-add-input:focus{outline:none;border-color:var(--s);box-shadow:0 0 0 2px rgba(12,184,125,.1)}
+.task-add-sel{border:.5px solid var(--brd);border-radius:7px;padding:8px 10px;font-size:13px;font-family:inherit;background:#fff;color:var(--txt);height:36px}
+.task-add-sel:focus{outline:none;border-color:var(--s)}
+
 /* STRATEGY & DIRECTION SHARED */
 .strat-section{background:#fff;border:1px solid var(--brd);border-radius:12px;overflow:hidden;margin-bottom:20px}
 .strat-section-hd{background:#f0f7f4;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--brd)}
@@ -316,6 +346,7 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
 </header>
 
 <div class="tabs-bar" id="tabs-bar">
+  <button class="my-tasks-btn" id="my-tasks-btn" onclick="openMyTasks()"><i class="ti ti-checkbox"></i> My Tasks <span class="my-tasks-badge" id="my-tasks-badge">0</span></button>
   <button class="add-tab-btn" id="add-tab-btn" title="Add Account">＋</button>
 </div>
 
@@ -399,11 +430,12 @@ function dKPIs(obj,cur){
 }
 
 // ── STATE ──
-let db={accounts:[],active:null};
+let db={accounts:[],active:null,myTasks:[]};
 let sub='tasks';
 let addT=false;
 let filt='all';
 let chart=null;
+let gview=null; // null | 'mytasks'
 
 function load(){try{const s=localStorage.getItem('mbd_v3');if(s)db=JSON.parse(s)}catch(e){}}
 function save(){localStorage.setItem('mbd_v3',JSON.stringify(db))}
@@ -512,8 +544,9 @@ function delAcc(id){
 
 function setAcc(id){
   if(db.active!==id)killChart();
-  db.active=id;addT=false;sub='tasks';filt='all';render();
+  db.active=id;addT=false;sub='tasks';filt='all';gview=null;render();
 }
+function openMyTasks(){gview='mytasks';killChart();render()}
 
 function switchSub(s){
   if(s!=='mp')killChart();
@@ -2035,17 +2068,128 @@ function dirListRow(d){
   </div>`;
 }
 
+// ── MY TASKS ──
+const MT_CATS=['Campaign Launch','Client Report','Client Call','Budget Review','Creative Review','Research','Admin','Follow-up','Personal','Other'];
+const MT_PRI={high:{label:'🔴 High',bg:'#fee2e2',color:'#991b1b',border:'#ef4444'},medium:{label:'🟡 Medium',bg:'#fef3c7',color:'#92400e',border:'#f59e0b'},low:{label:'🟢 Low',bg:'#dcfce7',color:'#166534',border:'#22c55e'}};
+const MT_COLS=[
+  {key:'todo',label:'📋 To Do',bg:'#f0f4f2',hd:'#1f2937',cnt_bg:'#e5e7eb',cnt_color:'#374151'},
+  {key:'doing',label:'⚡ In Progress',bg:'#eff6ff',hd:'#1e40af',cnt_bg:'#dbeafe',cnt_color:'#1e40af'},
+  {key:'done',label:'✅ Done',bg:'#f0fdf4',hd:'#065f46',cnt_bg:'#bbf7d0',cnt_color:'#065f46'}
+];
+
+let mtNewTitle='';let mtNewPri='medium';let mtNewCat='';let mtNewDue='';
+
+function addMyTask(){
+  const title=(document.getElementById('mt-title')||{}).value||mtNewTitle;
+  if(!title.trim())return;
+  const pri=(document.getElementById('mt-pri')||{}).value||mtNewPri;
+  const cat=(document.getElementById('mt-cat')||{}).value||mtNewCat;
+  const due=(document.getElementById('mt-due')||{}).value||mtNewDue;
+  db.myTasks.unshift({id:uid(),title:title.trim(),priority:pri,category:cat,dueDate:due,status:'todo',notes:'',createdAt:new Date().toISOString()});
+  save();renderMain();renderTabs();
+}
+function delMyTask(id){db.myTasks=db.myTasks.filter(x=>x.id!==id);save();renderMain();renderTabs()}
+function moveTask(id,dir){
+  const t=db.myTasks.find(x=>x.id===id);if(!t)return;
+  const order=['todo','doing','done'];
+  const i=order.indexOf(t.status)+dir;
+  if(i<0||i>2)return;
+  t.status=order[i];save();renderMain();renderTabs();
+}
+function updMyTask(id,f,v){const t=db.myTasks.find(x=>x.id===id);if(t){t[f]=v;save();renderTabs()}}
+function togTaskNotes(id){
+  const el=document.getElementById('mt-notes-'+id);
+  if(el)el.classList.toggle('hidden');
+}
+
+function renderMyTasks(main){
+  const tasks=db.myTasks||[];
+  const today=new Date().toISOString().slice(0,10);
+  const overdue=tasks.filter(t=>t.dueDate&&t.dueDate<today&&t.status!=='done').length;
+
+  main.innerHTML=`
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px">
+    <div>
+      <div style="font-size:22px;font-weight:800;color:var(--p)">My Tasks</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:2px">
+        ${tasks.filter(t=>t.status!=='done').length} open · ${tasks.filter(t=>t.status==='done').length} done
+        ${overdue?`<span style="color:#ef4444;font-weight:700;margin-left:8px">· ${overdue} overdue</span>`:''}
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Add -->
+  <div class="task-add-bar">
+    <input id="mt-title" class="task-add-input" placeholder="New task..." onkeydown="if(event.key==='Enter')addMyTask()"/>
+    <select id="mt-pri" class="task-add-sel">
+      <option value="high">🔴 High</option>
+      <option value="medium" selected>🟡 Medium</option>
+      <option value="low">🟢 Low</option>
+    </select>
+    <select id="mt-cat" class="task-add-sel">
+      <option value="">Category</option>
+      ${MT_CATS.map(c=>`<option value="${c}">${c}</option>`).join('')}
+    </select>
+    <input id="mt-due" type="date" class="task-add-sel" style="width:auto"/>
+    <button class="btn btn-p btn-sm" onclick="addMyTask()">＋ Add</button>
+  </div>
+
+  <!-- Kanban -->
+  <div class="kanban">
+    ${MT_COLS.map(col=>{
+      const colTasks=tasks.filter(t=>t.status===col.key);
+      return `<div class="k-col" style="background:${col.bg}">
+        <div class="k-col-hd" style="color:${col.hd}">
+          <span>${col.label}</span>
+          <span class="k-count" style="background:${col.cnt_bg};color:${col.cnt_color}">${colTasks.length}</span>
+        </div>
+        <div class="k-cards">
+          ${colTasks.length===0?`<div style="text-align:center;color:#aaa;font-size:12px;padding:20px 0">Empty</div>`
+          :colTasks.map(t=>{
+            const pri=MT_PRI[t.priority]||MT_PRI.medium;
+            const isOverdue=t.dueDate&&t.dueDate<today&&t.status!=='done';
+            const dl=t.dueDate?new Date(t.dueDate+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
+            return `<div class="k-card${t.status==='done'?' done-card':''}" style="border-left-color:${pri.border}">
+              <div class="k-card-title${t.status==='done'?' done-title':''}" contenteditable="true" spellcheck="false" onblur="updMyTask('${t.id}','title',this.textContent.trim())">${esc(t.title)}</div>
+              <div class="k-card-meta">
+                <span class="k-tag" style="background:${pri.bg};color:${pri.color}">${pri.label}</span>
+                ${t.category?`<span class="k-tag" style="background:#f0f7f4;color:#054930">${esc(t.category)}</span>`:''}
+                ${dl?`<span class="k-tag" style="background:${isOverdue?'#fee2e2':'#f3f4f6'};color:${isOverdue?'#991b1b':'#6b7280'}${isOverdue?';font-weight:800':''}">📅 ${dl}${isOverdue?' ⚠️':''}</span>`:''}
+              </div>
+              ${t.notes?`<div class="k-card-notes">${esc(t.notes)}</div>`:''}
+              <div id="mt-notes-${t.id}" class="hidden" style="margin-bottom:6px">
+                <textarea style="width:100%;border:.5px solid var(--brd);border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;resize:vertical;min-height:48px" placeholder="Notes..." oninput="updMyTask('${t.id}','notes',this.value)">${esc(t.notes)}</textarea>
+              </div>
+              <div class="k-card-actions">
+                ${col.key!=='todo'?`<button class="k-mv-btn" onclick="moveTask('${t.id}',-1)">← Back</button>`:''}
+                ${col.key!=='done'?`<button class="k-mv-btn" onclick="moveTask('${t.id}',1)">${col.key==='todo'?'Start →':'Done →'}</button>`:''}
+                <button class="k-mv-btn" onclick="togTaskNotes('${t.id}')" style="margin-left:auto">📝</button>
+                <button class="k-mv-btn" onclick="delMyTask('${t.id}')" style="color:#ef4444;border-color:#fecaca">🗑</button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
 // ── RENDER ──
 function render(){renderTabs();renderSubBar();renderMain();updStats()}
 
 function renderTabs(){
   const bar=document.getElementById('tabs-bar');
   const addBtn=document.getElementById('add-tab-btn');
+  const tasksBtn=document.getElementById('my-tasks-btn');
   bar.innerHTML='';
+  bar.appendChild(tasksBtn);
+  tasksBtn.classList.toggle('active',gview==='mytasks');
+  const open=(db.myTasks||[]).filter(t=>t.status!=='done').length;
+  document.getElementById('my-tasks-badge').textContent=open;
   db.accounts.forEach(a=>{
     const pend=a.tasks.filter(t=>t.status!=='done').length;
     const btn=document.createElement('button');
-    btn.className='tab-btn'+(a.id===db.active?' active':'');
+    btn.className='tab-btn'+(a.id===db.active&&gview!=='mytasks'?' active':'');
     btn.innerHTML=`<span>${esc(a.name)}</span><span class="tab-count">${pend}</span><button class="tab-x" title="Delete">×</button>`;
     btn.onclick=()=>setAcc(a.id);
     btn.querySelector('.tab-x').onclick=e=>{e.stopPropagation();delAcc(a.id)};
@@ -2056,7 +2200,7 @@ function renderTabs(){
 
 function renderSubBar(){
   const el=document.getElementById('sub-tabs');
-  if(acct()){
+  if(acct()&&gview!=='mytasks'){
     el.classList.remove('hidden');
     document.getElementById('st-tasks').classList.toggle('active',sub==='tasks');
     document.getElementById('st-mp').classList.toggle('active',sub==='mp');
@@ -2070,6 +2214,7 @@ function renderSubBar(){
 
 function renderMain(){
   const main=document.getElementById('main');
+  if(gview==='mytasks'){renderMyTasks(main);return}
   const a=acct();
   if(!a){
     main.innerHTML=`<div class="empty" style="margin-top:60px"><div class="ei">📋</div><h3>No Accounts Yet</h3><p>Click <strong>＋</strong> in the tab bar to create your first account.</p></div>`;
@@ -2270,6 +2415,7 @@ db.accounts.forEach(a=>{
   if(!a.strategy.hooks)a.strategy.hooks=[];
   if(!a.directions)a.directions=[];
 });
+if(!db.myTasks)db.myTasks=[];
 render();
 </script>
 </body>
