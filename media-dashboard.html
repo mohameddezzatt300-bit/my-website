@@ -213,20 +213,32 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
 .hook-item{background:#f9fafb;border:1px solid var(--brd);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px}
 .hook-item-hd{display:flex;align-items:center;gap:8px}
 .hook-item-hd input{flex:1;border:none;background:transparent;font-size:13px;font-weight:700;color:var(--p);font-family:inherit;outline:none;min-width:0}
-/* Direction cards */
-.dir-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:16px}
-.dir-card{background:#fff;border:1px solid var(--brd);border-radius:12px;overflow:hidden;transition:box-shadow .15s,border-color .15s}
-.dir-card:hover{box-shadow:0 3px 16px rgba(5,73,48,.09);border-color:#a8d5c0}
-.dir-hd{background:#f0f7f4;padding:13px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--brd)}
-.dir-hd input{flex:1;border:none;background:transparent;font-size:14px;font-weight:700;color:var(--p);font-family:inherit;outline:none;min-width:0}
-.dir-body{padding:16px;display:flex;flex-direction:column;gap:12px}
+/* Direction list */
+.dir-list{display:flex;flex-direction:column;gap:8px}
+.dir-list-row{background:#fff;border:1px solid var(--brd);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .15s}
+.dir-list-row:hover{border-color:#a8d5c0;box-shadow:0 2px 12px rgba(5,73,48,.08);transform:translateY(-1px)}
+.dir-list-icon{width:36px;height:36px;background:linear-gradient(135deg,#054930,#0cb87d);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:16px}
+.dir-list-name{font-size:15px;font-weight:700;color:var(--p);min-width:160px;flex-shrink:0}
+.dir-list-meta{flex:1;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dir-badge{background:#f0f7f4;color:#054930;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;white-space:nowrap}
+.dir-format-tag{background:#e0f2ec;color:var(--p);border-radius:10px;padding:2px 7px;font-size:10px;font-weight:700}
+.dir-list-actions{display:flex;gap:6px;flex-shrink:0}
+/* Direction modal */
+.dir-modal-overlay{position:fixed;inset:0;background:rgba(5,30,20,.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
+.dir-modal-overlay.hidden{display:none}
+.dir-modal-box{background:#fff;border-radius:16px;width:100%;max-width:700px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.35)}
+.dir-modal-hd{background:linear-gradient(135deg,#054930,#076644);color:#fff;padding:22px 28px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;border-radius:16px 16px 0 0}
+.dir-modal-hd input{flex:1;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:8px 14px;color:#fff;font-size:16px;font-weight:700;font-family:inherit;outline:none}
+.dir-modal-hd input::placeholder{color:rgba(255,255,255,.5)}
+.dir-modal-hd input:focus{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.6)}
+.dir-modal-body{padding:24px 28px;display:flex;flex-direction:column;gap:14px}
 .dir-field{display:flex;flex-direction:column;gap:4px}
 .dir-label{font-size:10px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:.5px}
 .dir-sel{border:.5px solid var(--brd);border-radius:7px;padding:6px 10px;font-size:13px;font-family:inherit;background:#fff;color:var(--txt);width:100%;height:34px}
 .dir-sel:focus{outline:none;border-color:var(--s)}
 .dir-input{border:.5px solid var(--brd);border-radius:7px;padding:6px 10px;font-size:13px;font-family:inherit;background:#fff;color:var(--txt);width:100%;height:34px}
 .dir-input:focus{outline:none;border-color:var(--s);box-shadow:0 0 0 2px rgba(12,184,125,.1)}
-.dir-ta{border:.5px solid var(--brd);border-radius:7px;padding:8px 10px;font-size:13px;font-family:inherit;background:#fff;color:var(--txt);width:100%;resize:vertical;min-height:56px}
+.dir-ta{border:.5px solid var(--brd);border-radius:7px;padding:8px 10px;font-size:13px;font-family:inherit;background:#fff;color:var(--txt);width:100%;resize:vertical;min-height:64px}
 .dir-ta:focus{outline:none;border-color:var(--s);box-shadow:0 0 0 2px rgba(12,184,125,.1)}
 .color-swatch{width:28px;height:28px;border-radius:6px;border:2px solid var(--brd);cursor:pointer;padding:0;flex-shrink:0}
 .format-checks{display:flex;flex-wrap:wrap;gap:8px}
@@ -339,6 +351,13 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
       <button class="btn btn-g" onclick="closeM()">Cancel</button>
       <button class="btn btn-p" onclick="addAcc()">Create Account</button>
     </div>
+  </div>
+</div>
+
+<!-- DIRECTION MODAL -->
+<div class="dir-modal-overlay hidden" id="dir-modal-overlay" onclick="closeDirModal(event)">
+  <div class="dir-modal-box" onclick="event.stopPropagation()">
+    <div id="dir-modal-content"></div>
   </div>
 </div>
 
@@ -1449,58 +1468,94 @@ function previewBrief(id){
       <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e8f4ee">${rows}</table>
     </div>`;
 
+  const twoCol=(l1,v1,l2,v2)=>(v1||v2)?`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px">
+      ${v1?`<div style="background:#f9fafb;border-radius:8px;padding:14px 16px"><div style="font-size:10px;font-weight:800;color:#054930;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">${l1}</div><div style="font-size:13px;line-height:1.6;color:#1f2937;white-space:pre-wrap">${esc(v1)}</div></div>`:'<div></div>'}
+      ${v2?`<div style="background:#f9fafb;border-radius:8px;padding:14px 16px"><div style="font-size:10px;font-weight:800;color:#054930;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">${l2}</div><div style="font-size:13px;line-height:1.6;color:#1f2937;white-space:pre-wrap">${esc(v2)}</div></div>`:'<div></div>'}
+    </div>`:'';
+  const fullRow=(label,val,accent)=>val?`
+    <div style="background:${accent||'#f9fafb'};border-radius:8px;padding:14px 16px;margin-bottom:14px">
+      <div style="font-size:10px;font-weight:800;color:#054930;text-transform:uppercase;letter-spacing:.7px;margin-bottom:7px">${label}</div>
+      <div style="font-size:13px;line-height:1.7;color:#1f2937;white-space:pre-wrap">${esc(val)}</div>
+    </div>`:'';
+
   const html=`<!DOCTYPE html><html><head>
 <meta charset="UTF-8"><title>Creative Brief — ${esc(b.campaignName||'Untitled')}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#f5f5f5;color:#1a1a1a}
-.page{max-width:820px;margin:30px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 40px rgba(0,0,0,.12)}
-@media print{body{background:#fff}.page{margin:0;box-shadow:none;border-radius:0;max-width:100%}.no-print{display:none}}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4f0;color:#1a1a1a}
+.page{max-width:840px;margin:0 auto}
+.sec-hd{font-size:15px;font-weight:800;color:#054930;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #0cb87d;display:flex;align-items:center;gap:8px}
+.content-wrap{padding:32px 44px}
+@media print{
+  body{background:#fff}
+  .page{max-width:100%}
+  .content-wrap{padding:24px 32px}
+  .no-print{display:none}
+  .page-break{page-break-before:always}
+  section{break-inside:avoid}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
 </style></head><body>
-<div class="no-print" style="position:fixed;top:0;left:0;right:0;background:#054930;color:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;z-index:99;font-size:13px;font-weight:600">
-  <span>✏️ Creative Brief</span>
+<div class="no-print" style="position:fixed;top:0;left:0;right:0;background:#054930;color:#fff;padding:11px 24px;display:flex;align-items:center;justify-content:space-between;z-index:99;font-size:13px;font-weight:600">
+  <span>✏️ Creative Brief — ${esc(b.campaignName||'Untitled')}</span>
   <div style="display:flex;gap:10px">
-    <button onclick="window.print()" style="background:#0cb87d;color:#fff;border:none;border-radius:7px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer">🖨️ Print / Save PDF</button>
-    <button onclick="window.close()" style="background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:7px;padding:8px 14px;font-size:13px;cursor:pointer">✕ Close</button>
+    <button onclick="window.print()" style="background:#0cb87d;color:#fff;border:none;border-radius:7px;padding:7px 18px;font-size:13px;font-weight:700;cursor:pointer">🖨️ Print / Save PDF</button>
+    <button onclick="window.close()" style="background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:7px;padding:7px 14px;font-size:13px;cursor:pointer">✕ Close</button>
   </div>
 </div>
-<div style="height:52px" class="no-print"></div>
+<div style="height:44px" class="no-print"></div>
 <div class="page">
 
-  <div style="background:linear-gradient(135deg,#054930,#076644);color:#fff;padding:40px 48px">
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:.7;margin-bottom:8px">Creative Brief</div>
-    <div style="font-size:28px;font-weight:800;margin-bottom:4px">${esc(b.campaignName||'Untitled Brief')}</div>
-    <div style="font-size:14px;opacity:.75;margin-bottom:20px">${esc(a.name)} · ${today}</div>
-    <div style="display:flex;gap:12px;flex-wrap:wrap">
-      ${b.platform?`<span style="background:rgba(12,184,125,.2);border:1px solid rgba(12,184,125,.4);color:#0cb87d;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700">${esc(b.platform)}</span>`:''}
-      ${b.adType?`<span style="background:rgba(255,255,255,.15);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700">${esc(b.adType)}</span>`:''}
-      ${b.format?`<span style="background:rgba(255,255,255,.15);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700">${esc(b.format)}</span>`:''}
-      ${b.duration?`<span style="background:rgba(255,255,255,.15);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700">${esc(b.duration)}</span>`:''}
-      ${b.deadline?`<span style="background:rgba(239,68,68,.25);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700">📅 Deadline: ${dl}</span>`:''}
+  <!-- COVER HEADER -->
+  <div style="background:linear-gradient(135deg,#054930 0%,#076644 55%,#0a8055 100%);color:#fff;padding:44px 44px 36px;position:relative;overflow:hidden">
+    <div style="position:absolute;right:-40px;top:-40px;width:200px;height:200px;background:rgba(12,184,125,.12);border-radius:50%"></div>
+    <div style="position:absolute;right:40px;bottom:-30px;width:120px;height:120px;background:rgba(255,255,255,.05);border-radius:50%"></div>
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;opacity:.6;margin-bottom:10px">Creative Brief</div>
+    <div style="font-size:30px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px">${esc(b.campaignName||'Untitled Brief')}</div>
+    <div style="font-size:14px;opacity:.7;margin-bottom:24px">${esc(a.name)} &nbsp;·&nbsp; ${today}</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      ${b.platform?`<span style="background:rgba(12,184,125,.25);border:1px solid rgba(12,184,125,.5);color:#5df5c0;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700">${esc(b.platform)}</span>`:''}
+      ${b.adType?`<span style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700">${esc(b.adType)}</span>`:''}
+      ${b.format?`<span style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700">${esc(b.format)}</span>`:''}
+      ${b.duration?`<span style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700">${esc(b.duration)}</span>`:''}
+      ${b.deadline?`<span style="background:rgba(239,68,68,.3);border:1px solid rgba(239,68,68,.4);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700">📅 Deadline: ${dl}</span>`:''}
     </div>
   </div>
 
-  <div style="padding:36px 48px">
-    ${section('Campaign Info','🎯',
-      row('Objective', b.objective)+
-      row('Target Audience', b.targetAudience)+
-      row('Tone & Style', b.tone)
-    )}
-    ${section('The Message','💬',
-      row('Key Message', b.keyMessage)+
-      row('Hook (First 3s)', b.hook)+
-      row('Call to Action', b.cta)
-    )}
-    ${(b.dos||b.donts||b.references)?section('Creative Direction','🎨',
-      row("✅ Do's", b.dos)+
-      row("🚫 Don'ts", b.donts)+
-      row('References', b.references)
-    ):''}
-    ${b.notes?section('Additional Notes','📝', row('Notes', b.notes)):''}
+  <div class="content-wrap">
+
+    ${(b.objective||b.tone)?`<section style="margin-bottom:28px">
+      <div class="sec-hd">🎯 Campaign Info</div>
+      ${twoCol('Objective',b.objective,'Tone & Style',b.tone)}
+      ${fullRow('Target Audience',b.targetAudience)}
+    </section>`:''}
+
+    ${(b.keyMessage||b.hook||b.cta)?`<section style="margin-bottom:28px">
+      <div class="sec-hd">💬 The Message</div>
+      ${fullRow('Key Message',b.keyMessage,'#eef7f2')}
+      ${twoCol('Hook — First 3 Seconds',b.hook,'Call to Action',b.cta)}
+    </section>`:''}
+
+    ${(b.dos||b.donts)?`<section style="margin-bottom:28px">
+      <div class="sec-hd">🎨 Creative Direction</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        ${b.dos?`<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px 16px"><div style="font-size:10px;font-weight:800;color:#065f46;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px">✅ Do's — Must Include</div><div style="font-size:13px;line-height:1.7;color:#1f2937;white-space:pre-wrap">${esc(b.dos)}</div></div>`:''}
+        ${b.donts?`<div style="background:#fff5f5;border:1px solid #fecaca;border-radius:8px;padding:14px 16px"><div style="font-size:10px;font-weight:800;color:#991b1b;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px">🚫 Don'ts — Must Avoid</div><div style="font-size:13px;line-height:1.7;color:#1f2937;white-space:pre-wrap">${esc(b.donts)}</div></div>`:''}
+      </div>
+      ${fullRow('Reference Ads',b.references)}
+    </section>`:''}
+
+    ${b.notes?`<section style="margin-bottom:20px">
+      <div class="sec-hd">📝 Additional Notes</div>
+      ${fullRow('',b.notes)}
+    </section>`:''}
+
   </div>
 
-  <div style="background:#054930;color:rgba(255,255,255,.6);text-align:center;padding:14px;font-size:12px">
-    <strong style="color:#0cb87d">${esc(a.name)}</strong> · Creative Brief · ${today}
+  <div style="background:#054930;color:rgba(255,255,255,.5);text-align:center;padding:14px 24px;font-size:12px;display:flex;align-items:center;justify-content:space-between">
+    <span><strong style="color:#0cb87d">${esc(a.name)}</strong> · Creative Brief</span>
+    <span>${today}</span>
   </div>
 </div>
 </body></html>`;
@@ -1554,6 +1609,7 @@ function renderStrategy(main,a){
       <div style="font-size:22px;font-weight:800;color:var(--p)">${esc(a.name)} — Creative Strategy</div>
       <div style="font-size:13px;color:var(--muted);margin-top:2px">${s.angles.length} angles · ${s.hooks.length} hooks · ${s.usps.length} USPs</div>
     </div>
+    <button class="btn btn-p btn-sm" onclick="exportStrategyPDF()" style="display:flex;align-items:center;gap:6px"><i class="ti ti-file-export"></i> Export PDF</button>
   </div>
 
   <!-- USPs -->
@@ -1682,25 +1738,262 @@ function renderStrategy(main,a){
   </div>`;
 }
 
+function exportStrategyPDF(){
+  const a=acct();if(!a)return;
+  const s=a.strategy;
+  const today=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+
+  const angleColor={winner:'#065f46','to-test':'#5b21b6',testing:'#92400e',loser:'#991b1b',paused:'#6b7280'};
+  const angleBg={winner:'#d1fae5','to-test':'#ede9fe',testing:'#fef3c7',loser:'#fee2e2',paused:'#f3f4f6'};
+  const angleLabel={winner:'🏆 Winner','to-test':'🧪 To Test',testing:'⏳ Testing',loser:'❌ Loser',paused:'⏸ Paused'};
+  const hookColor={'top':'#92400e','tested':'#065f46','to-test':'#5b21b6'};
+  const hookBg={'top':'#fef3c7','tested':'#d1fae5','to-test':'#ede9fe'};
+  const hookLabel={'top':'🔥 Top Hook','tested':'✅ Tested','to-test':'🧪 To Test'};
+
+  const html=`<!DOCTYPE html><html><head>
+<meta charset="UTF-8"><title>Creative Strategy — ${esc(a.name)}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f4f6f4;color:#1a1a1a;font-size:14px}
+.wrap{max-width:880px;margin:0 auto;padding:30px 20px}
+.cover{background:linear-gradient(135deg,#054930 0%,#076644 60%,#0a8055 100%);color:#fff;border-radius:16px;padding:48px 52px;margin-bottom:28px;position:relative;overflow:hidden}
+.cover::before{content:'';position:absolute;right:-60px;top:-60px;width:260px;height:260px;background:rgba(12,184,125,.15);border-radius:50%}
+.cover-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;opacity:.65;margin-bottom:12px}
+.cover-title{font-size:32px;font-weight:900;margin-bottom:6px;letter-spacing:-.5px}
+.cover-sub{font-size:15px;opacity:.75;margin-bottom:24px}
+.cover-stats{display:flex;gap:28px}
+.stat-box{background:rgba(255,255,255,.12);border-radius:10px;padding:12px 20px;text-align:center}
+.stat-num{font-size:26px;font-weight:900;color:#0cb87d}
+.stat-lbl{font-size:11px;font-weight:600;opacity:.7;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.section{background:#fff;border-radius:12px;padding:28px 32px;margin-bottom:20px;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.sec-title{font-size:17px;font-weight:800;color:#054930;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid #0cb87d;display:flex;align-items:center;gap:10px}
+.usp-row{display:flex;align-items:flex-start;gap:14px;padding:10px 0;border-bottom:1px dashed #e5e7eb}
+.usp-row:last-child{border-bottom:none}
+.usp-num{background:#0cb87d;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;margin-top:1px}
+.usp-text{font-size:14px;font-weight:600;color:#1a1a1a}
+.usp-note{font-size:12px;color:#6b7280;margin-top:3px}
+.angle-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.angle-card{border-radius:10px;padding:16px;border-left:4px solid}
+.angle-name{font-size:14px;font-weight:800;margin-bottom:4px}
+.angle-meta{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.badge{border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;display:inline-block}
+.angle-hyp{font-size:12px;color:#4b5563;line-height:1.5;margin-bottom:6px}
+.angle-notes{font-size:11px;color:#6b7280;line-height:1.5;padding-top:6px;border-top:1px dashed #e5e7eb}
+.hook-item{background:#f9fafb;border-radius:8px;padding:14px 16px;margin-bottom:10px}
+.hook-formula{font-size:14px;font-weight:700;color:#054930;margin-bottom:6px}
+.hook-example{font-size:12px;color:#4b5563;line-height:1.5;white-space:pre-wrap}
+.notes-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.note-box{background:#f9fafb;border-radius:10px;padding:18px 20px}
+.note-title{font-size:12px;font-weight:800;color:#054930;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.note-body{font-size:13px;color:#374151;line-height:1.7;white-space:pre-wrap}
+.footer{text-align:center;padding:18px;color:#9ca3af;font-size:12px;border-top:1px solid #e5e7eb;margin-top:28px}
+@media print{
+  body{background:#fff}
+  .wrap{padding:0}
+  .cover{border-radius:0;margin-bottom:20px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .section{box-shadow:none;border:1px solid #e5e7eb;break-inside:avoid}
+  .angle-card{break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .no-print{display:none}
+}
+</style></head><body>
+<div class="no-print" style="position:fixed;top:0;left:0;right:0;background:#054930;color:#fff;padding:11px 24px;display:flex;align-items:center;justify-content:space-between;z-index:99;font-size:13px;font-weight:600">
+  <span>💡 Creative Strategy — ${esc(a.name)}</span>
+  <div style="display:flex;gap:10px">
+    <button onclick="window.print()" style="background:#0cb87d;color:#fff;border:none;border-radius:7px;padding:7px 18px;font-size:13px;font-weight:700;cursor:pointer">🖨️ Print / Save PDF</button>
+    <button onclick="window.close()" style="background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:7px;padding:7px 14px;font-size:13px;cursor:pointer">✕ Close</button>
+  </div>
+</div>
+<div style="height:44px" class="no-print"></div>
+<div class="wrap">
+
+  <div class="cover">
+    <div class="cover-label">Creative Strategy Document</div>
+    <div class="cover-title">${esc(a.name)}</div>
+    <div class="cover-sub">Prepared ${today}</div>
+    <div class="cover-stats">
+      <div class="stat-box"><div class="stat-num">${s.usps.length}</div><div class="stat-lbl">USPs</div></div>
+      <div class="stat-box"><div class="stat-num">${s.angles.length}</div><div class="stat-lbl">Ad Angles</div></div>
+      <div class="stat-box"><div class="stat-num">${s.angles.filter(x=>x.status==='winner').length}</div><div class="stat-lbl">Winners</div></div>
+      <div class="stat-box"><div class="stat-num">${s.hooks.length}</div><div class="stat-lbl">Hooks</div></div>
+    </div>
+  </div>
+
+  ${s.usps.length?`
+  <div class="section">
+    <div class="sec-title">🎯 Unique Selling Points</div>
+    ${s.usps.map((u,i)=>`
+      <div class="usp-row">
+        <div class="usp-num">${i+1}</div>
+        <div>
+          <div class="usp-text">${esc(u.text||'—')}</div>
+          ${u.notes?`<div class="usp-note">${esc(u.notes)}</div>`:''}
+        </div>
+      </div>`).join('')}
+  </div>`:''}
+
+  ${s.angles.length?`
+  <div class="section">
+    <div class="sec-title">💡 Ad Angles</div>
+    <div class="angle-grid">
+      ${s.angles.map(ang=>`
+        <div class="angle-card" style="background:${angleBg[ang.status]||'#f9fafb'};border-left-color:${angleColor[ang.status]||'#6b7280'}">
+          <div class="angle-name" style="color:${angleColor[ang.status]||'#1a1a1a'}">${esc(ang.name||'Untitled Angle')}</div>
+          <div class="angle-meta">
+            <span class="badge" style="background:${angleColor[ang.status]||'#6b7280'}22;color:${angleColor[ang.status]||'#6b7280'}">${angleLabel[ang.status]||ang.status}</span>
+            ${ang.angleType?`<span class="badge" style="background:#e0f2ec;color:#054930">${esc(ang.angleType)}</span>`:''}
+            ${ang.funnel?`<span class="badge" style="background:#e0e7ff;color:#3730a3">${esc(ang.funnel)}</span>`:''}
+          </div>
+          ${ang.hypothesis?`<div class="angle-hyp">${esc(ang.hypothesis)}</div>`:''}
+          ${ang.notes?`<div class="angle-notes">${esc(ang.notes)}</div>`:''}
+        </div>`).join('')}
+    </div>
+  </div>`:''}
+
+  ${s.hooks.length?`
+  <div class="section">
+    <div class="sec-title">🎣 Hook Formulas</div>
+    ${s.hooks.map(h=>`
+      <div class="hook-item">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div class="hook-formula">${esc(h.formula||'Untitled Hook')}</div>
+          <div style="display:flex;gap:6px">
+            <span class="badge" style="background:${hookBg[h.status]||'#f3f4f6'};color:${hookColor[h.status]||'#6b7280'}">${hookLabel[h.status]||h.status}</span>
+            ${h.funnel?`<span class="badge" style="background:#e0e7ff;color:#3730a3">${esc(h.funnel)}</span>`:''}
+          </div>
+        </div>
+        ${h.example?`<div class="hook-example">${esc(h.example)}</div>`:''}
+      </div>`).join('')}
+  </div>`:''}
+
+  ${(s.testingPlan||s.funnelNotes||s.fatigueRules||s.winningPatterns)?`
+  <div class="section">
+    <div class="sec-title">📋 Strategy Notes</div>
+    <div class="notes-grid">
+      ${s.testingPlan?`<div class="note-box"><div class="note-title">🧪 Testing Plan</div><div class="note-body">${esc(s.testingPlan)}</div></div>`:''}
+      ${s.funnelNotes?`<div class="note-box"><div class="note-title">🗺️ Funnel Mapping</div><div class="note-body">${esc(s.funnelNotes)}</div></div>`:''}
+      ${s.fatigueRules?`<div class="note-box"><div class="note-title">🔁 Creative Fatigue Rules</div><div class="note-body">${esc(s.fatigueRules)}</div></div>`:''}
+      ${s.winningPatterns?`<div class="note-box"><div class="note-title">🏆 Winning Patterns</div><div class="note-body">${esc(s.winningPatterns)}</div></div>`:''}
+    </div>
+  </div>`:''}
+
+  <div class="footer"><strong style="color:#054930">${esc(a.name)}</strong> · Creative Strategy · ${today}</div>
+</div>
+</body></html>`;
+
+  const w=window.open('','_blank');w.document.write(html);w.document.close();
+}
+
 // ── CREATIVE DIRECTION ──
+const DIR_TONES=['Professional','Fun & Energetic','Emotional','Urgent','Inspirational','Conversational','Bold & Direct'];
+
 function addDirection(){
   const a=acct();if(!a)return;
-  a.directions.unshift({
-    id:uid(),name:'',visualStyle:'',colorNotes:'',colors:['#054930','#0cb87d','#ffffff'],
-    typography:'',mood:'',talentNotes:'',music:'',
-    formats:[],references:'',notes:'',createdAt:new Date().toISOString()
-  });
+  const d={id:uid(),name:'',visualStyle:'',colorNotes:'',colors:['#054930','#0cb87d','#ffffff'],
+    typography:'',mood:'',talentNotes:'',music:'',formats:[],references:'',notes:'',createdAt:new Date().toISOString()};
+  a.directions.unshift(d);
   save();renderMain();
+  openDirModal(d.id);
 }
-function delDirection(id){const a=acct();if(!a)return;a.directions=a.directions.filter(x=>x.id!==id);save();renderMain()}
-function updDir(id,f,v){const a=acct();if(!a)return;const d=a.directions.find(x=>x.id===id);if(d){d[f]=v;save()}}
+function delDirection(id,e){
+  if(e)e.stopPropagation();
+  const a=acct();if(!a)return;
+  a.directions=a.directions.filter(x=>x.id!==id);
+  save();closeDirModal(null,true);renderMain();
+}
+function updDir(id,f,v){const a=acct();if(!a)return;const d=a.directions.find(x=>x.id===id);if(d){d[f]=v;save();refreshDirListRow(id)}}
 function togDirFormat(id,fmt){
   const a=acct();if(!a)return;
   const d=a.directions.find(x=>x.id===id);if(!d)return;
   if(!d.formats)d.formats=[];
   const i=d.formats.indexOf(fmt);
   if(i===-1)d.formats.push(fmt);else d.formats.splice(i,1);
-  save();
+  save();refreshDirListRow(id);
+}
+function refreshDirListRow(id){
+  const a=acct();if(!a)return;
+  const d=a.directions.find(x=>x.id===id);if(!d)return;
+  const row=document.getElementById('dlr-'+id);
+  if(row)row.outerHTML=dirListRow(d);
+}
+
+function openDirModal(id){
+  const a=acct();if(!a)return;
+  const d=a.directions.find(x=>x.id===id);if(!d)return;
+  document.getElementById('dir-modal-content').innerHTML=buildDirModal(d);
+  document.getElementById('dir-modal-overlay').classList.remove('hidden');
+}
+function closeDirModal(e,force){
+  if(e&&e.target!==document.getElementById('dir-modal-overlay')&&!force)return;
+  document.getElementById('dir-modal-overlay').classList.add('hidden');
+  renderMain();
+}
+
+function buildDirModal(d){
+  return `
+  <div class="dir-modal-hd">
+    <i class="ti ti-palette" style="color:rgba(255,255,255,.8);font-size:20px;flex-shrink:0"></i>
+    <input value="${esc(d.name)}" placeholder="Direction doc name (e.g. Ramadan Campaign, BOFU Retargeting)..." oninput="updDir('${d.id}','name',this.value)"/>
+    <button onclick="closeDirModal(null,true)" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:13px;flex-shrink:0">✕ Close</button>
+  </div>
+  <div class="dir-modal-body">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="dir-field">
+        <div class="dir-label">Visual Style</div>
+        <select class="dir-sel" oninput="updDir('${d.id}','visualStyle',this.value)">
+          <option value="">Select style</option>
+          ${VIS_STYLES.map(s=>`<option value="${s}"${d.visualStyle===s?' selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="dir-field">
+        <div class="dir-label">Tone & Mood</div>
+        <select class="dir-sel" oninput="updDir('${d.id}','mood',this.value)">
+          <option value="">Select tone</option>
+          ${DIR_TONES.map(t=>`<option value="${t}"${d.mood===t?' selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="dir-field">
+      <div class="dir-label">Typography / Font</div>
+      <input class="dir-input" value="${esc(d.typography)}" placeholder="e.g. Cairo Bold for headlines, Tajawal for body text" oninput="updDir('${d.id}','typography',this.value)"/>
+    </div>
+    <div class="dir-field">
+      <div class="dir-label">Color Palette</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        ${(d.colors||['#054930','#0cb87d','#ffffff']).map((c,ci)=>`
+          <div style="display:flex;align-items:center;gap:5px">
+            <input type="color" class="color-swatch" value="${c}" oninput="(function(el){const a=acct();const dir=a.directions.find(x=>x.id==='${d.id}');if(dir){if(!dir.colors)dir.colors=['#054930','#0cb87d','#ffffff'];dir.colors[${ci}]=el.value;save()}})(this)"/>
+            <span style="font-size:11px;color:var(--muted);font-family:monospace">${c}</span>
+          </div>`).join('')}
+        <input class="dir-input" style="flex:1;min-width:150px" value="${esc(d.colorNotes)}" placeholder="e.g. Brand green only, no red, no gradient" oninput="updDir('${d.id}','colorNotes',this.value)"/>
+      </div>
+    </div>
+    <div class="dir-field">
+      <div class="dir-label">Required Formats</div>
+      <div class="format-checks">
+        ${FORMATS.map(f=>`<label class="format-check"><input type="checkbox" ${(d.formats||[]).includes(f)?'checked':''} onchange="togDirFormat('${d.id}','${f}')"/> ${f}</label>`).join('')}
+      </div>
+    </div>
+    <div class="dir-field">
+      <div class="dir-label">Talent / People Guidelines</div>
+      <textarea class="dir-ta" placeholder="e.g. Female presenter 25–35, casual Egyptian dialect, relatable home setting, no heavy makeup..." oninput="updDir('${d.id}','talentNotes',this.value)">${esc(d.talentNotes)}</textarea>
+    </div>
+    <div class="dir-field">
+      <div class="dir-label">Music & Sound Direction</div>
+      <textarea class="dir-ta" style="min-height:56px" placeholder="e.g. Upbeat instrumental only. Fast cuts every 2s. Sound effect on product reveal. No voiceover." oninput="updDir('${d.id}','music',this.value)">${esc(d.music)}</textarea>
+    </div>
+    <div class="dir-field">
+      <div class="dir-label">Reference Links / Mood Board</div>
+      <textarea class="dir-ta" style="min-height:56px" placeholder="https://... or describe: similar to [Brand]'s [Campaign name] style — fast cuts, UGC feel, bold text overlays" oninput="updDir('${d.id}','references',this.value)">${esc(d.references)}</textarea>
+    </div>
+    <div class="dir-field">
+      <div class="dir-label">Additional Notes</div>
+      <textarea class="dir-ta" style="min-height:56px" placeholder="Logo placement, safe zones, watermarks, file delivery format, aspect ratio notes..." oninput="updDir('${d.id}','notes',this.value)">${esc(d.notes)}</textarea>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--brd)">
+      <button class="btn btn-d btn-sm" onclick="delDirection('${d.id}')"><i class="ti ti-trash"></i> Delete</button>
+      <button class="btn btn-p btn-sm" onclick="closeDirModal(null,true)"><i class="ti ti-check"></i> Done</button>
+    </div>
+  </div>`;
 }
 
 function renderDirection(main,a){
@@ -1717,73 +2010,27 @@ function renderDirection(main,a){
     <div class="empty" style="margin-top:40px">
       <div class="ei">🎨</div>
       <h3>No direction docs yet</h3>
-      <p>Create a creative direction document for each campaign or content type.</p>
+      <p>Click <strong>＋ New Direction</strong> to create your first creative direction document.</p>
     </div>`
-  :`<div class="dir-grid">${dirs.map(d=>dirCard(d)).join('')}</div>`}`;
+  :`<div class="dir-list">${dirs.map(d=>dirListRow(d)).join('')}</div>`}`;
 }
 
-function dirCard(d){
-  const tones=['Professional','Fun & Energetic','Emotional','Urgent','Inspirational','Conversational','Bold & Direct'];
-  return `<div class="dir-card">
-    <div class="dir-hd">
-      <i class="ti ti-palette" style="color:var(--s);font-size:16px;flex-shrink:0"></i>
-      <input value="${esc(d.name)}" placeholder="Direction doc name (e.g. Ramadan Campaign, BOFU Ads)..." oninput="updDir('${d.id}','name',this.value)"/>
-      <button class="btn btn-d btn-xs" onclick="delDirection('${d.id}')"><i class="ti ti-trash"></i></button>
+function dirListRow(d){
+  const fmts=(d.formats||[]).slice(0,3);
+  const more=(d.formats||[]).length-3;
+  return `<div class="dir-list-row" id="dlr-${d.id}" onclick="openDirModal('${d.id}')">
+    <div class="dir-list-icon"><i class="ti ti-palette"></i></div>
+    <div class="dir-list-name">${d.name||'<span style="color:#aaa;font-weight:400">Untitled Direction</span>'}</div>
+    <div class="dir-list-meta">
+      ${d.visualStyle?`<span class="dir-badge">🎬 ${esc(d.visualStyle)}</span>`:''}
+      ${d.mood?`<span class="dir-badge">💬 ${esc(d.mood)}</span>`:''}
+      ${(d.colors||[]).filter(c=>c&&c!=='#ffffff').map(c=>`<span style="display:inline-block;width:16px;height:16px;background:${c};border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #ddd;flex-shrink:0"></span>`).join('')}
+      ${fmts.map(f=>`<span class="dir-format-tag">${f.split(' ')[0]}</span>`).join('')}
+      ${more>0?`<span class="dir-format-tag">+${more}</span>`:''}
     </div>
-    <div class="dir-body">
-      <div class="dir-field">
-        <div class="dir-label">Visual Style</div>
-        <select class="dir-sel" oninput="updDir('${d.id}','visualStyle',this.value)">
-          <option value="">Select style</option>
-          ${VIS_STYLES.map(s=>`<option value="${s}"${d.visualStyle===s?' selected':''}>${s}</option>`).join('')}
-        </select>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="dir-field">
-          <div class="dir-label">Tone & Mood</div>
-          <select class="dir-sel" oninput="updDir('${d.id}','mood',this.value)">
-            <option value="">Select tone</option>
-            ${tones.map(t=>`<option value="${t}"${d.mood===t?' selected':''}>${t}</option>`).join('')}
-          </select>
-        </div>
-        <div class="dir-field">
-          <div class="dir-label">Typography / Font</div>
-          <input class="dir-input" value="${esc(d.typography)}" placeholder="e.g. Cairo Bold for headers" oninput="updDir('${d.id}','typography',this.value)"/>
-        </div>
-      </div>
-      <div class="dir-field">
-        <div class="dir-label">Color Palette</div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          ${(d.colors||['#054930','#0cb87d','#ffffff']).map((c,ci)=>`
-            <div style="display:flex;align-items:center;gap:4px">
-              <input type="color" class="color-swatch" value="${c}" oninput="(function(el){const a=acct();const dir=a.directions.find(x=>x.id==='${d.id}');if(dir){if(!dir.colors)dir.colors=['#054930','#0cb87d','#ffffff'];dir.colors[${ci}]=el.value;save()}})(this)"/>
-              <span style="font-size:12px;color:var(--muted);font-family:monospace">${c}</span>
-            </div>`).join('')}
-          <input class="dir-input" style="flex:1;min-width:160px" value="${esc(d.colorNotes)}" placeholder="Notes: brand colors only, avoid red..." oninput="updDir('${d.id}','colorNotes',this.value)"/>
-        </div>
-      </div>
-      <div class="dir-field">
-        <div class="dir-label">Required Formats</div>
-        <div class="format-checks">
-          ${FORMATS.map(f=>`<label class="format-check"><input type="checkbox" ${(d.formats||[]).includes(f)?'checked':''} onchange="togDirFormat('${d.id}','${f}')"/> ${f}</label>`).join('')}
-        </div>
-      </div>
-      <div class="dir-field">
-        <div class="dir-label">Talent / People Guidelines</div>
-        <textarea class="dir-ta" placeholder="e.g. Female presenter 25–35, casual Egyptian dialect, no heavy makeup, relatable home setting..." oninput="updDir('${d.id}','talentNotes',this.value)">${esc(d.talentNotes)}</textarea>
-      </div>
-      <div class="dir-field">
-        <div class="dir-label">Music & Sound Direction</div>
-        <textarea class="dir-ta" style="min-height:48px" placeholder="e.g. Upbeat background track, no lyrics. Fast cuts. Sound effects on key product moments. No voiceover." oninput="updDir('${d.id}','music',this.value)">${esc(d.music)}</textarea>
-      </div>
-      <div class="dir-field">
-        <div class="dir-label">Reference Links / Mood Board</div>
-        <textarea class="dir-ta" style="min-height:48px" placeholder="https://... or describe: similar to [brand]'s ad style in [campaign]" oninput="updDir('${d.id}','references',this.value)">${esc(d.references)}</textarea>
-      </div>
-      <div class="dir-field">
-        <div class="dir-label">Additional Notes</div>
-        <textarea class="dir-ta" style="min-height:48px" placeholder="Logo placement, watermarks, safe zones, file format requirements..." oninput="updDir('${d.id}','notes',this.value)">${esc(d.notes)}</textarea>
-      </div>
+    <div class="dir-list-actions" onclick="event.stopPropagation()">
+      <button class="btn btn-p btn-xs" onclick="openDirModal('${d.id}')"><i class="ti ti-edit"></i> Edit</button>
+      <button class="btn btn-d btn-xs" onclick="delDirection('${d.id}',event)"><i class="ti ti-trash"></i></button>
     </div>
   </div>`;
 }
