@@ -470,24 +470,22 @@ function dKPIs(obj,cur){
 
 // ── SUB-TAB DEFINITIONS ──
 const ALL_SUB_TABS=[
-  {key:'tasks',   icon:'ti-clipboard-list', label:'Content Requests'},
   {key:'mp',      icon:'ti-chart-dots-3',   label:'Media Plan'},
   {key:'pace',    icon:'ti-coin',           label:'Budget Pacing'},
   {key:'kpi',     icon:'ti-trending-up',    label:'KPI Dashboard'},
   {key:'rep',     icon:'ti-file-analytics', label:'Client Report'},
   {key:'aud',     icon:'ti-users',          label:'Audiences'},
-  {key:'brief',   icon:'ti-pencil',         label:'Creative Briefs'},
   {key:'copy',    icon:'ti-copy',           label:'Ad Copy Library'},
   {key:'strat',   icon:'ti-bulb',           label:'Creative Strategy'},
   {key:'campgen', icon:'ti-tag',            label:'Campaign Naming'},
-  {key:'dir',     icon:'ti-palette',        label:'Creative Direction'},
   {key:'atasks',  icon:'ti-layout-kanban',  label:'Task Board'},
 ];
 const DEFAULT_SUB_ORDER=ALL_SUB_TABS.map(t=>t.key);
 
 // ── STATE ──
 let db={accounts:[],active:null,myTasks:[],subTabOrder:[...DEFAULT_SUB_ORDER]};
-let sub='tasks';
+let sub='strat';
+let stratSub='strat';
 let addT=false;
 let filt='all';
 let chart=null;
@@ -590,7 +588,7 @@ function addAcc(){
     acctTasks:[]
   };
   db.accounts.push(a);db.active=a.id;save();closeM();
-  addT=false;sub='tasks';filt='all';killChart();render();
+  addT=false;sub='strat';stratSub='strat';filt='all';killChart();render();
 }
 
 function delAcc(id){
@@ -603,13 +601,15 @@ function delAcc(id){
 
 function setAcc(id){
   if(db.active!==id)killChart();
-  db.active=id;addT=false;sub='tasks';filt='all';gview=null;render();
+  db.active=id;addT=false;sub='strat';stratSub='strat';filt='all';gview=null;render();
 }
 function openMyTasks(){gview='mytasks';killChart();render()}
 
+function switchStratSub(s){stratSub=s;addT=false;filt='all';renderMain()}
 function switchSub(s){
   if(s!=='mp')killChart();
   sub=s;
+  if(s==='strat')stratSub='strat';
   renderSubBar();
   renderMain();
   if(s==='mp')setTimeout(recalc,60);
@@ -1685,11 +1685,48 @@ function updHook(id,f,v){const s=strat();if(!s)return;const u=s.hooks.find(x=>x.
 function updStratField(f,v){const s=strat();if(!s)return;s[f]=v;save()}
 
 function renderStrategy(main,a){
+  const STRAT_INNER=[
+    {key:'strat', label:'Strategy',          icon:'ti-bulb'},
+    {key:'dir',   label:'Creative Direction', icon:'ti-palette'},
+    {key:'brief', label:'Creative Briefs',    icon:'ti-pencil'},
+    {key:'tasks', label:'Content Requests',   icon:'ti-clipboard-list'},
+  ];
+  const mkInnerBar=(active)=>`<div style="display:flex;gap:2px;background:#f0f2f5;border-radius:12px;padding:4px;margin-bottom:22px">
+    ${STRAT_INNER.map(t=>`
+      <button onclick="switchStratSub('${t.key}')"
+        style="flex:1;padding:8px 12px;border-radius:9px;border:none;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;
+               background:${active===t.key?'#fff':'transparent'};
+               color:${active===t.key?'var(--p)':'var(--muted)'};
+               box-shadow:${active===t.key?'0 1px 4px rgba(0,0,0,.1)':'none'}">
+        <i class="ti ${t.icon}" style="font-size:14px"></i> ${t.label}
+      </button>`).join('')}
+  </div>`;
+
+  // internal tab routing
+  if(stratSub==='dir'){
+    main.innerHTML=mkInnerBar('dir');
+    const inner=document.createElement('div');main.appendChild(inner);
+    renderDirection(inner,a);return;
+  }
+  if(stratSub==='brief'){
+    main.innerHTML=mkInnerBar('brief');
+    const inner=document.createElement('div');main.appendChild(inner);
+    renderBrief(inner,a);return;
+  }
+  if(stratSub==='tasks'){
+    main.innerHTML=mkInnerBar('tasks');
+    const inner=document.createElement('div');main.appendChild(inner);
+    renderTasks(inner,a);return;
+  }
+
   const s=a.strategy;
   const angleStatusBadge=st=>{const o=ANGLE_STATUS.find(x=>x.val===st)||ANGLE_STATUS[0];return `<span style="background:${o.bg};color:${o.color};font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px">${o.label}</span>`};
   const hookStatusBadge=st=>{const o=HOOK_STATUS.find(x=>x.val===st)||HOOK_STATUS[0];return `<span style="background:${o.bg};color:${o.color};font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px">${o.label}</span>`};
 
+  const innerBar=mkInnerBar('strat');
+
   main.innerHTML=`
+  ${innerBar}
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:20px">
     <div>
       <div style="font-size:22px;font-weight:800;color:var(--p)">${esc(a.name)} — Creative Strategy</div>
@@ -3005,17 +3042,14 @@ function renderMain(){
     main.innerHTML=`<div class="empty" style="margin-top:60px"><div class="ei">📋</div><h3>No Accounts Yet</h3><p>Click <strong>＋</strong> in the tab bar to create your first account.</p></div>`;
     return;
   }
-  if(sub==='tasks')renderTasks(main,a);
-  else if(sub==='mp')renderMP(main,a);
+  if(sub==='mp')renderMP(main,a);
   else if(sub==='pace')renderPace(main,a);
   else if(sub==='kpi')renderKPI(main,a);
   else if(sub==='rep')renderRep(main,a);
   else if(sub==='aud')renderAud(main,a);
-  else if(sub==='brief')renderBrief(main,a);
   else if(sub==='copy')renderCopyLib(main,a);
   else if(sub==='strat')renderStrategy(main,a);
   else if(sub==='campgen')renderCampGen(main,a);
-  else if(sub==='dir')renderDirection(main,a);
   else renderAcctTasks(main,a);
 }
 
