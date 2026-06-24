@@ -2827,22 +2827,46 @@ const KPI_COLS=[
   {key:'revenue',label:'Revenue',      lower:false, fmt:v=>parseFloat(v).toLocaleString()},
   {key:'conv',   label:'Conversions',  lower:false, fmt:v=>parseInt(v).toLocaleString()},
 ];
+function isoFmt(d){return d.toISOString().slice(0,10)}
 function weekToRange(w){
-  if(!w)return '—';
-  const m=w.match(/^(\d{4})-W(\d{2})$/);
-  if(m){
-    const year=parseInt(m[1]),week=parseInt(m[2]);
-    // ISO week: Jan 4 is always in week 1
+  if(!w)return '';
+  // YYYY-Www
+  const mw=w.match(/^(\d{4})-W(\d{2})$/);
+  if(mw){
+    const year=parseInt(mw[1]),week=parseInt(mw[2]);
     const jan4=new Date(year,0,4);
     const dow=(jan4.getDay()||7);
     const mon=new Date(jan4);
     mon.setDate(jan4.getDate()-dow+1+(week-1)*7);
     const sun=new Date(mon);sun.setDate(mon.getDate()+6);
-    const fmt=d=>d.toISOString().slice(0,10);
-    return fmt(mon)+' - '+fmt(sun);
+    return isoFmt(mon)+' - '+isoFmt(sun);
   }
-  if(w.includes(' - ')||w.includes(' — '))return w;
+  // YYYY-MM-DD (single date → expand to Mon–Sun)
+  const md=w.match(/^(\d{4}-\d{2}-\d{2})$/);
+  if(md){
+    const d=new Date(md[1]);
+    const dow=(d.getDay()||7);
+    const mon=new Date(d);mon.setDate(d.getDate()-dow+1);
+    const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+    return isoFmt(mon)+' - '+isoFmt(sun);
+  }
+  // Already a range or any text — return as-is
   return w;
+}
+function weekStartDate(w){
+  if(!w)return '';
+  const range=weekToRange(w);
+  const m=range.match(/^(\d{4}-\d{2}-\d{2})/);
+  return m?m[1]:'';
+}
+function updKPIDate(id,dateVal){
+  if(!dateVal)return;
+  const d=new Date(dateVal);
+  const dow=(d.getDay()||7);
+  const mon=new Date(d);mon.setDate(d.getDate()-dow+1);
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  updKPI(id,'week',isoFmt(mon)+' - '+isoFmt(sun));
+  renderMain();
 }
 function renderKPI(main,a){
   const kpis=[...(a.kpis||[])].sort((a,b)=>b.week.localeCompare(a.week));
@@ -2886,9 +2910,9 @@ function renderKPI(main,a){
             ${kpis.map((k,i)=>{
               const prev=kpis[i+1];
               return`<tr>
-                <td style="min-width:190px">
-                  <div style="font-size:12px;font-weight:700;color:var(--p);letter-spacing:-.2px">${weekToRange(k.week)}</div>
-                  <input type="week" value="${k.week||''}" onchange="updKPI('${k.id}','week',this.value);renderMain()" style="margin-top:4px;border:1px solid var(--brd);border-radius:6px;padding:3px 7px;font-size:11px;font-family:inherit;outline:none;color:var(--muted);width:100%"/>
+                <td style="min-width:200px">
+                  <div style="font-size:12px;font-weight:700;color:var(--p);letter-spacing:-.3px;margin-bottom:5px">${weekToRange(k.week)||'—'}</div>
+                  <input type="date" value="${weekStartDate(k.week)}" onchange="updKPIDate('${k.id}',this.value)" style="border:1px solid var(--brd);border-radius:6px;padding:3px 7px;font-size:11px;font-family:inherit;outline:none;color:var(--muted);width:100%"/>
                 </td>
                 ${KPI_COLS.map(c=>`<td>
                   <input class="kpi-input" type="number" value="${k[c.key]||''}" placeholder="—" oninput="updKPI('${k.id}','${c.key}',this.value)"/>
@@ -2907,9 +2931,10 @@ function renderKPI(main,a){
 function addKPIWeek(){
   const a=acct();if(!a)return;
   const now=new Date();
-  const y=now.getFullYear();
-  const w=String(Math.ceil((now-new Date(y,0,1))/(7*86400000))).padStart(2,'0');
-  a.kpis.unshift({id:uid(),week:`${y}-W${w}`,roas:'',cpa:'',ctr:'',cpm:'',spend:'',revenue:'',conv:'',notes:''});
+  const dow=(now.getDay()||7);
+  const mon=new Date(now);mon.setDate(now.getDate()-dow+1);
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  a.kpis.unshift({id:uid(),week:isoFmt(mon)+' - '+isoFmt(sun),roas:'',cpa:'',ctr:'',cpm:'',spend:'',revenue:'',conv:'',notes:''});
   save();renderMain();
 }
 function updKPI(id,f,v){const a=acct();if(!a)return;const k=a.kpis.find(x=>x.id===id);if(k){k[f]=v;save()}}
@@ -2920,7 +2945,7 @@ let _kpiXLRows=[];   // raw parsed rows
 let _kpiXLMap={};    // {kpi_key: excel_col_index}
 
 const KPI_XL_SYNONYMS={
-  week:    ['week','date','period','reporting period','time','יום','أسبوع','week of'],
+  week:    ['week','date','period','reporting period','time','أسبوع','week of','report date','reporting starts','start date','تاريخ','الأسبوع','فترة'],
   roas:    ['roas','return on ad spend','purchase roas','purchase roas (return on ad spend)','عائد'],
   cpa:     ['cpa','cost per acquisition','cost per conversion','cost per result','تكلفة لكل نتيجة','cost per purchase'],
   ctr:     ['ctr','click-through rate','click through rate','ctr (all)','نسبة النقر'],
@@ -3016,16 +3041,32 @@ function kpiXLConfirm(){
 
       if(key==='week'){
         if(raw instanceof Date){
-          // convert date → YYYY-Www
+          // Excel date → Mon-Sun range
           const d=new Date(raw);
-          const y=d.getFullYear();
-          const start=new Date(y,0,1);
-          const wn=Math.ceil(((d-start)/86400000+start.getDay()+1)/7);
-          entry.week=`${y}-W${String(wn).padStart(2,'0')}`;
+          const dow=(d.getDay()||7);
+          const mon=new Date(d);mon.setDate(d.getDate()-dow+1);
+          const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+          entry.week=isoFmt(mon)+' - '+isoFmt(sun);
+        }else if(typeof raw==='number'&&raw>40000){
+          // Excel serial date number
+          const d=new Date(Math.round((raw-25569)*86400000));
+          const dow=(d.getDay()||7);
+          const mon=new Date(d);mon.setDate(d.getDate()-dow+1);
+          const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+          entry.week=isoFmt(mon)+' - '+isoFmt(sun);
         }else{
-          // try to keep as-is if already week format, else store as notes fallback
           const s=String(raw).trim();
-          entry.week=s;
+          // Extract first date from any text containing a date
+          const dm=s.match(/(\d{4}[-\/]\d{1,2}[-\/]\d{1,2})/);
+          if(dm){
+            const d=new Date(dm[1].replace(/\//g,'-'));
+            if(!isNaN(d)){
+              const dow=(d.getDay()||7);
+              const mon=new Date(d);mon.setDate(d.getDate()-dow+1);
+              const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+              entry.week=isoFmt(mon)+' - '+isoFmt(sun);
+            }else{entry.week=s}
+          }else{entry.week=s}
         }
       }else if(key==='notes'){
         entry.notes=String(raw).trim();
