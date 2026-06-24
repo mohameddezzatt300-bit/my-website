@@ -494,7 +494,7 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
 <!-- DIRECTION MODAL -->
 <!-- AI GENERATE MODAL -->
 <div class="dir-modal-overlay hidden" id="ai-gen-overlay" onclick="if(event.target===this)closeAIGenModal()">
-  <div class="dir-modal-box" style="max-width:500px;width:100%" onclick="event.stopPropagation()">
+  <div class="dir-modal-box" style="max-width:500px;width:100%;padding:24px;overflow:hidden" onclick="event.stopPropagation()">
     <div id="ai-gen-modal-content"></div>
   </div>
 </div>
@@ -2671,33 +2671,118 @@ function openAIGenModal(type){
     return'';
   }).join('');
 
-  // Pre-fill account info if available
+  // build field HTML
+  function fieldHtml(f){
+    if(f.type==='textarea')return`
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <label style="font-size:12px;font-weight:700;color:#374151;text-align:right">${f.label}</label>
+        <textarea id="${f.id}" placeholder="${f.placeholder||''}" rows="2"
+          style="resize:none;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 13px;font-size:13px;font-family:inherit;color:#111;background:#fafafa;outline:none;transition:border .15s;direction:rtl"
+          onfocus="this.style.borderColor='#0cb87d';this.style.background='#fff'"
+          onblur="this.style.borderColor='#e5e7eb';this.style.background='#fafafa'"></textarea>
+      </div>`;
+    if(f.type==='text')return`
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <label style="font-size:12px;font-weight:700;color:#374151;text-align:right">${f.label}</label>
+        <input id="${f.id}" type="text" placeholder="${f.placeholder||''}"
+          style="border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 13px;font-size:13px;font-family:inherit;color:#111;background:#fafafa;outline:none;transition:border .15s;direction:rtl"
+          onfocus="this.style.borderColor='#0cb87d';this.style.background='#fff'"
+          onblur="this.style.borderColor='#e5e7eb';this.style.background='#fafafa'"/>
+      </div>`;
+    if(f.type==='select'){
+      // count field → pill chips, others → styled select
+      if(f.id==='ag-count'){
+        const chips=f.options.map(o=>`
+          <button type="button" onclick="setAGCount(this,'${o}')" data-val="${o}"
+            style="padding:7px 18px;border-radius:20px;border:1.5px solid ${o===(f.default||'5')?'#0cb87d':'#e5e7eb'};background:${o===(f.default||'5')?'#e6faf3':'#fff'};color:${o===(f.default||'5')?'#054930':'#6b7280'};font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit">
+            ${o}
+          </button>`).join('');
+        return`
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="font-size:12px;font-weight:700;color:#374151;text-align:right">${f.label}</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap" id="ag-count-pills">
+              ${chips}
+              <input type="hidden" id="ag-count" value="${f.default||'5'}"/>
+            </div>
+          </div>`;
+      }
+      const opts=f.options.map(o=>`<option value="${o}"${o===(f.default||f.options[0])?'selected':''}>${o}</option>`).join('');
+      return`
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label style="font-size:12px;font-weight:700;color:#374151;text-align:right">${f.label}</label>
+          <select id="${f.id}"
+            style="border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 13px;font-size:13px;font-family:inherit;color:#111;background:#fafafa;outline:none;appearance:auto;direction:rtl">
+            ${opts}
+          </select>
+        </div>`;
+    }
+    return'';
+  }
+
+  const icons={usps:'🎯',angles:'💡',hooks:'🎣'};
+  const gradients={usps:'135deg,#054930,#0cb87d',angles:'135deg,#1a1a2e,#16213e,#0f3460',hooks:'135deg,#7c3aed,#4f46e5'};
+  const accentColors={usps:'#0cb87d',angles:'#4285f4',hooks:'#7c3aed'};
+  const accent=accentColors[type]||'#0cb87d';
+  const grad=gradients[type]||gradients.usps;
+
   box.innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div>
-        <div style="font-size:17px;font-weight:800;color:var(--p)">${cfg.title}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:3px">${cfg.subtitle}</div>
+    <!-- HEADER -->
+    <div style="background:linear-gradient(${grad});border-radius:16px 16px 0 0;padding:22px 24px 20px;margin:-24px -24px 0;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.06)"></div>
+      <div style="position:absolute;bottom:-30px;left:10px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.04)"></div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;position:relative">
+        <div>
+          <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-.3px">${icons[type]} ${cfg.title.replace(/^[^\s]+\s/,'')}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.65);margin-top:5px;direction:rtl">${cfg.subtitle}</div>
+        </div>
+        <button onclick="closeAIGenModal()"
+          style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:10px;width:34px;height:34px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s"
+          onmouseover="this.style.background='rgba(255,255,255,.25)'" onmouseout="this.style.background='rgba(255,255,255,.15)'">✕</button>
       </div>
-      <button onclick="closeAIGenModal()" style="background:#f3f4f6;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;color:#6b7280">✕</button>
+      <!-- account pill -->
+      <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border-radius:20px;padding:5px 12px;margin-top:12px;font-size:11px;color:rgba(255,255,255,.9);font-weight:600;direction:rtl">
+        <span style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;flex-shrink:0"></span>
+        ${esc(a.name)}
+        ${a.industry?`<span style="opacity:.6">·</span><span style="opacity:.75">${esc(a.industry)}</span>`:''}
+        ${a.platform?`<span style="opacity:.6">·</span><span style="opacity:.75">${esc(a.platform)}</span>`:''}
+      </div>
     </div>
-    <div style="background:#f0f9f4;border:1px solid #bbf0d9;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--p)">
-      <strong>الحساب:</strong> ${esc(a.name)} &nbsp;|&nbsp; <strong>القطاع:</strong> ${esc(a.industry||'غير محدد')} &nbsp;|&nbsp; <strong>الميزانية:</strong> ${esc(a.budget||'غير محدد')}
+
+    <!-- FIELDS -->
+    <div style="padding:20px 0 0;display:flex;flex-direction:column;gap:14px;direction:rtl">
+      ${cfg.fields.map(f=>fieldHtml(f)).join('')}
     </div>
-    <div style="display:flex;flex-direction:column;gap:4px">${fieldsHtml}</div>
-    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
-      <button class="btn btn-g" onclick="closeAIGenModal()">إلغاء</button>
-      <button onclick="runAIGen()" id="ai-gen-run-btn" style="background:linear-gradient(135deg,#f55036,#e8431e);color:#fff;border:none;border-radius:8px;padding:10px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:7px">
-        ${AI_GEN_STAR} Generate
+
+    <!-- FOOTER -->
+    <div style="display:flex;gap:10px;margin-top:22px;align-items:center;justify-content:flex-end">
+      <button onclick="closeAIGenModal()"
+        style="background:#f3f4f6;border:none;border-radius:10px;padding:10px 20px;font-size:13px;font-weight:600;color:#6b7280;cursor:pointer;font-family:inherit;transition:background .15s"
+        onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='#f3f4f6'">إلغاء</button>
+      <button onclick="runAIGen()" id="ai-gen-run-btn"
+        style="background:linear-gradient(135deg,${accent},${accent}cc);color:#fff;border:none;border-radius:10px;padding:11px 26px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;box-shadow:0 4px 14px ${accent}55;transition:all .15s;letter-spacing:.2px"
+        onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px ${accent}66'"
+        onmouseout="this.style.transform='';this.style.boxShadow='0 4px 14px ${accent}55'">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Generate
       </button>
     </div>
   `;
 
-  // auto-fill product field from account name/industry hint
   const pf=document.getElementById('ag-product');
-  if(pf&&!pf.value){pf.placeholder=`مثال: ${a.name} - ${a.industry||'منتج أو خدمة'}`}
+  if(pf&&!pf.value){pf.placeholder=`مثال: ${a.name}${a.industry?' - '+a.industry:''}`}
 
   overlay.classList.remove('hidden');
-  setTimeout(()=>{const f=box.querySelector('textarea,input');if(f)f.focus()},80);
+  setTimeout(()=>{const f=box.querySelector('textarea,input:not([type=hidden])');if(f)f.focus()},80);
+}
+
+function setAGCount(btn,val){
+  document.getElementById('ag-count').value=val;
+  document.querySelectorAll('#ag-count-pills button').forEach(b=>{
+    const sel=b.dataset.val===val;
+    b.style.borderColor=sel?'#0cb87d':'#e5e7eb';
+    b.style.background=sel?'#e6faf3':'#fff';
+    b.style.color=sel?'#054930':'#6b7280';
+  });
 }
 
 function closeAIGenModal(){document.getElementById('ai-gen-overlay').classList.add('hidden')}
