@@ -11,6 +11,35 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px}
 
+/* AI */
+.ai-fab{position:fixed;bottom:24px;right:24px;z-index:500;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#4285f4,#0cb87d);border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(66,133,244,.45);display:flex;align-items:center;justify-content:center;transition:transform .18s,box-shadow .18s}
+.ai-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(66,133,244,.55)}
+.ai-fab.active{background:linear-gradient(135deg,#0cb87d,#054930)}
+.ai-panel{position:fixed;bottom:88px;right:24px;z-index:499;width:380px;max-height:520px;background:#fff;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.18);display:flex;flex-direction:column;overflow:hidden;transition:opacity .2s,transform .2s;transform-origin:bottom right}
+.ai-panel.hidden{opacity:0;pointer-events:none;transform:scale(.92)}
+.ai-panel-hd{background:linear-gradient(135deg,#4285f4,#1a73e8);color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.ai-panel-hd-l{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700}
+.ai-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:0}
+.ai-msg{max-width:88%;padding:10px 13px;border-radius:12px;font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.ai-msg.user{align-self:flex-end;background:#054930;color:#fff;border-bottom-right-radius:3px}
+.ai-msg.ai{align-self:flex-start;background:#f0f4f2;color:#1a1a1a;border-bottom-left-radius:3px}
+.ai-msg.loading{color:#6b7280;font-style:italic}
+.ai-input-row{padding:10px 12px;border-top:1px solid #e5e7eb;display:flex;gap:8px;flex-shrink:0}
+.ai-input{flex:1;border:.5px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;resize:none;outline:none;max-height:80px;min-height:36px}
+.ai-input:focus{border-color:#4285f4;box-shadow:0 0 0 2px rgba(66,133,244,.12)}
+.ai-send-btn{background:#4285f4;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;font-weight:700;flex-shrink:0;transition:background .15s}
+.ai-send-btn:hover{background:#3367d6}
+.ai-send-btn:disabled{background:#aaa;cursor:not-allowed}
+.ai-chips{padding:0 12px 10px;display:flex;flex-wrap:wrap;gap:6px;flex-shrink:0}
+.ai-chip{background:#f0f4f2;border:1px solid var(--brd);border-radius:20px;padding:4px 11px;font-size:11px;font-weight:600;color:var(--p);cursor:pointer;transition:all .12s;white-space:nowrap}
+.ai-chip:hover{background:#e0f2ec;border-color:var(--s);color:var(--s)}
+.ai-gen-btn{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#f0f4ff,#e8f5ee);border:1px solid #c7d9f5;border-radius:7px;padding:5px 12px;font-size:11px;font-weight:700;color:#1a73e8;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.ai-gen-btn:hover{background:linear-gradient(135deg,#e0ebff,#d4f0e4);border-color:#4285f4;transform:translateY(-1px)}
+.ai-gen-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+/* SETTINGS BTN */
+.settings-btn{background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;transition:all .15s;display:flex;align-items:center}
+.settings-btn:hover{background:rgba(255,255,255,.18);color:#fff}
+
 /* HEADER */
 .hdr{background:var(--p);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(5,73,48,.35)}
 .hdr-l{display:flex;align-items:center;gap:10px}
@@ -343,13 +372,63 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" opacity=".9"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     <div><h1>Media Buying Dashboard</h1><div class="hdr-sub">Content Requests &amp; Media Planning</div></div>
   </div>
-  <div class="hdr-stats">
-    <div class="stat"><div class="stat-n" id="s-acc">0</div><div class="stat-l">Accounts</div></div>
-    <div class="stat"><div class="stat-n" id="s-tasks">0</div><div class="stat-l">Total Tasks</div></div>
-    <div class="stat"><div class="stat-n" id="s-pend">0</div><div class="stat-l">Open</div></div>
-    <div class="stat"><div class="stat-n" id="s-done">0</div><div class="stat-l">Done</div></div>
+  <div style="display:flex;align-items:center;gap:20px">
+    <div class="hdr-stats">
+      <div class="stat"><div class="stat-n" id="s-acc">0</div><div class="stat-l">Accounts</div></div>
+      <div class="stat"><div class="stat-n" id="s-tasks">0</div><div class="stat-l">Total Tasks</div></div>
+      <div class="stat"><div class="stat-n" id="s-pend">0</div><div class="stat-l">Open</div></div>
+      <div class="stat"><div class="stat-n" id="s-done">0</div><div class="stat-l">Done</div></div>
+    </div>
+    <button class="settings-btn" onclick="openSettings()" title="Settings"><i class="ti ti-settings"></i></button>
   </div>
 </header>
+
+<!-- AI PANEL -->
+<div class="ai-panel hidden" id="ai-panel">
+  <div class="ai-panel-hd">
+    <div class="ai-panel-hd-l">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+      Gemini AI Assistant
+    </div>
+    <button onclick="toggleAI()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:13px">✕</button>
+  </div>
+  <div class="ai-msgs" id="ai-msgs">
+    <div class="ai-msg ai">مرحباً! أنا مساعدك الذكي. اسألني عن استراتيجيات الإعلان، الـ hooks، الـ audiences، أو أي حاجة تانية. 🚀</div>
+  </div>
+  <div class="ai-chips" id="ai-chips">
+    <span class="ai-chip" onclick="aiChip('اقترحلي 5 ad angles لـ '+acctName())">💡 اقترح Angles</span>
+    <span class="ai-chip" onclick="aiChip('اكتبلي 3 hooks قوية لـ '+acctName())">🎣 اكتب Hooks</span>
+    <span class="ai-chip" onclick="aiChip('اقترحلي USPs لـ '+acctName())">🎯 اقترح USPs</span>
+    <span class="ai-chip" onclick="aiChip('ما هي أفضل targeting strategy لـ '+acctName()+'؟')">👥 Targeting</span>
+  </div>
+  <div class="ai-input-row">
+    <textarea class="ai-input" id="ai-input" placeholder="اسأل Gemini..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAI()}"></textarea>
+    <button class="ai-send-btn" id="ai-send" onclick="sendAI()">↑</button>
+  </div>
+</div>
+<button class="ai-fab" id="ai-fab" onclick="toggleAI()" title="Gemini AI Assistant">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+</button>
+
+<!-- SETTINGS MODAL -->
+<div class="overlay hidden" id="modal-settings">
+  <div class="modal" style="max-width:420px">
+    <h3 style="margin-bottom:16px">⚙️ Settings</h3>
+    <div class="fg">
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#4285f4"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Gemini API Key
+      </label>
+      <input id="s-gemini-key" type="password" placeholder="Paste your Gemini API key here..." style="font-family:monospace;font-size:13px"/>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">Get a free key from <strong>aistudio.google.com</strong> → Get API Key. بيتحفظ في المتصفح بتاعك بس.</div>
+    </div>
+    <div class="mfoot" style="margin-top:18px">
+      <button class="btn btn-g" onclick="closeSettings()">Cancel</button>
+      <button class="btn" id="s-test-btn" onclick="testGemini()" style="background:#4285f4;color:#fff;border-radius:8px;padding:8px 16px;border:none;font-weight:700;cursor:pointer">Test</button>
+      <button class="btn btn-p" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
 
 <div class="tabs-bar" id="tabs-bar">
   <button class="my-tasks-btn" id="my-tasks-btn" onclick="openMyTasks()"><i class="ti ti-layout-kanban"></i> All Tasks <span class="my-tasks-badge" id="my-tasks-badge">0</span></button>
@@ -1658,7 +1737,10 @@ function renderStrategy(main,a){
   <div class="strat-section">
     <div class="strat-section-hd">
       <div class="strat-section-title">🎯 Unique Selling Points (USPs)</div>
-      <button class="btn btn-p btn-xs" onclick="addUSP()">＋ Add USP</button>
+      <div style="display:flex;gap:7px;align-items:center">
+        <button class="ai-gen-btn" onclick="aiGenerateUSPs()" id="ai-usp-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> AI Generate</button>
+        <button class="btn btn-p btn-xs" onclick="addUSP()">＋ Add</button>
+      </div>
     </div>
     <div class="strat-section-body" style="padding:${s.usps.length?'12px 18px':'18px'}">
       ${s.usps.length===0?`<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px 0">أضف أهم مميزات المنتج أو الخدمة هنا</div>`
@@ -1680,6 +1762,7 @@ function renderStrategy(main,a){
       <div class="strat-section-title">💡 Ad Angles</div>
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:12px;color:var(--muted)">${s.angles.filter(x=>x.status==='winner').length} winner${s.angles.filter(x=>x.status==='winner').length!==1?'s':''}</span>
+        <button class="ai-gen-btn" onclick="aiGenerateAngles()" id="ai-ang-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> AI Generate</button>
         <button class="btn btn-p btn-xs" onclick="addAngle()">＋ Add Angle</button>
       </div>
     </div>
@@ -1727,7 +1810,10 @@ function renderStrategy(main,a){
   <div class="strat-section">
     <div class="strat-section-hd">
       <div class="strat-section-title">🎣 Hook Formulas (First 3 Seconds)</div>
-      <button class="btn btn-p btn-xs" onclick="addHook()">＋ Add Hook</button>
+      <div style="display:flex;gap:7px;align-items:center">
+        <button class="ai-gen-btn" onclick="aiGenerateHooks()" id="ai-hook-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> AI Generate</button>
+        <button class="btn btn-p btn-xs" onclick="addHook()">＋ Add</button>
+      </div>
     </div>
     <div class="strat-section-body" style="display:flex;flex-direction:column;gap:10px">
       ${s.hooks.length===0?`<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px 0">أضف الـ hooks اللي بتجذب attention الـ audience ده</div>`
@@ -2303,6 +2389,215 @@ function renderMyTasks(main){
       </div>`;
     }).join('')}
   </div>`;
+}
+
+// ── GEMINI AI ──
+function geminiKey(){return localStorage.getItem('gemini_key')||''}
+function acctName(){const a=acct();return a?a.name:'this client'}
+
+function openSettings(){
+  document.getElementById('s-gemini-key').value=geminiKey();
+  document.getElementById('modal-settings').classList.remove('hidden');
+}
+function closeSettings(){document.getElementById('modal-settings').classList.add('hidden')}
+function saveSettings(){
+  const k=document.getElementById('s-gemini-key').value.trim();
+  if(k)localStorage.setItem('gemini_key',k);
+  else localStorage.removeItem('gemini_key');
+  closeSettings();
+  showAIStatus(k?'✅ API key saved!':'⚠️ API key removed');
+}
+async function testGemini(){
+  const k=document.getElementById('s-gemini-key').value.trim();
+  if(!k){alert('Enter your API key first');return}
+  const btn=document.getElementById('s-test-btn');
+  btn.textContent='Testing...';btn.disabled=true;
+  try{
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${k}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:'Say "OK" only'}]}]})
+    });
+    const d=await r.json();
+    if(d.candidates?.[0]?.content?.parts?.[0]?.text)btn.textContent='✅ Works!';
+    else btn.textContent='❌ Error: '+(d.error?.message||'Unknown');
+  }catch(e){btn.textContent='❌ Failed'}
+  setTimeout(()=>{btn.textContent='Test';btn.disabled=false},2500);
+}
+
+let aiOpen=false;
+let aiLoading=false;
+
+function toggleAI(){
+  aiOpen=!aiOpen;
+  document.getElementById('ai-panel').classList.toggle('hidden',!aiOpen);
+  document.getElementById('ai-fab').classList.toggle('active',aiOpen);
+  if(aiOpen){updateAIChips();setTimeout(()=>document.getElementById('ai-input').focus(),100)}
+}
+
+function updateAIChips(){
+  const a=acct();
+  const name=a?esc(a.name):'a client';
+  const chips=document.getElementById('ai-chips');
+  chips.innerHTML=`
+    <span class="ai-chip" onclick="aiChip('اقترحلي 5 ad angles مختلفة لـ ${name}')">💡 Ad Angles</span>
+    <span class="ai-chip" onclick="aiChip('اكتبلي 5 hooks قوية لأول 3 ثواني لإعلانات ${name}')">🎣 Hooks</span>
+    <span class="ai-chip" onclick="aiChip('اقترحلي أهم 5 USPs لـ ${name}')">🎯 USPs</span>
+    <span class="ai-chip" onclick="aiChip('ما أفضل targeting strategy على Meta لـ ${name}؟')">👥 Targeting</span>
+    <span class="ai-chip" onclick="aiChip('اكتبلي creative brief سريع لـ ${name}')">✏️ Brief</span>
+  `;
+}
+
+function aiChip(text){
+  document.getElementById('ai-input').value=text;
+  sendAI();
+}
+
+function showAIStatus(msg){
+  const msgs=document.getElementById('ai-msgs');
+  const el=document.createElement('div');
+  el.className='ai-msg ai';el.textContent=msg;
+  msgs.appendChild(el);msgs.scrollTop=msgs.scrollHeight;
+}
+
+async function sendAI(){
+  if(aiLoading)return;
+  const key=geminiKey();
+  if(!key){
+    if(!aiOpen)toggleAI();
+    showAIStatus('⚠️ محتاج تضيف Gemini API key أولاً. اضغط ⚙️ في الهيدر.');
+    return;
+  }
+  const input=document.getElementById('ai-input');
+  const text=input.value.trim();
+  if(!text)return;
+
+  const msgs=document.getElementById('ai-msgs');
+  const userEl=document.createElement('div');
+  userEl.className='ai-msg user';userEl.textContent=text;
+  msgs.appendChild(userEl);
+  input.value='';msgs.scrollTop=msgs.scrollHeight;
+
+  const loadEl=document.createElement('div');
+  loadEl.className='ai-msg ai loading';loadEl.textContent='Gemini is thinking...';
+  msgs.appendChild(loadEl);msgs.scrollTop=msgs.scrollHeight;
+
+  aiLoading=true;
+  document.getElementById('ai-send').disabled=true;
+
+  const a=acct();
+  const context=a?`أنت مساعد متخصص في media buying تساعد في إدارة حساب "${a.name}" (Industry: ${a.industry||'غير محدد'}, Platform: ${a.platform||'غير محدد'}, Budget: ${a.budget||'غير محدد'}). الـ USPs الموجودة: ${(a.strategy?.usps||[]).map(u=>u.text).filter(Boolean).join(', ')||'لا يوجد'}. الـ Angles الموجودة: ${(a.strategy?.angles||[]).map(ang=>ang.name).filter(Boolean).join(', ')||'لا يوجد'}. رد بنفس لغة السؤال (عربي أو إنجليزي). كن عملياً وموجزاً.`
+  :'أنت مساعد متخصص في media buying. رد بنفس لغة السؤال. كن عملياً وموجزاً.';
+
+  try{
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        system_instruction:{parts:[{text:context}]},
+        contents:[{parts:[{text}]}]
+      })
+    });
+    const d=await r.json();
+    const reply=d.candidates?.[0]?.content?.parts?.[0]?.text;
+    loadEl.className='ai-msg ai';
+    loadEl.textContent=reply||('Error: '+(d.error?.message||'No response'));
+  }catch(e){
+    loadEl.className='ai-msg ai';
+    loadEl.textContent='❌ Network error. Check your connection.';
+  }
+  aiLoading=false;
+  document.getElementById('ai-send').disabled=false;
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+async function aiGenerate(prompt,onResult){
+  const key=geminiKey();
+  if(!key){openSettings();return}
+  const a=acct();
+  const context=a?`أنت مساعد media buying متخصص للحساب "${a.name}". أجب بنفس لغة السؤال. كن موجزاً وعملياً.`:'أنت مساعد media buying.';
+  try{
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({system_instruction:{parts:[{text:context}]},contents:[{parts:[{text:prompt}]}]})
+    });
+    const d=await r.json();
+    const reply=d.candidates?.[0]?.content?.parts?.[0]?.text;
+    if(reply)onResult(reply);
+    else alert('No response from Gemini: '+(d.error?.message||'Unknown error'));
+  }catch(e){alert('Network error. Check your connection.')}
+}
+
+async function aiGenerateUSPs(){
+  const a=acct();if(!a)return;
+  const btn=document.getElementById('ai-usp-btn');
+  if(btn){btn.disabled=true;btn.innerHTML='⏳ Generating...'}
+  const prompt=`أنت خبير media buying. أعطني 5 USPs (unique selling points) مهمة وعملية للحساب "${a.name}" في قطاع "${a.industry||'غير محدد'}" على منصة "${a.platform||'غير محدد'}".
+لكل USP اكتب جملة واحدة موجزة وقوية.
+الشكل المطلوب (رقم - نقطة فقط):
+1. ...
+2. ...
+3. ...
+4. ...
+5. ...`;
+  await aiGenerate(prompt,text=>{
+    const lines=text.split('\n').filter(l=>/^\d+\./.test(l.trim()));
+    lines.forEach(l=>{
+      const t=l.replace(/^\d+\.\s*/,'').trim();
+      if(t&&a.strategy){a.strategy.usps.push({id:uid(),text:t,notes:''})}
+    });
+    if(lines.length>0){save();renderMain()}
+    else alert('لم يتم التعرف على الـ USPs. جرب مرة أخرى.');
+  });
+  if(btn){btn.disabled=false;btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> AI Generate'}
+}
+
+async function aiGenerateAngles(){
+  const a=acct();if(!a)return;
+  const btn=document.getElementById('ai-ang-btn');
+  if(btn){btn.disabled=true;btn.innerHTML='⏳ Generating...'}
+  const uspsText=(a.strategy?.usps||[]).map(u=>u.text).filter(Boolean).join(', ')||'غير محددة';
+  const prompt=`أنت خبير media buying. اقترح 5 ad angles مختلفة ومبتكرة لحساب "${a.name}" (${a.industry||'غير محدد'}).
+USPs الموجودة: ${uspsText}
+لكل angle: اكتب اسم الـ angle فقط (5-8 كلمات وصفية).
+الشكل:
+1. ...
+2. ...
+3. ...
+4. ...
+5. ...`;
+  await aiGenerate(prompt,text=>{
+    const lines=text.split('\n').filter(l=>/^\d+\./.test(l.trim()));
+    lines.forEach(l=>{
+      const n=l.replace(/^\d+\.\s*/,'').trim();
+      if(n&&a.strategy){a.strategy.angles.unshift({id:uid(),name:n,angleType:'',hypothesis:'',funnel:'top',status:'to-test',notes:''})}
+    });
+    if(lines.length>0){save();renderMain()}
+    else alert('لم يتم التعرف على الـ angles. جرب مرة أخرى.');
+  });
+  if(btn){btn.disabled=false;btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> AI Generate'}
+}
+
+async function aiGenerateHooks(){
+  const a=acct();if(!a)return;
+  const btn=document.getElementById('ai-hook-btn');
+  if(btn){btn.disabled=true;btn.innerHTML='⏳ Generating...'}
+  const prompt=`أنت خبير في كتابة إعلانات رقمية. اكتب 5 hook formulas قوية لأول 3 ثواني لإعلانات "${a.name}" (${a.industry||'غير محدد'}).
+كل hook يجب أن يجذب الانتباه فوراً.
+الشكل:
+1. [الـ hook بالكامل - جملة أو سؤال مباشر]
+2. ...
+3. ...
+4. ...
+5. ...`;
+  await aiGenerate(prompt,text=>{
+    const lines=text.split('\n').filter(l=>/^\d+\./.test(l.trim()));
+    lines.forEach(l=>{
+      const f=l.replace(/^\d+\.\s*/,'').replace(/^\[|\]$/g,'').trim();
+      if(f&&a.strategy){a.strategy.hooks.unshift({id:uid(),formula:f,example:'',funnel:'top',status:'to-test'})}
+    });
+    if(lines.length>0){save();renderMain()}
+    else alert('لم يتم التعرف على الـ hooks. جرب مرة أخرى.');
+  });
+  if(btn){btn.disabled=false;btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> AI Generate'}
 }
 
 // ── RENDER ──
