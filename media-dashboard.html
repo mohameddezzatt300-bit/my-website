@@ -544,14 +544,15 @@ function dKPIs(obj,cur){
 
 // ── SUB-TAB DEFINITIONS ──
 const ALL_SUB_TABS=[
-  {key:'tasks',  icon:'ti-clipboard-list', label:'Content Requests'},
-  {key:'mp',     icon:'ti-chart-dots-3',   label:'Media Plan'},
-  {key:'rep',    icon:'ti-file-analytics', label:'Client Report'},
-  {key:'aud',    icon:'ti-users',          label:'Audiences'},
-  {key:'brief',  icon:'ti-pencil',         label:'Creative Briefs'},
-  {key:'strat',  icon:'ti-bulb',           label:'Creative Strategy'},
-  {key:'dir',    icon:'ti-palette',        label:'Creative Direction'},
-  {key:'atasks', icon:'ti-layout-kanban',  label:'Task Board'},
+  {key:'tasks',   icon:'ti-clipboard-list', label:'Content Requests'},
+  {key:'mp',      icon:'ti-chart-dots-3',   label:'Media Plan'},
+  {key:'rep',     icon:'ti-file-analytics', label:'Client Report'},
+  {key:'aud',     icon:'ti-users',          label:'Audiences'},
+  {key:'brief',   icon:'ti-pencil',         label:'Creative Briefs'},
+  {key:'strat',   icon:'ti-bulb',           label:'Creative Strategy'},
+  {key:'campgen', icon:'ti-tag',            label:'Campaign Naming'},
+  {key:'dir',     icon:'ti-palette',        label:'Creative Direction'},
+  {key:'atasks',  icon:'ti-layout-kanban',  label:'Task Board'},
 ];
 const DEFAULT_SUB_ORDER=ALL_SUB_TABS.map(t=>t.key);
 
@@ -1872,66 +1873,6 @@ function renderStrategy(main,a){
     </div>
   </div>
 
-  <!-- Campaign Name Generator -->
-  <div class="strat-section">
-    <div class="strat-section-hd">
-      <div class="strat-section-title">📛 Campaign Name Generator</div>
-      <div style="font-size:11px;color:var(--muted);font-weight:500">منظم للتحليل</div>
-    </div>
-    <div class="strat-section-body" style="padding:0">
-      <!-- Builder -->
-      <div style="padding:16px 18px;border-bottom:1px solid var(--brd)">
-        <!-- Live Preview -->
-        <div style="background:linear-gradient(135deg,#054930,#0a7a50);border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
-          <div style="flex:1;font-family:monospace;font-size:14px;font-weight:800;color:#fff;letter-spacing:.5px;word-break:break-all" id="cn-preview">—</div>
-          <button onclick="saveCampName()" title="حفظ في التاريخ"
-            style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;transition:background .15s;flex-shrink:0"
-            onmouseover="this.style.background='rgba(255,255,255,.25)'" onmouseout="this.style.background='rgba(255,255,255,.15)'">💾 Save</button>
-          <button onclick="copyPreviewName()" id="cn-copy-btn"
-            style="background:#0cb87d;border:none;color:#fff;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .15s;flex-shrink:0"
-            onmouseover="this.style.background='#0aa06c'" onmouseout="this.style.background='#0cb87d'">📋 Copy</button>
-        </div>
-        <!-- Tokens Grid -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px" id="cn-tokens">
-          ${renderCNTokens(a)}
-        </div>
-        <div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <span style="font-size:11px;color:var(--muted)">الفاصل:</span>
-          ${['_','|','-','/'].map(sep=>`
-            <button onclick="setCNSep('${sep}')" data-sep="${sep}"
-              style="padding:4px 12px;border-radius:6px;border:1.5px solid ${(a.cnSettings?.sep||'_')===sep?'var(--s)':'var(--brd)'};background:${(a.cnSettings?.sep||'_')===sep?'#e6faf3':'#fff'};color:${(a.cnSettings?.sep||'_')===sep?'var(--p)':'var(--muted)'};font-family:monospace;font-size:13px;font-weight:700;cursor:pointer;transition:all .12s">
-              ${sep==='_'?'_':sep==='|'?'|':sep==='-'?'-':'/'}
-            </button>`).join('')}
-          <button onclick="clearCNBuilder()" style="margin-left:auto;background:transparent;border:1px solid var(--brd);color:var(--muted);border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .12s" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="this.style.borderColor='var(--brd)';this.style.color='var(--muted)'">🗑 Clear All</button>
-        </div>
-      </div>
-      <!-- History -->
-      <div style="padding:12px 18px">
-        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">History</div>
-        ${!s.campNames||s.campNames.length===0
-          ?`<div style="color:var(--muted);font-size:12px;text-align:center;padding:8px 0">اضغط Save بعد ما تبني الاسم</div>`
-          :`<div style="display:flex;flex-direction:column;gap:6px">
-            ${s.campNames.map(cn=>`
-              <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f9fafb;border:1px solid var(--brd);border-radius:8px">
-                <div style="flex:1;font-family:monospace;font-size:12px;font-weight:700;color:#111;word-break:break-all">${esc(cn.name)}</div>
-                <select onchange="updCampName('${cn.id}','status',this.value)"
-                  style="border:1px solid var(--brd);border-radius:6px;padding:3px 7px;font-size:10px;font-weight:700;font-family:inherit;outline:none;background:${cn.status==='active'?'#d1fae5':cn.status==='used'?'#dbeafe':'#f3f4f6'};color:${cn.status==='active'?'#065f46':cn.status==='used'?'#1e40af':'#6b7280'};cursor:pointer;flex-shrink:0">
-                  <option value="draft"${cn.status==='draft'?' selected':''}>Draft</option>
-                  <option value="active"${cn.status==='active'?' selected':''}>✅ Active</option>
-                  <option value="used"${cn.status==='used'?' selected':''}>📌 Used</option>
-                  <option value="archived"${cn.status==='archived'?' selected':''}>Archived</option>
-                </select>
-                <button onclick="copyCampName('${cn.id}')" id="copy-cn-${cn.id}"
-                  style="background:#f0f4ff;border:1px solid #c7d9f5;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;color:#4285f4;cursor:pointer;font-family:inherit;transition:all .12s;flex-shrink:0">📋</button>
-                <button onclick="delCampName('${cn.id}')"
-                  style="background:transparent;border:none;color:#d1d5db;cursor:pointer;font-size:14px;padding:2px 4px;flex-shrink:0;line-height:1"
-                  onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#d1d5db'">✕</button>
-              </div>`).join('')}
-          </div>`}
-      </div>
-    </div>
-  </div>
-
   <!-- Notes Grid -->
   <div class="strat-grid2" style="gap:16px">
     <div class="strat-section">
@@ -3124,6 +3065,95 @@ function copyCampName(id){
   });
 }
 
+// ── CAMPAIGN NAME GENERATOR TAB ──
+function renderCampGen(main,a){
+  const s=a.strategy||{};
+  const sep=a.cnSettings?.sep||'_';
+  main.innerHTML=`
+  <div style="max-width:860px;margin:0 auto">
+
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#054930 0%,#0a7a50 60%,#0cb87d 100%);border-radius:16px;padding:28px 32px;margin-bottom:24px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-30px;right:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.06)"></div>
+      <div style="position:absolute;bottom:-20px;left:20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.04)"></div>
+      <div style="position:relative">
+        <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-.3px">📛 Campaign Name Generator</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.65);margin-top:5px">بناء أسماء حملات منظمة لتحسين التحليل</div>
+        <!-- Live Preview -->
+        <div style="margin-top:18px;background:rgba(0,0,0,.25);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;backdrop-filter:blur(4px)">
+          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;flex-shrink:0">Preview</div>
+          <div style="flex:1;font-family:monospace;font-size:16px;font-weight:900;color:#fff;letter-spacing:.8px;word-break:break-all" id="cn-preview">—</div>
+          <button onclick="saveCampName()"
+            style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;transition:background .15s;flex-shrink:0"
+            onmouseover="this.style.background='rgba(255,255,255,.25)'" onmouseout="this.style.background='rgba(255,255,255,.15)'">💾 Save</button>
+          <button onclick="copyPreviewName()" id="cn-copy-btn"
+            style="background:#0cb87d;border:none;color:#fff;border-radius:8px;padding:8px 18px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .15s;flex-shrink:0;box-shadow:0 2px 8px rgba(12,184,125,.4)"
+            onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">📋 Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start">
+
+      <!-- LEFT: Builder -->
+      <div style="background:#fff;border:1px solid var(--brd);border-radius:14px;overflow:hidden">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:14px;font-weight:800;color:var(--p)">Build Your Name</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;color:var(--muted)">Separator:</span>
+            ${['_','|','-','/'].map(sp=>`
+              <button onclick="setCNSep('${sp}')" data-sep="${sp}"
+                style="width:30px;height:30px;border-radius:7px;border:1.5px solid ${sep===sp?'var(--s)':'var(--brd)'};background:${sep===sp?'#e6faf3':'#f9fafb'};color:${sep===sp?'var(--p)':'var(--muted)'};font-family:monospace;font-size:14px;font-weight:800;cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center">
+                ${sp}
+              </button>`).join('')}
+            <button onclick="clearCNBuilder()"
+              style="padding:5px 12px;border-radius:7px;border:1px solid var(--brd);background:#fff;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .12s;margin-left:4px"
+              onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="this.style.borderColor='var(--brd)';this.style.color='var(--muted)'">🗑 Clear</button>
+          </div>
+        </div>
+        <div style="padding:18px 20px;display:flex;flex-direction:column;gap:14px" id="cn-tokens">
+          ${renderCNTokens(a)}
+        </div>
+      </div>
+
+      <!-- RIGHT: History -->
+      <div style="background:#fff;border:1px solid var(--brd);border-radius:14px;overflow:hidden;position:sticky;top:16px">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:13px;font-weight:800;color:var(--p)">📋 Saved Names</div>
+          <div style="font-size:11px;color:var(--muted)">${(s.campNames||[]).length} total</div>
+        </div>
+        <div style="padding:12px;max-height:500px;overflow-y:auto">
+          ${!s.campNames||s.campNames.length===0
+            ?`<div style="text-align:center;padding:28px 16px;color:var(--muted)">
+                <div style="font-size:28px;margin-bottom:8px">🏷️</div>
+                <div style="font-size:12px">اضغط Save بعد ما تبني الاسم</div>
+              </div>`
+            :`<div style="display:flex;flex-direction:column;gap:6px">
+              ${s.campNames.map(cn=>`
+                <div style="border:1px solid var(--brd);border-radius:9px;padding:10px 12px;background:#fafafa;transition:background .12s" onmouseover="this.style.background='#f0faf6'" onmouseout="this.style.background='#fafafa'">
+                  <div style="font-family:monospace;font-size:11px;font-weight:800;color:#111;word-break:break-all;margin-bottom:7px;line-height:1.4">${esc(cn.name)}</div>
+                  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                    <select onchange="updCampName('${cn.id}','status',this.value)"
+                      style="border:1px solid var(--brd);border-radius:6px;padding:3px 6px;font-size:10px;font-weight:700;font-family:inherit;outline:none;background:${cn.status==='active'?'#d1fae5':cn.status==='used'?'#dbeafe':'#f3f4f6'};color:${cn.status==='active'?'#065f46':cn.status==='used'?'#1e40af':'#6b7280'};cursor:pointer;flex-shrink:0">
+                      <option value="draft"${cn.status==='draft'?' selected':''}>Draft</option>
+                      <option value="active"${cn.status==='active'?' selected':''}>✅ Active</option>
+                      <option value="used"${cn.status==='used'?' selected':''}>📌 Used</option>
+                      <option value="archived"${cn.status==='archived'?' selected':''}>Archived</option>
+                    </select>
+                    <button onclick="copyCampName('${cn.id}')" id="copy-cn-${cn.id}"
+                      style="background:#f0f4ff;border:1px solid #c7d9f5;border-radius:6px;padding:3px 9px;font-size:10px;font-weight:700;color:#4285f4;cursor:pointer;font-family:inherit;flex-shrink:0">📋 Copy</button>
+                    <button onclick="delCampName('${cn.id}')"
+                      style="background:transparent;border:none;color:#d1d5db;cursor:pointer;font-size:14px;padding:2px;flex-shrink:0;line-height:1;margin-left:auto"
+                      onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#d1d5db'">✕</button>
+                  </div>
+                </div>`).join('')}
+            </div>`}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
 // ── RENDER ──
 function render(){renderTabs();renderSubBar();renderMain();updStats()}
 
@@ -3211,6 +3241,7 @@ function renderMain(){
   else if(sub==='aud')renderAud(main,a);
   else if(sub==='brief')renderBrief(main,a);
   else if(sub==='strat')renderStrategy(main,a);
+  else if(sub==='campgen')renderCampGen(main,a);
   else if(sub==='dir')renderDirection(main,a);
   else renderAcctTasks(main,a);
 }
@@ -3409,7 +3440,10 @@ db.accounts.forEach(a=>{
   if(!a.acctTasks)a.acctTasks=[];
 });
 if(!db.myTasks)db.myTasks=[];
-if(!db.subTabOrder||db.subTabOrder.length!==DEFAULT_SUB_ORDER.length)db.subTabOrder=[...DEFAULT_SUB_ORDER];
+// migrate subTabOrder: add any new keys not yet in saved order
+if(!db.subTabOrder)db.subTabOrder=[...DEFAULT_SUB_ORDER];
+DEFAULT_SUB_ORDER.forEach(k=>{if(!db.subTabOrder.includes(k))db.subTabOrder.splice(DEFAULT_SUB_ORDER.indexOf(k),0,k)});
+db.subTabOrder=db.subTabOrder.filter(k=>DEFAULT_SUB_ORDER.includes(k));
 render();
 </script>
 </body>
