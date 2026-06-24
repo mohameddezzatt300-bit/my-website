@@ -345,8 +345,8 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
   </div>
   <div class="hdr-stats">
     <div class="stat"><div class="stat-n" id="s-acc">0</div><div class="stat-l">Accounts</div></div>
-    <div class="stat"><div class="stat-n" id="s-tasks">0</div><div class="stat-l">Tasks</div></div>
-    <div class="stat"><div class="stat-n" id="s-pend">0</div><div class="stat-l">Pending</div></div>
+    <div class="stat"><div class="stat-n" id="s-tasks">0</div><div class="stat-l">Total Tasks</div></div>
+    <div class="stat"><div class="stat-n" id="s-pend">0</div><div class="stat-l">Open</div></div>
     <div class="stat"><div class="stat-n" id="s-done">0</div><div class="stat-l">Done</div></div>
   </div>
 </header>
@@ -2315,10 +2315,6 @@ function renderTabs(){
   bar.innerHTML='';
   bar.appendChild(tasksBtn);
   tasksBtn.classList.toggle('active',gview==='mytasks');
-  const open=getAllTasks().filter(t=>t.status!=='done').length;
-  const badge=document.getElementById('my-tasks-badge');
-  badge.textContent=open;
-  badge.className='my-tasks-badge'+(open>0?' has-tasks':'');
 
   db.accounts.forEach(a=>{
     const pend=a.tasks.filter(t=>t.status!=='done').length;
@@ -2564,11 +2560,15 @@ function renderMP(main,a){
 
 // ── STATS ──
 function updStats(){
-  const all=db.accounts.flatMap(a=>a.tasks);
+  const allTasks=getAllTasks();
+  const open=allTasks.filter(t=>t.status!=='done').length;
   document.getElementById('s-acc').textContent=db.accounts.length;
-  document.getElementById('s-tasks').textContent=all.length;
-  document.getElementById('s-pend').textContent=all.filter(t=>t.status==='pending').length;
-  document.getElementById('s-done').textContent=all.filter(t=>t.status==='done').length;
+  document.getElementById('s-tasks').textContent=allTasks.length;
+  document.getElementById('s-pend').textContent=open;
+  document.getElementById('s-done').textContent=allTasks.filter(t=>t.status==='done').length;
+  const badge=document.getElementById('my-tasks-badge');
+  badge.textContent=open;
+  badge.className='my-tasks-badge'+(open>0?' has-tasks':'');
 }
 
 // ── INIT ──
