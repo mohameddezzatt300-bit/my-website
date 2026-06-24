@@ -22,7 +22,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .stat-l{font-size:10px;opacity:.6;margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
 
 /* TABS */
-.tabs-bar{background:var(--pd);padding:0 16px 0 0;display:flex;align-items:stretch;gap:2px;overflow-x:auto;scrollbar-width:none;min-height:48px}
+.tabs-bar{background:var(--pd);padding:0 24px;display:flex;align-items:stretch;gap:2px;overflow-x:auto;scrollbar-width:none;min-height:46px}
 .tabs-bar::-webkit-scrollbar{display:none}
 .tab-btn{padding:0 20px;border:none;background:transparent;color:rgba(255,255,255,.55);cursor:grab;font-size:13px;font-weight:600;border-bottom:3px solid transparent;white-space:nowrap;transition:all .18s;display:flex;align-items:center;gap:8px;user-select:none}
 .tab-btn:hover{color:#fff;background:rgba(255,255,255,.06)}
@@ -189,15 +189,12 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
 .preview-brief-btn:hover{background:var(--pd)}
 
 /* MY TASKS GLOBAL BTN */
-.my-tasks-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.15);color:rgba(255,255,255,.75);padding:0 16px;border-radius:0;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;height:100%;transition:all .18s;white-space:nowrap;flex-shrink:0;position:relative;letter-spacing:.1px}
-.my-tasks-btn::after{content:'';position:absolute;right:0;top:20%;height:60%;width:1px;background:rgba(255,255,255,.12)}
-.my-tasks-btn:hover{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.25)}
-.my-tasks-btn.active{background:var(--s);color:#fff;border-color:var(--s);box-shadow:0 0 0 3px rgba(12,184,125,.25)}
-.my-tasks-btn .ti{font-size:15px;opacity:.9}
-.my-tasks-badge{background:rgba(255,255,255,.2);color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;font-weight:800;min-width:20px;text-align:center;transition:all .18s}
-.my-tasks-badge.has-tasks{background:#ef4444;color:#fff;animation:pulse-badge .6s ease}
-@keyframes pulse-badge{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
-.my-tasks-btn.active .my-tasks-badge{background:rgba(255,255,255,.25)}
+.my-tasks-btn{padding:0 20px;border:none;background:transparent;color:rgba(255,255,255,.55);cursor:pointer;font-size:13px;font-weight:600;border-bottom:3px solid transparent;white-space:nowrap;transition:all .18s;display:flex;align-items:center;gap:8px;user-select:none;font-family:inherit;flex-shrink:0}
+.my-tasks-btn:hover{color:#fff;background:rgba(255,255,255,.06)}
+.my-tasks-btn.active{color:var(--s);border-bottom-color:var(--s)}
+.my-tasks-badge{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700}
+.my-tasks-btn.active .my-tasks-badge{background:rgba(12,184,125,.2);color:var(--s)}
+.my-tasks-badge.has-tasks{background:rgba(239,68,68,.8);color:#fff}
 /* KANBAN */
 .kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start}
 .k-col{background:#f4f6f5;border-radius:12px;overflow:hidden}
