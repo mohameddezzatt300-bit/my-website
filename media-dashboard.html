@@ -412,19 +412,47 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
 
 <!-- SETTINGS MODAL -->
 <div class="overlay hidden" id="modal-settings">
-  <div class="modal" style="max-width:420px">
-    <h3 style="margin-bottom:16px">⚙️ Settings</h3>
-    <div class="fg">
-      <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="#4285f4"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        Gemini API Key
-      </label>
-      <input id="s-gemini-key" type="password" placeholder="Paste your Gemini API key here..." style="font-family:monospace;font-size:13px"/>
-      <div style="font-size:11px;color:var(--muted);margin-top:6px">Get a free key from <strong>aistudio.google.com</strong> → Get API Key. بيتحفظ في المتصفح بتاعك بس.</div>
+  <div class="modal" style="max-width:460px">
+    <h3 style="margin-bottom:18px">⚙️ AI Settings</h3>
+
+    <!-- Provider toggle -->
+    <div style="display:flex;gap:8px;margin-bottom:18px">
+      <button id="s-prov-groq" onclick="setProvider('groq')" style="flex:1;padding:10px;border-radius:8px;border:2px solid #f55036;background:#fff8f7;color:#f55036;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s">
+        ⚡ Groq <span style="font-size:10px;font-weight:500;display:block;color:#888;margin-top:2px">مجاني تماماً — Llama 3.1</span>
+      </button>
+      <button id="s-prov-gemini" onclick="setProvider('gemini')" style="flex:1;padding:10px;border-radius:8px;border:2px solid #e5e7eb;background:#fff;color:#888;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s">
+        ✨ Gemini <span style="font-size:10px;font-weight:500;display:block;color:#aaa;margin-top:2px">Google — يحتاج billing</span>
+      </button>
     </div>
+
+    <!-- Groq section -->
+    <div id="s-groq-section" class="fg">
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-weight:600">
+        ⚡ Groq API Key <span style="font-size:10px;background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-weight:700">مجاني</span>
+      </label>
+      <input id="s-groq-key" type="password" placeholder="gsk_..." style="font-family:monospace;font-size:13px"/>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6">
+        1. روح <strong>console.groq.com</strong><br>
+        2. Sign up مجاناً (بدون بطاقة)<br>
+        3. API Keys → Create API Key → انسخه هنا
+      </div>
+    </div>
+
+    <!-- Gemini section -->
+    <div id="s-gemini-section" class="fg" style="display:none">
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-weight:600">
+        ✨ Gemini API Key
+      </label>
+      <input id="s-gemini-key" type="password" placeholder="AIza..." style="font-family:monospace;font-size:13px"/>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6">
+        روح <strong>aistudio.google.com</strong> → Get API Key<br>
+        (يحتاج تفعيل billing علشان يشتغل بشكل صحيح)
+      </div>
+    </div>
+
     <div class="mfoot" style="margin-top:18px">
       <button class="btn btn-g" onclick="closeSettings()">Cancel</button>
-      <button class="btn" id="s-test-btn" onclick="testGemini()" style="background:#4285f4;color:#fff;border-radius:8px;padding:8px 16px;border:none;font-weight:700;cursor:pointer">Test</button>
+      <button class="btn" id="s-test-btn" onclick="testAI()" style="background:#f55036;color:#fff;border-radius:8px;padding:8px 16px;border:none;font-weight:700;cursor:pointer;font-family:inherit">Test</button>
       <button class="btn btn-p" onclick="saveSettings()">Save</button>
     </div>
   </div>
@@ -2392,36 +2420,69 @@ function renderMyTasks(main){
 }
 
 // ── GEMINI AI ──
+function aiProvider(){return localStorage.getItem('ai_provider')||'groq'}
+function groqKey(){return localStorage.getItem('groq_key')||''}
 function geminiKey(){return localStorage.getItem('gemini_key')||''}
+function aiKey(){return aiProvider()==='groq'?groqKey():geminiKey()}
 function acctName(){const a=acct();return a?a.name:'this client'}
 
+function setProvider(p){
+  localStorage.setItem('ai_provider',p);
+  const isGroq=p==='groq';
+  document.getElementById('s-prov-groq').style.cssText=`flex:1;padding:10px;border-radius:8px;border:2px solid ${isGroq?'#f55036':'#e5e7eb'};background:${isGroq?'#fff8f7':'#fff'};color:${isGroq?'#f55036':'#888'};font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s`;
+  document.getElementById('s-prov-gemini').style.cssText=`flex:1;padding:10px;border-radius:8px;border:2px solid ${!isGroq?'#4285f4':'#e5e7eb'};background:${!isGroq?'#f0f4ff':'#fff'};color:${!isGroq?'#4285f4':'#888'};font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s`;
+  document.getElementById('s-groq-section').style.display=isGroq?'':'none';
+  document.getElementById('s-gemini-section').style.display=isGroq?'none':'';
+  document.getElementById('s-test-btn').style.background=isGroq?'#f55036':'#4285f4';
+}
+
 function openSettings(){
+  document.getElementById('s-groq-key').value=groqKey();
   document.getElementById('s-gemini-key').value=geminiKey();
   document.getElementById('modal-settings').classList.remove('hidden');
+  setProvider(aiProvider());
 }
 function closeSettings(){document.getElementById('modal-settings').classList.add('hidden')}
 function saveSettings(){
-  const k=document.getElementById('s-gemini-key').value.trim();
-  if(k)localStorage.setItem('gemini_key',k);
-  else localStorage.removeItem('gemini_key');
+  const prov=aiProvider();
+  if(prov==='groq'){
+    const k=document.getElementById('s-groq-key').value.trim();
+    if(k)localStorage.setItem('groq_key',k);else localStorage.removeItem('groq_key');
+  }else{
+    const k=document.getElementById('s-gemini-key').value.trim();
+    if(k)localStorage.setItem('gemini_key',k);else localStorage.removeItem('gemini_key');
+  }
   closeSettings();
-  showAIStatus(k?'✅ API key saved!':'⚠️ API key removed');
+  showAIStatus('✅ Settings saved!');
 }
-async function testGemini(){
-  const k=document.getElementById('s-gemini-key').value.trim();
-  if(!k){alert('Enter your API key first');return}
+async function testAI(){
+  const prov=aiProvider();
+  const k=prov==='groq'?document.getElementById('s-groq-key').value.trim():document.getElementById('s-gemini-key').value.trim();
+  if(!k){alert('أدخل الـ API key أولاً');return}
   const btn=document.getElementById('s-test-btn');
   btn.textContent='Testing...';btn.disabled=true;
   try{
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${k}`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{parts:[{text:'Say "OK" only'}]}]})
-    });
-    const d=await r.json();
-    if(d.candidates?.[0]?.content?.parts?.[0]?.text)btn.textContent='✅ Works!';
-    else btn.textContent='❌ Error: '+(d.error?.message||'Unknown');
-  }catch(e){btn.textContent='❌ Failed'}
-  setTimeout(()=>{btn.textContent='Test';btn.disabled=false},2500);
+    let ok=false;
+    if(prov==='groq'){
+      const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},
+        body:JSON.stringify({model:'llama-3.1-8b-instant',messages:[{role:'user',content:'Say OK only'}],max_tokens:5})
+      });
+      const d=await r.json();
+      ok=!!d.choices?.[0]?.message?.content;
+      if(!ok)btn.textContent='❌ '+(d.error?.message||'Unknown');
+    }else{
+      const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${k}`,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({contents:[{parts:[{text:'Say OK only'}]}]})
+      });
+      const d=await r.json();
+      ok=!!d.candidates?.[0]?.content?.parts?.[0]?.text;
+      if(!ok)btn.textContent='❌ '+(d.error?.message||'Unknown');
+    }
+    if(ok)btn.textContent='✅ Works!';
+  }catch(e){btn.textContent='❌ Network error'}
+  setTimeout(()=>{btn.textContent='Test';btn.disabled=false},3000);
 }
 
 let aiOpen=false;
@@ -2459,12 +2520,46 @@ function showAIStatus(msg){
   msgs.appendChild(el);msgs.scrollTop=msgs.scrollHeight;
 }
 
+async function callAI(systemCtx, userMsg){
+  const prov=aiProvider(); const key=aiKey();
+  if(!key)return {error:'no_key'};
+  try{
+    if(prov==='groq'){
+      const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+        body:JSON.stringify({model:'llama-3.1-8b-instant',messages:[{role:'system',content:systemCtx},{role:'user',content:userMsg}],max_tokens:1024})
+      });
+      const d=await r.json();
+      const txt=d.choices?.[0]?.message?.content;
+      if(txt)return {text:txt};
+      return {error:d.error?.message||'No response'};
+    }else{
+      const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({system_instruction:{parts:[{text:systemCtx}]},contents:[{parts:[{text:userMsg}]}]})
+      });
+      const d=await r.json();
+      const txt=d.candidates?.[0]?.content?.parts?.[0]?.text;
+      if(txt)return {text:txt};
+      return {error:d.error?.message||'No response'};
+    }
+  }catch(e){return {error:'network'}}
+}
+
+function aiErrMsg(err){
+  if(err==='no_key')return '⚙️ أضف الـ API key من الـ Settings (⚙️ أعلى يمين).';
+  if(err==='network')return '❌ مشكلة في الاتصال. تأكد من الإنترنت.';
+  if(err.toLowerCase().includes('quota')||err.toLowerCase().includes('rate'))return '⚠️ انتهت الكوتا. انتظر دقيقة وحاول تاني، أو غيّر الـ provider في الـ Settings.';
+  if(err.toLowerCase().includes('invalid')||err.toLowerCase().includes('auth'))return '🔑 الـ API key غلط. تأكد منه في الـ Settings.';
+  return '❌ خطأ: '+err;
+}
+
 async function sendAI(){
   if(aiLoading)return;
-  const key=geminiKey();
-  if(!key){
+  if(!aiKey()){
     if(!aiOpen)toggleAI();
-    showAIStatus('⚠️ محتاج تضيف Gemini API key أولاً. اضغط ⚙️ في الهيدر.');
+    showAIStatus('⚙️ أضف الـ API key من الـ Settings (⚙️ أعلى يمين). Groq مجاني تماماً!');
     return;
   }
   const input=document.getElementById('ai-input');
@@ -2478,71 +2573,35 @@ async function sendAI(){
   input.value='';msgs.scrollTop=msgs.scrollHeight;
 
   const loadEl=document.createElement('div');
-  loadEl.className='ai-msg ai loading';loadEl.textContent='Gemini is thinking...';
+  loadEl.className='ai-msg ai loading';
+  loadEl.textContent=(aiProvider()==='groq'?'Llama':'Gemini')+' is thinking...';
   msgs.appendChild(loadEl);msgs.scrollTop=msgs.scrollHeight;
 
   aiLoading=true;
   document.getElementById('ai-send').disabled=true;
 
   const a=acct();
-  const context=a?`أنت مساعد متخصص في media buying تساعد في إدارة حساب "${a.name}" (Industry: ${a.industry||'غير محدد'}, Platform: ${a.platform||'غير محدد'}, Budget: ${a.budget||'غير محدد'}). الـ USPs الموجودة: ${(a.strategy?.usps||[]).map(u=>u.text).filter(Boolean).join(', ')||'لا يوجد'}. الـ Angles الموجودة: ${(a.strategy?.angles||[]).map(ang=>ang.name).filter(Boolean).join(', ')||'لا يوجد'}. رد بنفس لغة السؤال (عربي أو إنجليزي). كن عملياً وموجزاً.`
-  :'أنت مساعد متخصص في media buying. رد بنفس لغة السؤال. كن عملياً وموجزاً.';
+  const ctx=a
+    ?`أنت مساعد متخصص في media buying تساعد في إدارة حساب "${a.name}" (Industry: ${a.industry||'غير محدد'}, Platform: ${a.platform||'غير محدد'}, Budget: ${a.budget||'غير محدد'}). USPs: ${(a.strategy?.usps||[]).map(u=>u.text).filter(Boolean).join(', ')||'لا يوجد'}. Angles: ${(a.strategy?.angles||[]).map(ang=>ang.name).filter(Boolean).join(', ')||'لا يوجد'}. رد بنفس لغة السؤال. كن عملياً وموجزاً.`
+    :'أنت مساعد media buying محترف. رد بنفس لغة السؤال. كن عملياً وموجزاً.';
 
-  try{
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        system_instruction:{parts:[{text:context}]},
-        contents:[{parts:[{text}]}]
-      })
-    });
-    const d=await r.json();
-    const reply=d.candidates?.[0]?.content?.parts?.[0]?.text;
-    loadEl.className='ai-msg ai';
-    if(reply){loadEl.textContent=reply}
-    else{
-      const msg=d.error?.message||'No response';
-      const isQuota=msg.toLowerCase().includes('quota');
-      loadEl.textContent=isQuota
-        ?'⚠️ انتهت الكوتا المجانية. روح Google AI Studio وفعّل Billing على الـ project بتاعك (مجاني لحد حد معين)، أو عمل API key جديد.'
-        :'❌ خطأ: '+msg;
-    }
-  }catch(e){
-    loadEl.className='ai-msg ai';
-    loadEl.textContent='❌ مشكلة في الاتصال. تأكد من الإنترنت وحاول تاني.';
-  }
+  const res=await callAI(ctx,text);
+  loadEl.className='ai-msg ai';
+  loadEl.textContent=res.text||aiErrMsg(res.error||'');
   aiLoading=false;
   document.getElementById('ai-send').disabled=false;
   msgs.scrollTop=msgs.scrollHeight;
 }
 
 async function aiGenerate(prompt,onResult){
-  const key=geminiKey();
-  if(!key){openSettings();return}
+  if(!aiKey()){openSettings();return}
   const a=acct();
-  const context=a?`أنت مساعد media buying متخصص للحساب "${a.name}". أجب بنفس لغة السؤال. كن موجزاً وعملياً.`:'أنت مساعد media buying.';
-  try{
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({system_instruction:{parts:[{text:context}]},contents:[{parts:[{text:prompt}]}]})
-    });
-    const d=await r.json();
-    const reply=d.candidates?.[0]?.content?.parts?.[0]?.text;
-    if(reply){onResult(reply)}
-    else{
-      const msg=d.error?.message||'Unknown error';
-      const isQuota=msg.toLowerCase().includes('quota');
-      if(isQuota){
-        if(!aiOpen)toggleAI();
-        showAIStatus('⚠️ انتهت الكوتا المجانية. روح Google AI Studio وفعّل Billing على الـ project، أو عمل API key جديد.');
-      }else{
-        if(!aiOpen)toggleAI();
-        showAIStatus('❌ خطأ من Gemini: '+msg);
-      }
-    }
-  }catch(e){
+  const ctx=a?`أنت مساعد media buying للحساب "${a.name}". أجب بنفس لغة السؤال. كن موجزاً وعملياً.`:'أنت مساعد media buying.';
+  const res=await callAI(ctx,prompt);
+  if(res.text){onResult(res.text)}
+  else{
     if(!aiOpen)toggleAI();
-    showAIStatus('❌ مشكلة في الاتصال. تأكد من الإنترنت وحاول تاني.');
+    showAIStatus(aiErrMsg(res.error||''));
   }
 }
 
