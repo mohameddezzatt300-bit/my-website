@@ -363,6 +363,36 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
 
 @media(max-width:900px){.hdr-stats{display:none}.g3{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.main{padding:16px}.g2,.g3{grid-template-columns:1fr}.ctrl{flex-direction:column;align-items:stretch}}
+/* PACING */
+.pace-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.pace-card{background:#fff;border:1px solid var(--brd);border-radius:12px;padding:16px;text-align:center}
+.pace-card-n{font-size:22px;font-weight:900;line-height:1}
+.pace-card-l{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-top:4px}
+.pace-bar-wrap{height:8px;background:#e5e7eb;border-radius:10px;overflow:hidden;margin:6px 0}
+.pace-bar-fill{height:100%;border-radius:10px;transition:width .4s}
+.pace-entry-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--brd)}
+.pace-entry-row:last-child{border-bottom:none}
+/* COPY LIBRARY */
+.copy-card{background:#fff;border:1px solid var(--brd);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;transition:box-shadow .15s}
+.copy-card:hover{box-shadow:0 2px 12px rgba(5,73,48,.08)}
+.copy-field-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px}
+.copy-field-val{font-size:13px;color:#111;line-height:1.5}
+.copy-copy-btn{background:#f0f4ff;border:1px solid #c7d9f5;border-radius:6px;padding:3px 9px;font-size:10px;font-weight:700;color:#4285f4;cursor:pointer;font-family:inherit;transition:all .12s;white-space:nowrap;flex-shrink:0}
+.copy-copy-btn:hover{background:#e0ebff}
+.copy-status-win{background:#d1fae5;color:#065f46}
+.copy-status-test{background:#fef3c7;color:#92400e}
+.copy-status-arch{background:#f3f4f6;color:#6b7280}
+/* KPI */
+.kpi-table{width:100%;border-collapse:collapse;font-size:12px}
+.kpi-table th{background:#f0f7f4;color:var(--p);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;padding:9px 12px;text-align:left;border-bottom:2px solid var(--brd);white-space:nowrap}
+.kpi-table td{padding:9px 12px;border-bottom:1px solid var(--brd);color:#111;vertical-align:middle}
+.kpi-table tr:last-child td{border-bottom:none}
+.kpi-table tr:hover td{background:#f9fafb}
+.kpi-delta-up{color:#059669;font-size:10px;font-weight:700}
+.kpi-delta-down{color:#dc2626;font-size:10px;font-weight:700}
+.kpi-delta-flat{color:#9ca3af;font-size:10px}
+.kpi-input{border:1px solid var(--brd);border-radius:6px;padding:5px 8px;font-size:12px;font-family:inherit;width:80px;outline:none;text-align:right}
+.kpi-input:focus{border-color:var(--s)}
 </style>
 </head>
 <body>
@@ -546,9 +576,12 @@ function dKPIs(obj,cur){
 const ALL_SUB_TABS=[
   {key:'tasks',   icon:'ti-clipboard-list', label:'Content Requests'},
   {key:'mp',      icon:'ti-chart-dots-3',   label:'Media Plan'},
+  {key:'pace',    icon:'ti-coin',           label:'Budget Pacing'},
+  {key:'kpi',     icon:'ti-trending-up',    label:'KPI Dashboard'},
   {key:'rep',     icon:'ti-file-analytics', label:'Client Report'},
   {key:'aud',     icon:'ti-users',          label:'Audiences'},
   {key:'brief',   icon:'ti-pencil',         label:'Creative Briefs'},
+  {key:'copy',    icon:'ti-copy',           label:'Ad Copy Library'},
   {key:'strat',   icon:'ti-bulb',           label:'Creative Strategy'},
   {key:'campgen', icon:'ti-tag',            label:'Campaign Naming'},
   {key:'dir',     icon:'ti-palette',        label:'Creative Direction'},
@@ -3065,6 +3098,330 @@ function copyCampName(id){
   });
 }
 
+// ── BUDGET PACING ──
+function renderPace(main,a){
+  const p=a.pacing;
+  const cur=p.currency||'EGP';
+  const budget=parseFloat(p.monthlyBudget)||0;
+  const today=new Date();
+  const start=p.startDate?new Date(p.startDate):new Date(today.getFullYear(),today.getMonth(),1);
+  const end=p.endDate?new Date(p.endDate):new Date(today.getFullYear(),today.getMonth()+1,0);
+  const totalDays=Math.max(1,Math.round((end-start)/(86400000))+1);
+  const elapsedDays=Math.max(0,Math.min(totalDays,Math.round((today-start)/(86400000))+1));
+  const remainDays=Math.max(0,totalDays-elapsedDays);
+  const totalSpent=(p.entries||[]).reduce((s,e)=>s+(parseFloat(e.spend)||0),0);
+  const expectedByNow=budget?(budget/totalDays)*elapsedDays:0;
+  const pace=expectedByNow>0?totalSpent/expectedByNow:null;
+  const remaining=Math.max(0,budget-totalSpent);
+  const dailyNeeded=remainDays>0?remaining/remainDays:0;
+  const pctSpent=budget>0?Math.min(100,(totalSpent/budget)*100):0;
+  const pctElapsed=totalDays>0?Math.min(100,(elapsedDays/totalDays)*100):0;
+  const paceColor=pace===null?'#6b7280':pace>1.1?'#dc2626':pace<0.85?'#f59e0b':'#059669';
+  const paceLabel=pace===null?'—':pace>1.1?'⚠️ Overpacing':pace<0.85?'🐢 Underpacing':'✅ On Pace';
+  const fmtN=n=>n>=1000?Math.round(n).toLocaleString():n.toFixed(0);
+
+  const entriesSorted=[...(p.entries||[])].sort((a,b)=>b.date.localeCompare(a.date));
+
+  main.innerHTML=`
+  <div style="max-width:860px;margin:0 auto">
+    <!-- Settings Row -->
+    <div style="background:#fff;border:1px solid var(--brd);border-radius:14px;padding:18px 22px;margin-bottom:20px;display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+      <div class="fg" style="flex:1;min-width:130px">
+        <label>Monthly Budget</label>
+        <div style="display:flex;gap:6px">
+          <select onchange="updPacing('currency',this.value)" style="border:1px solid var(--brd);border-radius:8px;padding:8px;font-size:13px;font-family:inherit;outline:none;background:#fff">
+            ${['EGP','USD','SAR','AED','KWD'].map(c=>`<option${c===cur?' selected':''}>${c}</option>`).join('')}
+          </select>
+          <input type="number" value="${p.monthlyBudget||''}" placeholder="0" oninput="updPacing('monthlyBudget',this.value)"
+            style="flex:1;border:1px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:14px;font-weight:700;font-family:inherit;outline:none"/>
+        </div>
+      </div>
+      <div class="fg" style="flex:1;min-width:130px">
+        <label>Start Date</label>
+        <input type="date" value="${p.startDate||''}" onchange="updPacing('startDate',this.value)"
+          style="border:1px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none;width:100%;box-sizing:border-box"/>
+      </div>
+      <div class="fg" style="flex:1;min-width:130px">
+        <label>End Date</label>
+        <input type="date" value="${p.endDate||''}" onchange="updPacing('endDate',this.value)"
+          style="border:1px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none;width:100%;box-sizing:border-box"/>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="pace-cards">
+      <div class="pace-card">
+        <div class="pace-card-n" style="color:${paceColor}">${paceLabel}</div>
+        <div class="pace-card-l">Pacing Status</div>
+      </div>
+      <div class="pace-card">
+        <div class="pace-card-n" style="color:var(--p)">${cur} ${fmtN(totalSpent)}</div>
+        <div class="pace-card-l">Total Spent</div>
+        <div class="pace-bar-wrap"><div class="pace-bar-fill" style="width:${pctSpent}%;background:${paceColor}"></div></div>
+        <div style="font-size:10px;color:var(--muted)">${pctSpent.toFixed(1)}% of budget</div>
+      </div>
+      <div class="pace-card">
+        <div class="pace-card-n" style="color:#374151">${cur} ${budget?fmtN(remaining):'—'}</div>
+        <div class="pace-card-l">Remaining</div>
+      </div>
+      <div class="pace-card">
+        <div class="pace-card-n" style="color:#374151">${cur} ${dailyNeeded?fmtN(dailyNeeded):'—'}</div>
+        <div class="pace-card-l">Daily Budget Needed</div>
+      </div>
+      <div class="pace-card">
+        <div class="pace-card-n" style="color:#374151">${elapsedDays} / ${totalDays}</div>
+        <div class="pace-card-l">Days Elapsed</div>
+        <div class="pace-bar-wrap"><div class="pace-bar-fill" style="width:${pctElapsed}%;background:#6b7280"></div></div>
+        <div style="font-size:10px;color:var(--muted)">${remainDays} days left</div>
+      </div>
+      <div class="pace-card">
+        <div class="pace-card-n" style="color:#374151">${cur} ${budget?fmtN(budget/totalDays):'—'}</div>
+        <div class="pace-card-l">Daily Budget Planned</div>
+      </div>
+    </div>
+
+    <!-- Add Entry -->
+    <div style="background:#fff;border:1px solid var(--brd);border-radius:14px;overflow:hidden;margin-bottom:16px">
+      <div style="padding:14px 20px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:14px;font-weight:800;color:var(--p)">Daily Spend Log</div>
+        <button onclick="addPaceEntry()" class="btn btn-p btn-xs">＋ Add Day</button>
+      </div>
+      <div style="padding:0 20px">
+        ${entriesSorted.length===0?`<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">لا يوجد إدخالات — اضغط Add Day</div>`
+        :`<div style="padding:4px 0">
+          ${entriesSorted.map(e=>`
+            <div class="pace-entry-row">
+              <input type="date" value="${e.date}" onchange="updPaceEntry('${e.id}','date',this.value)"
+                style="border:1px solid var(--brd);border-radius:7px;padding:6px 10px;font-size:13px;font-family:inherit;outline:none"/>
+              <div style="display:flex;align-items:center;gap:4px;flex:1">
+                <span style="font-size:12px;color:var(--muted)">${cur}</span>
+                <input type="number" value="${e.spend||''}" placeholder="0" oninput="updPaceEntry('${e.id}','spend',this.value)"
+                  style="border:1px solid var(--brd);border-radius:7px;padding:6px 10px;font-size:13px;font-weight:700;font-family:inherit;outline:none;width:120px"/>
+              </div>
+              <input type="text" value="${esc(e.notes||'')}" placeholder="Notes..." oninput="updPaceEntry('${e.id}','notes',this.value)"
+                style="flex:2;border:1px solid var(--brd);border-radius:7px;padding:6px 10px;font-size:12px;font-family:inherit;outline:none;color:var(--muted)"/>
+              <button onclick="delPaceEntry('${e.id}')" style="background:none;border:none;color:#d1d5db;cursor:pointer;font-size:16px;padding:4px;line-height:1" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#d1d5db'">✕</button>
+            </div>`).join('')}
+        </div>`}
+      </div>
+    </div>
+  </div>`;
+}
+function updPacing(f,v){const a=acct();if(!a)return;a.pacing[f]=v;save();renderMain()}
+function addPaceEntry(){
+  const a=acct();if(!a)return;
+  const today=new Date().toISOString().split('T')[0];
+  a.pacing.entries.unshift({id:uid(),date:today,spend:'',notes:''});
+  save();renderMain();
+}
+function updPaceEntry(id,f,v){const a=acct();if(!a)return;const e=a.pacing.entries.find(x=>x.id===id);if(e){e[f]=v;save()}}
+function delPaceEntry(id){const a=acct();if(!a)return;a.pacing.entries=a.pacing.entries.filter(x=>x.id!==id);save();renderMain()}
+
+// ── AD COPY LIBRARY ──
+let copyFilter={platform:'all',status:'all'};
+function renderCopyLib(main,a){
+  const copies=a.copies||[];
+  const platforms=['all','Meta','TikTok','Google','Snapchat','YouTube'];
+  const statuses=['all','winner','testing','archived'];
+  const filtered=copies.filter(c=>
+    (copyFilter.platform==='all'||c.platform===copyFilter.platform)&&
+    (copyFilter.status==='all'||c.status===copyFilter.status)
+  );
+  const statusStyle=s=>s==='winner'?'copy-status-win':s==='testing'?'copy-status-test':'copy-status-arch';
+  const statusLabel=s=>s==='winner'?'🏆 Winner':s==='testing'?'🧪 Testing':'🗄️ Archived';
+
+  main.innerHTML=`
+  <div style="max-width:960px;margin:0 auto">
+    <!-- Toolbar -->
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;flex:1">
+        ${platforms.map(p=>`<button onclick="setCopyFilter('platform','${p}')"
+          style="padding:5px 13px;border-radius:20px;border:1.5px solid ${copyFilter.platform===p?'var(--s)':'var(--brd)'};background:${copyFilter.platform===p?'#e6faf3':'#fff'};color:${copyFilter.platform===p?'var(--p)':'var(--muted)'};font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .12s">
+          ${p==='all'?'All Platforms':p}
+        </button>`).join('')}
+        <div style="width:1px;background:var(--brd);margin:0 4px"></div>
+        ${statuses.map(s=>`<button onclick="setCopyFilter('status','${s}')"
+          style="padding:5px 13px;border-radius:20px;border:1.5px solid ${copyFilter.status===s?'var(--s)':'var(--brd)'};background:${copyFilter.status===s?'#e6faf3':'#fff'};color:${copyFilter.status===s?'var(--p)':'var(--muted)'};font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .12s">
+          ${s==='all'?'All Status':s==='winner'?'🏆 Winners':s==='testing'?'🧪 Testing':'🗄️ Archived'}
+        </button>`).join('')}
+      </div>
+      <button onclick="openCopyModal()" class="btn btn-p">＋ Add Copy</button>
+    </div>
+
+    <!-- Grid -->
+    ${filtered.length===0?`<div style="text-align:center;padding:60px;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">✍️</div><div style="font-size:14px;font-weight:600">No copies yet</div><div style="font-size:12px;margin-top:6px">اضغط Add Copy لإضافة أول نسخة إعلانية</div></div>`
+    :`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px">
+      ${filtered.map(c=>`
+        <div class="copy-card">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:10px;font-weight:800;padding:3px 9px;border-radius:10px" class="${statusStyle(c.status)}">${statusLabel(c.status)}</span>
+            ${c.platform?`<span style="font-size:10px;background:#f3f4f6;border-radius:8px;padding:3px 8px;color:#374151;font-weight:700">${esc(c.platform)}</span>`:''}
+            ${c.format?`<span style="font-size:10px;background:#f3f4f6;border-radius:8px;padding:3px 8px;color:#374151;font-weight:700">${esc(c.format)}</span>`:''}
+            <button onclick="delCopy('${c.id}')" style="margin-left:auto;background:none;border:none;color:#d1d5db;cursor:pointer;font-size:15px;line-height:1;padding:2px" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#d1d5db'">✕</button>
+          </div>
+          ${c.headline?`<div><div class="copy-field-lbl">Headline</div><div class="copy-field-val" style="font-weight:700">${esc(c.headline)}</div><button class="copy-copy-btn" onclick="copyText('${c.id}','headline')">📋 Copy</button></div>`:''}
+          ${c.body?`<div><div class="copy-field-lbl">Body</div><div class="copy-field-val" style="white-space:pre-wrap;max-height:80px;overflow:hidden">${esc(c.body)}</div><button class="copy-copy-btn" onclick="copyText('${c.id}','body')">📋 Copy</button></div>`:''}
+          ${c.cta?`<div style="display:flex;align-items:center;justify-content:space-between"><div><div class="copy-field-lbl">CTA</div><div class="copy-field-val" style="font-weight:700;color:var(--s)">${esc(c.cta)}</div></div><button class="copy-copy-btn" onclick="copyText('${c.id}','cta')">📋 Copy</button></div>`:''}
+          ${c.angle?`<div style="font-size:11px;color:var(--muted);padding-top:4px;border-top:1px solid var(--brd)">Angle: ${esc(c.angle)}</div>`:''}
+          <div style="display:flex;gap:6px;padding-top:4px;border-top:1px solid var(--brd)">
+            <select onchange="updCopy('${c.id}','status',this.value)" style="border:1px solid var(--brd);border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;font-family:inherit;outline:none;flex:1;cursor:pointer">
+              <option value="testing"${c.status==='testing'?' selected':''}>🧪 Testing</option>
+              <option value="winner"${c.status==='winner'?' selected':''}>🏆 Winner</option>
+              <option value="archived"${c.status==='archived'?' selected':''}>🗄️ Archived</option>
+            </select>
+            <button onclick="openCopyModal('${c.id}')" style="background:#f3f4f6;border:1px solid var(--brd);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:#374151">Edit</button>
+          </div>
+        </div>`).join('')}
+    </div>`}
+  </div>`;
+}
+function setCopyFilter(k,v){copyFilter[k]=v;renderMain()}
+function delCopy(id){const a=acct();if(!a)return;a.copies=a.copies.filter(x=>x.id!==id);save();renderMain()}
+function updCopy(id,f,v){const a=acct();if(!a)return;const c=a.copies.find(x=>x.id===id);if(c){c[f]=v;save()}}
+function copyText(id,field){
+  const a=acct();if(!a)return;
+  const c=a.copies.find(x=>x.id===id);if(!c||!c[field])return;
+  navigator.clipboard.writeText(c[field]);
+}
+let _editCopyId=null;
+function openCopyModal(id){
+  const a=acct();if(!a)return;
+  _editCopyId=id||null;
+  const c=id?a.copies.find(x=>x.id===id):null;
+  const box=document.getElementById('ai-gen-modal-content');
+  const overlay=document.getElementById('ai-gen-overlay');
+  box.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="font-size:17px;font-weight:800;color:var(--p)">✍️ ${id?'Edit':'Add'} Ad Copy</div>
+      <button onclick="closeAIGenModal()" style="background:#f3f4f6;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;color:#6b7280">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div class="fg"><label>Platform</label><select id="cp-platform" style="border:1px solid var(--brd);border-radius:8px;padding:8px;font-size:13px;font-family:inherit;outline:none;width:100%">
+          ${['Meta','TikTok','Google','Snapchat','YouTube','All'].map(p=>`<option${(c?.platform||'Meta')===p?' selected':''}>${p}</option>`).join('')}
+        </select></div>
+        <div class="fg"><label>Format</label><select id="cp-format" style="border:1px solid var(--brd);border-radius:8px;padding:8px;font-size:13px;font-family:inherit;outline:none;width:100%">
+          ${['Video','Carousel','Image','Reel','Story','Collection'].map(f=>`<option${(c?.format||'Video')===f?' selected':''}>${f}</option>`).join('')}
+        </select></div>
+        <div class="fg"><label>Status</label><select id="cp-status" style="border:1px solid var(--brd);border-radius:8px;padding:8px;font-size:13px;font-family:inherit;outline:none;width:100%">
+          <option value="testing"${(c?.status||'testing')==='testing'?' selected':''}>🧪 Testing</option>
+          <option value="winner"${c?.status==='winner'?' selected':''}>🏆 Winner</option>
+          <option value="archived"${c?.status==='archived'?' selected':''}>🗄️ Archived</option>
+        </select></div>
+      </div>
+      <div class="fg"><label>Headline</label><input id="cp-headline" type="text" value="${esc(c?.headline||'')}" placeholder="عنوان الإعلان الرئيسي..."/></div>
+      <div class="fg"><label>Body Text</label><textarea id="cp-body" rows="4" style="resize:vertical">${esc(c?.body||'')}</textarea></div>
+      <div class="fg"><label>CTA</label><input id="cp-cta" type="text" value="${esc(c?.cta||'')}" placeholder="Shop Now, Learn More, Get Offer..."/></div>
+      <div class="fg"><label>Ad Angle (اختياري)</label><input id="cp-angle" type="text" value="${esc(c?.angle||'')}" placeholder="الـ angle اللي هتشتغل بيه..."/></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
+      <button class="btn btn-g" onclick="closeAIGenModal()">إلغاء</button>
+      <button onclick="saveCopyModal()" class="btn btn-p">Save</button>
+    </div>`;
+  overlay.classList.remove('hidden');
+}
+function saveCopyModal(){
+  const a=acct();if(!a)return;
+  const v=id=>document.getElementById(id)?.value?.trim()||'';
+  const data={platform:v('cp-platform'),format:v('cp-format'),status:v('cp-status'),headline:v('cp-headline'),body:v('cp-body'),cta:v('cp-cta'),angle:v('cp-angle')};
+  if(_editCopyId){
+    const c=a.copies.find(x=>x.id===_editCopyId);if(c)Object.assign(c,data);
+  }else{
+    a.copies.unshift({id:uid(),...data});
+  }
+  save();closeAIGenModal();renderMain();
+}
+
+// ── KPI DASHBOARD ──
+function sparkline(vals,color='#0cb87d'){
+  if(!vals||vals.length<2)return'';
+  const mn=Math.min(...vals),mx=Math.max(...vals);
+  const range=mx-mn||1;
+  const w=80,h=28;
+  const pts=vals.map((v,i)=>`${(i/(vals.length-1)*w).toFixed(1)},${(h-(v-mn)/range*h).toFixed(1)}`).join(' ');
+  return`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+function delta(curr,prev,lowerBetter=false){
+  if(!curr||!prev||prev===0)return'<span class="kpi-delta-flat">—</span>';
+  const pct=((curr-prev)/Math.abs(prev)*100).toFixed(1);
+  const up=curr>prev;
+  const good=lowerBetter?!up:up;
+  return`<span class="${good?'kpi-delta-up':'kpi-delta-down'}">${up?'↑':'↓'}${Math.abs(pct)}%</span>`;
+}
+const KPI_COLS=[
+  {key:'roas',   label:'ROAS',         lower:false, fmt:v=>parseFloat(v).toFixed(2)+'x'},
+  {key:'cpa',    label:'CPA',          lower:true,  fmt:v=>parseFloat(v).toFixed(2)},
+  {key:'ctr',    label:'CTR %',        lower:false, fmt:v=>parseFloat(v).toFixed(2)+'%'},
+  {key:'cpm',    label:'CPM',          lower:true,  fmt:v=>parseFloat(v).toFixed(2)},
+  {key:'spend',  label:'Spend',        lower:true,  fmt:v=>parseFloat(v).toLocaleString()},
+  {key:'revenue',label:'Revenue',      lower:false, fmt:v=>parseFloat(v).toLocaleString()},
+  {key:'conv',   label:'Conversions',  lower:false, fmt:v=>parseInt(v).toLocaleString()},
+];
+function renderKPI(main,a){
+  const kpis=[...(a.kpis||[])].sort((a,b)=>b.week.localeCompare(a.week));
+  main.innerHTML=`
+  <div style="max-width:960px;margin:0 auto">
+    <!-- Sparklines row (last 8 weeks) -->
+    ${kpis.length>=2?`
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin-bottom:20px">
+      ${KPI_COLS.filter(c=>['roas','cpa','ctr','cpm'].includes(c.key)).map(c=>{
+        const vals=kpis.slice(0,8).reverse().map(k=>parseFloat(k[c.key])||0).filter(v=>v>0);
+        const last=vals[vals.length-1]||0;
+        const prev=vals[vals.length-2]||0;
+        return`<div style="background:#fff;border:1px solid var(--brd);border-radius:12px;padding:12px 14px">
+          <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">${c.label}</div>
+          <div style="font-size:18px;font-weight:900;color:var(--p);margin-bottom:6px">${last?c.fmt(last):'—'}</div>
+          ${sparkline(vals,last>=prev?'#0cb87d':'#ef4444')}
+          <div style="margin-top:4px">${delta(last,prev,c.lower)}</div>
+        </div>`;
+      }).join('')}
+    </div>`:''}
+
+    <!-- Table -->
+    <div style="background:#fff;border:1px solid var(--brd);border-radius:14px;overflow:hidden">
+      <div style="padding:14px 20px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:14px;font-weight:800;color:var(--p)">Weekly KPI Log</div>
+        <button onclick="addKPIWeek()" class="btn btn-p btn-xs">＋ Add Week</button>
+      </div>
+      ${kpis.length===0?`<div style="text-align:center;padding:48px;color:var(--muted)"><div style="font-size:36px;margin-bottom:10px">📊</div><div style="font-size:13px">لا توجد بيانات — اضغط Add Week وأدخل الأرقام</div></div>`
+      :`<div style="overflow-x:auto">
+        <table class="kpi-table">
+          <thead><tr>
+            <th>Week</th>
+            ${KPI_COLS.map(c=>`<th>${c.label}</th>`).join('')}
+            <th>Notes</th>
+            <th></th>
+          </tr></thead>
+          <tbody>
+            ${kpis.map((k,i)=>{
+              const prev=kpis[i+1];
+              return`<tr>
+                <td><input type="week" value="${k.week||''}" onchange="updKPI('${k.id}','week',this.value)" style="border:1px solid var(--brd);border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;outline:none"/></td>
+                ${KPI_COLS.map(c=>`<td>
+                  <input class="kpi-input" type="number" value="${k[c.key]||''}" placeholder="—" oninput="updKPI('${k.id}','${c.key}',this.value)"/>
+                  ${prev&&k[c.key]&&prev[c.key]?`<div style="margin-top:2px">${delta(parseFloat(k[c.key]),parseFloat(prev[c.key]),c.lower)}</div>`:''}
+                </td>`).join('')}
+                <td><input type="text" value="${esc(k.notes||'')}" placeholder="..." oninput="updKPI('${k.id}','notes',this.value)" style="border:1px solid var(--brd);border-radius:6px;padding:5px 8px;font-size:12px;font-family:inherit;outline:none;width:120px"/></td>
+                <td><button onclick="delKPI('${k.id}')" style="background:none;border:none;color:#d1d5db;cursor:pointer;font-size:16px;padding:4px;line-height:1" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#d1d5db'">✕</button></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`}
+    </div>
+  </div>`;
+}
+function addKPIWeek(){
+  const a=acct();if(!a)return;
+  const now=new Date();
+  const y=now.getFullYear();
+  const w=String(Math.ceil((now-new Date(y,0,1))/(7*86400000))).padStart(2,'0');
+  a.kpis.unshift({id:uid(),week:`${y}-W${w}`,roas:'',cpa:'',ctr:'',cpm:'',spend:'',revenue:'',conv:'',notes:''});
+  save();renderMain();
+}
+function updKPI(id,f,v){const a=acct();if(!a)return;const k=a.kpis.find(x=>x.id===id);if(k){k[f]=v;save()}}
+function delKPI(id){const a=acct();if(!a)return;a.kpis=a.kpis.filter(x=>x.id!==id);save();renderMain()}
+
 // ── CAMPAIGN NAME GENERATOR TAB ──
 function renderCampGen(main,a){
   const s=a.strategy||{};
@@ -3237,9 +3594,12 @@ function renderMain(){
   }
   if(sub==='tasks')renderTasks(main,a);
   else if(sub==='mp')renderMP(main,a);
+  else if(sub==='pace')renderPace(main,a);
+  else if(sub==='kpi')renderKPI(main,a);
   else if(sub==='rep')renderRep(main,a);
   else if(sub==='aud')renderAud(main,a);
   else if(sub==='brief')renderBrief(main,a);
+  else if(sub==='copy')renderCopyLib(main,a);
   else if(sub==='strat')renderStrategy(main,a);
   else if(sub==='campgen')renderCampGen(main,a);
   else if(sub==='dir')renderDirection(main,a);
@@ -3436,6 +3796,9 @@ db.accounts.forEach(a=>{
   if(!a.strategy.hooks)a.strategy.hooks=[];
   if(!a.strategy.campNames)a.strategy.campNames=[];
   if(!a.cnSettings)a.cnSettings={sep:'_',tokens:{}};
+  if(!a.pacing)a.pacing={monthlyBudget:'',currency:'EGP',startDate:'',endDate:'',entries:[]};
+  if(!a.copies)a.copies=[];
+  if(!a.kpis)a.kpis=[];
   if(!a.directions)a.directions=[];
   if(!a.acctTasks)a.acctTasks=[];
 });
