@@ -872,6 +872,157 @@ function expTXT(){
   const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='media_plan.txt';a.click();
 }
 
+function expMPPDF(){
+  const a=acct();if(!a)return;
+  const m=a.mediaPlan;
+  const total=parseFloat(document.getElementById('mp-bud')?.value||m.totalBudget)||0;
+  const cur=document.getElementById('mp-cur')?.value||m.currency||'EGP';
+  const dur=parseInt(document.getElementById('mp-dur')?.value||m.duration)||3;
+  const obj=document.getElementById('mp-obj')?.value||m.objective||'conversions';
+  const today=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const fmtN=n=>Math.round(n).toLocaleString('en')+' '+cur;
+
+  // Capture chart canvas as image
+  const chartCanvas=document.getElementById('mp-chart');
+  const chartImg=chartCanvas?chartCanvas.toDataURL('image/png'):'';
+
+  // Stage colors
+  const stageColor={awareness:'#3b82f6',consideration:'#f59e0b',conversion:'#0cb87d'};
+  const stageBg={awareness:'#eff6ff',consideration:'#fffbeb',conversion:'#f0fdf4'};
+
+  // Platform colors for budget bar
+  const platColors={'Meta':'#1877f2','Google Ads':'#34a853','TikTok':'#010101','Snapchat':'#fffc00','Twitter/X':'#000','LinkedIn':'#0a66c2','YouTube':'#ff0000'};
+  const platMap={};
+  camps().forEach(c=>{platMap[c.platform]=(platMap[c.platform]||0)+total*c.pct/100});
+  const platEntries=Object.entries(platMap).sort((a,b)=>b[1]-a[1]);
+  const platTotal=platEntries.reduce((s,[,v])=>s+v,0);
+
+  const html=`<!DOCTYPE html><html><head>
+<meta charset="UTF-8"><title>Media Plan — ${esc(a.name)}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+@page{size:A4;margin:18mm 14mm}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#fff;color:#1a1a1a;font-size:13px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.wrap{max-width:860px;margin:0 auto;padding:28px 20px}
+/* Cover */
+.cover{background:linear-gradient(135deg,#054930 0%,#076644 55%,#0cb87d 100%);color:#fff;border-radius:16px;padding:40px 48px;margin-bottom:24px;position:relative;overflow:hidden;page-break-inside:avoid}
+.cover::before{content:'';position:absolute;right:-60px;top:-60px;width:240px;height:240px;background:rgba(12,184,125,.12);border-radius:50%}
+.cover-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;position:relative}
+.cover-logo{height:48px;border-radius:8px;background:#fff;padding:6px 10px;object-fit:contain}
+.cover-date{font-size:12px;opacity:.6;font-weight:600}
+.cover-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;opacity:.6;margin-bottom:10px;position:relative}
+.cover-title{font-size:30px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px;position:relative}
+.cover-sub{font-size:14px;opacity:.7;margin-bottom:24px;position:relative}
+.cover-cards{display:flex;gap:14px;position:relative;flex-wrap:wrap}
+.c-card{background:rgba(255,255,255,.13);border-radius:10px;padding:12px 18px;flex:1;min-width:100px}
+.c-num{font-size:22px;font-weight:900;color:#7fffce}
+.c-lbl{font-size:10px;font-weight:600;opacity:.65;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+/* Sections */
+.section{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:22px 26px;margin-bottom:18px;page-break-inside:avoid}
+.sec-hd{font-size:15px;font-weight:800;color:#054930;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #0cb87d;display:flex;align-items:center;gap:8px}
+.sec-icon{width:22px;height:22px;background:#054930;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:12px}
+/* Table */
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#f0f4f2;color:#054930;font-weight:700;padding:9px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+td{padding:9px 12px;border-top:1px solid #f0f2f1;vertical-align:top}
+tr:hover td{background:#fafcfb}
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700}
+/* Platform bar */
+.plat-bar{height:18px;border-radius:9px;overflow:hidden;display:flex;margin-bottom:14px}
+.plat-seg{height:100%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;min-width:18px;overflow:hidden;white-space:nowrap;padding:0 4px}
+.plat-legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:10px}
+.plat-dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px}
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.kpi-card{background:#f0fdf4;border:1px solid #c8e2d6;border-radius:10px;padding:14px 16px}
+.kpi-val{font-size:20px;font-weight:900;color:#054930;margin-bottom:3px}
+.kpi-lbl{font-size:11px;color:#6b7280;font-weight:600}
+/* Print button */
+.print-bar{text-align:center;padding:24px 0;border-top:1px solid #e5e7eb;margin-top:24px}
+.print-btn{background:#054930;color:#fff;border:none;border-radius:10px;padding:11px 32px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+@media print{.print-bar{display:none}}
+</style></head><body>
+<div class="wrap">
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="cover-top">
+      ${m.logoBase64?`<img class="cover-logo" src="${m.logoBase64}">`:'<div></div>'}
+      <div class="cover-date">${today}</div>
+    </div>
+    <div class="cover-label">Media Plan</div>
+    <div class="cover-title">${esc(m.clientName||a.name)}</div>
+    <div class="cover-sub">${dur} month${dur>1?'s':''} · ${obj.charAt(0).toUpperCase()+obj.slice(1)}</div>
+    <div class="cover-cards">
+      <div class="c-card"><div class="c-num">${fmtN(total)}</div><div class="c-lbl">Total Budget</div></div>
+      <div class="c-card"><div class="c-num">${fmtN(total/dur)}</div><div class="c-lbl">Per Month</div></div>
+      <div class="c-card"><div class="c-num">${fmtN(total/(dur*30))}</div><div class="c-lbl">Per Day</div></div>
+      <div class="c-card"><div class="c-num">${camps().length}</div><div class="c-lbl">Campaigns</div></div>
+    </div>
+  </div>
+
+  <!-- CAMPAIGNS -->
+  <div class="section">
+    <div class="sec-hd">📋 Campaign Budget Breakdown</div>
+    <table>
+      <thead><tr>
+        <th>Campaign</th><th>Platform</th><th>Stage</th><th style="text-align:right">%</th><th style="text-align:right">Budget</th>
+        ${OCOLS.filter(c=>VC[c.key]).map(c=>`<th>${c.label}</th>`).join('')}
+      </tr></thead>
+      <tbody>
+        ${camps().map(c=>`<tr>
+          <td style="font-weight:600">${esc(c.name)}</td>
+          <td>${esc(c.platform)}</td>
+          <td><span class="badge" style="background:${stageBg[c.stage]||'#f3f4f6'};color:${stageColor[c.stage]||'#374151'}">${c.stage}</span></td>
+          <td style="text-align:right;font-weight:700">${c.pct}%</td>
+          <td style="text-align:right;font-weight:700;color:#054930">${fmtN(total*c.pct/100)}</td>
+          ${OCOLS.filter(col=>VC[col.key]).map(col=>`<td style="color:#6b7280">${esc(c[col.key]||'—')}</td>`).join('')}
+        </tr>`).join('')}
+        <tr style="background:#f0f4f2;font-weight:800">
+          <td colspan="3">TOTAL</td>
+          <td style="text-align:right">${camps().reduce((s,c)=>s+c.pct,0)}%</td>
+          <td style="text-align:right;color:#054930">${fmtN(camps().reduce((s,c)=>s+total*c.pct/100,0))}</td>
+          ${OCOLS.filter(c=>VC[c.key]).map(()=>'<td></td>').join('')}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PLATFORM DISTRIBUTION -->
+  ${platEntries.length>0?`<div class="section">
+    <div class="sec-hd">📊 Budget by Platform</div>
+    <div class="plat-bar">
+      ${platEntries.map(([p,v])=>`<div class="plat-seg" style="width:${(v/platTotal*100).toFixed(1)}%;background:${platColors[p]||'#6b7280'}">${(v/platTotal*100).toFixed(0)}%</div>`).join('')}
+    </div>
+    <div class="plat-legend">
+      ${platEntries.map(([p,v])=>`<span><span class="plat-dot" style="background:${platColors[p]||'#6b7280'}"></span><strong>${esc(p)}</strong> — ${fmtN(v)} (${(v/platTotal*100).toFixed(1)}%)</span>`).join('')}
+    </div>
+    ${chartImg?`<div style="margin-top:18px;text-align:center"><img src="${chartImg}" style="max-width:100%;border-radius:10px;max-height:260px"></div>`:''}
+  </div>`:''}
+
+  <!-- EXPECTED KPIs -->
+  ${kpis().length>0?`<div class="section">
+    <div class="sec-hd">🎯 Expected Results</div>
+    <div class="kpi-grid">
+      ${kpis().map(k=>`<div class="kpi-card">
+        <div class="kpi-val">${esc(k.value)}${esc(k.suffix)}</div>
+        <div class="kpi-lbl">${esc(k.label)}</div>
+      </div>`).join('')}
+    </div>
+  </div>`:''}
+
+  <div class="print-bar">
+    <button class="print-btn" onclick="window.print()">🖨️ Save as PDF</button>
+  </div>
+
+</div></body></html>`;
+
+  const w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(()=>w.print(),800);
+}
+
 function resetPlan(){
   const a=acct();if(!a)return;
   if(!confirm('Reset media plan to defaults?'))return;
@@ -3422,9 +3573,9 @@ function renderMP(main,a){
   </div></div>
 
   <div class="act-bar">
+    <button onclick="expMPPDF()"><i class="ti ti-file-type-pdf"></i> Export PDF</button>
     <button onclick="expCSV()"><i class="ti ti-file-spreadsheet"></i> Export CSV</button>
     <button onclick="expTXT()"><i class="ti ti-download"></i> Export TXT</button>
-    <button onclick="window.print()"><i class="ti ti-printer"></i> Print</button>
     <button onclick="resetPlan()"><i class="ti ti-refresh"></i> Reset</button>
   </div>`;
 }
