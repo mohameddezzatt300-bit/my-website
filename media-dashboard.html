@@ -365,9 +365,47 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
 .kpi-delta-flat{color:#9ca3af;font-size:10px}
 .kpi-input{border:1px solid var(--brd);border-radius:6px;padding:5px 8px;font-size:12px;font-family:inherit;width:80px;outline:none;text-align:right}
 .kpi-input:focus{border-color:var(--s)}
+
+/* ── LOGIN GATE ── */
+#login-gate{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#032b1c 0%,#054930 50%,#076644 100%);display:flex;align-items:center;justify-content:center;padding:20px}
+#login-gate.hidden{display:none}
+.login-box{background:#fff;border-radius:20px;padding:44px 48px;max-width:400px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,.4);text-align:center;position:relative;overflow:hidden}
+.login-box::before{content:'';position:absolute;top:-60px;right:-60px;width:180px;height:180px;background:#f0fdf4;border-radius:50%}
+.login-logo{width:52px;height:52px;background:linear-gradient(135deg,#054930,#0cb87d);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;position:relative}
+.login-title{font-size:22px;font-weight:900;color:#054930;margin-bottom:5px;position:relative}
+.login-sub{font-size:13px;color:#6b7280;margin-bottom:28px;position:relative}
+.login-input-wrap{position:relative;margin-bottom:14px}
+.login-input{width:100%;padding:13px 44px 13px 16px;border:2px solid #e5e7eb;border-radius:12px;font-size:15px;font-family:inherit;outline:none;transition:border-color .15s;background:#f9fafb}
+.login-input:focus{border-color:#0cb87d;background:#fff}
+.login-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:#9ca3af;cursor:pointer;font-size:18px;padding:0;line-height:1}
+.login-btn{width:100%;padding:14px;background:linear-gradient(135deg,#054930,#0cb87d);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.2px;transition:opacity .15s}
+.login-btn:hover{opacity:.9}
+.login-btn:active{opacity:.8}
+.login-err{color:#dc2626;font-size:12px;font-weight:600;margin-top:10px;min-height:18px}
+.login-change{margin-top:20px;font-size:12px;color:#9ca3af}
+.login-change a{color:#0cb87d;cursor:pointer;font-weight:600;text-decoration:none}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 </style>
 </head>
 <body>
+
+<!-- LOGIN GATE -->
+<div id="login-gate">
+  <div class="login-box">
+    <div class="login-logo">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <div class="login-title">Media Dashboard</div>
+    <div class="login-sub">أدخل الباسورد عشان تكمل</div>
+    <div class="login-input-wrap">
+      <input class="login-input" id="login-pw" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')loginSubmit()">
+      <button class="login-eye" onclick="toggleLoginEye()" id="login-eye-btn" title="Show/hide">👁</button>
+    </div>
+    <button class="login-btn" onclick="loginSubmit()">دخول</button>
+    <div class="login-err" id="login-err"></div>
+    <div class="login-change">صاحب الداشبورد؟ <a onclick="loginChangeMode()">غيّر الباسورد</a></div>
+  </div>
+</div>
 
 <header class="hdr">
   <div class="hdr-l">
@@ -3591,6 +3629,68 @@ function updStats(){
   const badge=document.getElementById('my-tasks-badge');
   badge.textContent=open;
   badge.className='my-tasks-badge'+(open>0?' has-tasks':'');
+}
+
+// ── LOGIN GATE ──
+const PW_KEY='mbd_pw_hash';
+const SESSION_KEY='mbd_session';
+const DEFAULT_PW_HASH='8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'; // "admin"
+
+async function sha256(str){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function getStoredHash(){return localStorage.getItem(PW_KEY)||DEFAULT_PW_HASH}
+function isLoggedIn(){return sessionStorage.getItem(SESSION_KEY)==='1'}
+
+async function loginSubmit(){
+  const val=document.getElementById('login-pw').value;
+  if(!val){shakeLogin();return}
+  const h=await sha256(val);
+  const stored=getStoredHash();
+  if(h===stored){
+    sessionStorage.setItem(SESSION_KEY,'1');
+    document.getElementById('login-gate').classList.add('hidden');
+    document.getElementById('login-pw').value='';
+  }else{
+    const el=document.getElementById('login-err');
+    el.textContent='❌ باسورد غلط — حاول تاني';
+    document.getElementById('login-pw').value='';
+    document.getElementById('login-pw').focus();
+    setTimeout(()=>el.textContent='',3000);
+  }
+}
+
+async function loginChangeMode(){
+  const cur=prompt('أدخل الباسورد الحالي:','');
+  if(!cur)return;
+  const h=await sha256(cur);
+  if(h!==getStoredHash()){alert('❌ الباسورد الحالي غلط');return}
+  const nw=prompt('أدخل الباسورد الجديد:','');
+  if(!nw||nw.length<4){alert('الباسورد لازم يكون 4 حروف على الأقل');return}
+  const nw2=prompt('أكد الباسورد الجديد:','');
+  if(nw!==nw2){alert('❌ الباسوردين مش متطابقين');return}
+  const nh=await sha256(nw);
+  localStorage.setItem(PW_KEY,nh);
+  alert('✅ الباسورد اتغير بنجاح!');
+}
+
+function toggleLoginEye(){
+  const inp=document.getElementById('login-pw');
+  inp.type=inp.type==='password'?'text':'password';
+}
+function shakeLogin(){
+  const b=document.querySelector('.login-box');
+  b.style.animation='none';
+  b.offsetHeight;
+  b.style.animation='shake .35s ease';
+}
+
+// Check login on load
+if(!isLoggedIn()){
+  // gate is already visible by default, nothing to do
+}else{
+  document.getElementById('login-gate').classList.add('hidden');
 }
 
 // ── INIT ──
