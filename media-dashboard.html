@@ -3646,66 +3646,64 @@ function updStats(){
   badge.className='my-tasks-badge'+(open>0?' has-tasks':'');
 }
 
-// ── LOGIN GATE ──
-const PW_KEY='mbd_pw_hash';
+// ── LOGIN GATE — per-user passwords ──
+// Storage: mbd_users → [{email,hash,name,isAdmin}]
+const USERS_KEY='mbd_users';
 const SESSION_KEY='mbd_session';
 const SESSION_EMAIL_KEY='mbd_session_email';
-const EMAILS_KEY='mbd_allowed_emails';
-const ADMIN_EMAIL_KEY='mbd_admin_email';
-const DEFAULT_PW_HASH='8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'; // "admin"
+const DEFAULT_ADMIN_HASH='8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'; // "admin"
 
 async function sha256(str){
   const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
-function getStoredHash(){return localStorage.getItem(PW_KEY)||DEFAULT_PW_HASH}
+function getUsers(){try{return JSON.parse(localStorage.getItem(USERS_KEY)||'[]')}catch{return[]}}
+function saveUsers(arr){localStorage.setItem(USERS_KEY,JSON.stringify(arr))}
 function isLoggedIn(){return sessionStorage.getItem(SESSION_KEY)==='1'}
-function getAllowedEmails(){try{return JSON.parse(localStorage.getItem(EMAILS_KEY)||'[]')}catch{return[]}}
-function getAdminEmail(){return localStorage.getItem(ADMIN_EMAIL_KEY)||''}
-function isAdmin(){return sessionStorage.getItem(SESSION_EMAIL_KEY)===getAdminEmail()&&getAdminEmail()!==''}
+function currentUserEmail(){return sessionStorage.getItem(SESSION_EMAIL_KEY)||''}
+function currentUserIsAdmin(){
+  const u=getUsers().find(u=>u.email===currentUserEmail());
+  return u?.isAdmin||false;
+}
+function isValidEmail(e){return/\S+@\S+\.\S+/.test(e)}
 
 async function loginSubmit(){
   const email=(document.getElementById('login-email').value||'').trim().toLowerCase();
   const pw=document.getElementById('login-pw').value;
   const errEl=document.getElementById('login-err');
+  const showErr=msg=>{errEl.textContent=msg;shakeLogin();setTimeout(()=>errEl.textContent='',3500)};
 
-  if(!email||!pw){shakeLogin();errEl.textContent='❌ أدخل الإيميل والباسورد';setTimeout(()=>errEl.textContent='',3000);return}
-  if(!/\S+@\S+\.\S+/.test(email)){errEl.textContent='❌ إيميل غير صحيح';setTimeout(()=>errEl.textContent='',3000);return}
+  if(!email||!pw){showErr('❌ أدخل الإيميل والباسورد');return}
+  if(!isValidEmail(email)){showErr('❌ إيميل غير صحيح');return}
 
-  const h=await sha256(pw);
-  if(h!==getStoredHash()){
-    errEl.textContent='❌ باسورد غلط';
-    document.getElementById('login-pw').value='';
-    document.getElementById('login-pw').focus();
-    shakeLogin();
-    setTimeout(()=>errEl.textContent='',3000);
+  const users=getUsers();
+
+  // First-time setup: no users yet → accept any email + "admin" pw → create admin
+  if(users.length===0){
+    const h=await sha256(pw);
+    if(h!==DEFAULT_ADMIN_HASH){showErr('❌ باسورد غلط — الباسورد الافتراضي: admin');document.getElementById('login-pw').value='';return}
+    const newAdmin={email,hash:h,name:'Admin',isAdmin:true};
+    saveUsers([newAdmin]);
+    grantAccess(email,true);
     return;
   }
 
-  // Check email allowlist (if configured)
-  const allowed=getAllowedEmails();
-  const adminEmail=getAdminEmail();
-  if(allowed.length>0||adminEmail){
-    const allAllowed=[...allowed.map(e=>e.toLowerCase()),adminEmail.toLowerCase()].filter(Boolean);
-    if(!allAllowed.includes(email)){
-      errEl.textContent='❌ الإيميل ده مش مسموح بيه';
-      document.getElementById('login-email').value='';
-      document.getElementById('login-email').focus();
-      shakeLogin();
-      setTimeout(()=>errEl.textContent='',3000);
-      return;
-    }
-  }
+  const user=users.find(u=>u.email===email);
+  if(!user){showErr('❌ الإيميل ده مش مضاف في النظام');document.getElementById('login-email').value='';return}
 
+  const h=await sha256(pw);
+  if(h!==user.hash){showErr('❌ باسورد غلط');document.getElementById('login-pw').value='';return}
+
+  grantAccess(email,user.isAdmin);
+}
+
+function grantAccess(email,isAdmin){
   sessionStorage.setItem(SESSION_KEY,'1');
   sessionStorage.setItem(SESSION_EMAIL_KEY,email);
   document.getElementById('login-gate').classList.add('hidden');
   document.getElementById('login-pw').value='';
   document.getElementById('login-email').value='';
-  // Show admin button if admin
-  if(email===adminEmail.toLowerCase()&&adminEmail){
-    document.getElementById('access-settings-btn').style.display='flex';
-  }
+  if(isAdmin)document.getElementById('access-settings-btn').style.display='flex';
 }
 
 function toggleLoginEye(){
@@ -3717,122 +3715,113 @@ function shakeLogin(){
   b.style.animation='none';b.offsetHeight;b.style.animation='shake .35s ease';
 }
 
-// ── ACCESS SETTINGS MODAL ──
+// ── ACCESS SETTINGS ──
 async function openAccessSettings(){
-  // Verify password first if called from login screen
-  const isInside=!document.getElementById('login-gate').classList.contains('hidden')===false||isLoggedIn();
   if(!isLoggedIn()){
-    const pw=prompt('أدخل الباسورد الحالي للوصول للإعدادات:');
+    const pw=prompt('أدخل باسوردك للوصول للإعدادات:');
     if(!pw)return;
-    const h=await sha256(pw);
-    if(h!==getStoredHash()){alert('❌ باسورد غلط');return}
-  }
+    const users=getUsers();
+    if(users.length===0){
+      const h=await sha256(pw);
+      if(h!==DEFAULT_ADMIN_HASH){alert('❌ باسورد غلط');return}
+    }else{
+      // find any admin user and check their pw
+      const h=await sha256(pw);
+      const admin=users.find(u=>u.isAdmin&&u.hash===h);
+      if(!admin){alert('❌ باسورد غلط');return}
+    }
+  }else if(!currentUserIsAdmin()){alert('⛔ بس الـ Admin يقدر يفتح الإعدادات');return}
   renderAccessSettings();
   document.getElementById('access-settings-overlay').classList.remove('hidden');
 }
 function closeAccessSettings(){document.getElementById('access-settings-overlay').classList.add('hidden')}
 
 function renderAccessSettings(){
-  const emails=getAllowedEmails();
-  const adminEmail=getAdminEmail();
+  const users=getUsers();
+  const admins=users.filter(u=>u.isAdmin);
+  const guests=users.filter(u=>!u.isAdmin);
   document.getElementById('access-settings-body').innerHTML=`
-    <!-- Admin email -->
-    <div style="margin-bottom:22px">
-      <div style="font-size:13px;font-weight:800;color:var(--p);margin-bottom:8px">👑 إيميلك (Admin)</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">الإيميل ده بيدخل تلقائي على إعدادات الوصول</div>
-      <div style="display:flex;gap:8px">
-        <input id="as-admin-email" type="email" value="${esc(adminEmail)}" placeholder="admin@gmail.com" style="flex:1;border:1.5px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none">
-        <button onclick="saveAdminEmail()" class="btn btn-p btn-xs" style="white-space:nowrap">حفظ</button>
-      </div>
-    </div>
-
-    <hr style="border:none;border-top:1px solid var(--brd);margin-bottom:22px">
-
-    <!-- Allowed emails -->
-    <div style="margin-bottom:16px">
-      <div style="font-size:13px;font-weight:800;color:var(--p);margin-bottom:4px">📧 الإيميلات المسموحة</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">أي حد إيميله مش في اللستة دي ما يقدرش يدخل</div>
-      <div id="as-email-list" style="display:flex;flex-direction:column;gap:7px;margin-bottom:12px">
-        ${emails.length===0?`<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;background:#f9fafb;border-radius:8px;border:1px dashed var(--brd)">لا يوجد إيميلات مضافة — أضف الإيميلات المسموحة</div>`
-        :emails.map((em,i)=>`
-          <div style="display:flex;align-items:center;gap:8px;background:#f0fdf4;border:1px solid #c8e2d6;border-radius:8px;padding:8px 12px">
-            <div style="font-size:13px;color:#054930;font-weight:600;flex:1">📧 ${esc(em)}</div>
-            <button onclick="removeAllowedEmail(${i})" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:16px;padding:0;line-height:1" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#9ca3af'">✕</button>
+    <!-- Users list -->
+    <div style="margin-bottom:20px">
+      <div style="font-size:13px;font-weight:800;color:var(--p);margin-bottom:12px">👥 المستخدمين (${users.length})</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${users.length===0?`<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;background:#f9fafb;border-radius:8px;border:1px dashed var(--brd)">لا يوجد مستخدمين بعد</div>`:
+        users.map((u,i)=>`
+          <div style="background:${u.isAdmin?'#f0fdf4':'#f9fafb'};border:1px solid ${u.isAdmin?'#c8e2d6':'#e5e7eb'};border-radius:10px;padding:12px 14px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="font-size:16px">${u.isAdmin?'👑':'👤'}</span>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:700;color:#111">${esc(u.name||u.email)}</div>
+                <div style="font-size:11px;color:var(--muted)">${esc(u.email)} ${u.isAdmin?'<span style="background:#054930;color:#fff;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700">Admin</span>':''}</div>
+              </div>
+              ${!u.isAdmin?`<button onclick="removeUser('${u.email}')" style="background:#fee2e2;border:none;border-radius:7px;padding:4px 10px;color:#dc2626;font-size:12px;font-weight:700;cursor:pointer">حذف</button>`:''}
+            </div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="password" id="pw-${i}" placeholder="باسورد جديد..." style="flex:1;border:1px solid var(--brd);border-radius:7px;padding:6px 10px;font-size:12px;font-family:inherit;outline:none">
+              <button onclick="changeUserPw('${u.email}','${i}')" class="btn btn-xs" style="background:#054930;color:#fff;border:none;white-space:nowrap">تغيير الباسورد</button>
+            </div>
           </div>`).join('')}
       </div>
-      <div style="display:flex;gap:8px">
-        <input id="as-new-email" type="email" placeholder="إيميل جديد..." style="flex:1;border:1.5px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none" onkeydown="if(event.key==='Enter')addAllowedEmail()">
-        <button onclick="addAllowedEmail()" class="btn btn-p btn-xs" style="white-space:nowrap">＋ إضافة</button>
-      </div>
     </div>
 
-    <hr style="border:none;border-top:1px solid var(--brd);margin:22px 0">
+    <hr style="border:none;border-top:1px solid var(--brd);margin-bottom:20px">
 
-    <!-- Change password -->
+    <!-- Add new user -->
     <div>
-      <div style="font-size:13px;font-weight:800;color:var(--p);margin-bottom:10px">🔑 تغيير الباسورد</div>
+      <div style="font-size:13px;font-weight:800;color:var(--p);margin-bottom:10px">➕ إضافة مستخدم جديد</div>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <input id="as-pw-new" type="password" placeholder="الباسورد الجديد" style="border:1.5px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none">
-        <input id="as-pw-confirm" type="password" placeholder="تأكيد الباسورد" style="border:1.5px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none">
-        <button onclick="saveNewPassword()" class="btn btn-p btn-xs">حفظ الباسورد</button>
+        <input id="as-new-name" type="text" placeholder="الاسم (اختياري)" style="border:1.5px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none">
+        <input id="as-new-email" type="email" placeholder="الإيميل *" style="border:1.5px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none">
+        <input id="as-new-pw" type="password" placeholder="الباسورد الخاص بيه *" style="border:1.5px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none">
+        <div style="font-size:11px;color:var(--muted)">⚠️ كل مستخدم بياسورد مختلف — لو حد شير credentials بتاعته، إنت بتغير باسورده بس</div>
+        <button onclick="addUser()" class="btn btn-p btn-xs">＋ إضافة</button>
       </div>
     </div>`;
 }
 
-function saveAdminEmail(){
-  const v=document.getElementById('as-admin-email').value.trim().toLowerCase();
-  if(v&&!/\S+@\S+\.\S+/.test(v)){alert('إيميل غير صحيح');return}
-  localStorage.setItem(ADMIN_EMAIL_KEY,v);
+async function addUser(){
+  const name=document.getElementById('as-new-name').value.trim();
+  const email=document.getElementById('as-new-email').value.trim().toLowerCase();
+  const pw=document.getElementById('as-new-pw').value;
+  if(!email||!pw){alert('الإيميل والباسورد مطلوبين');return}
+  if(!isValidEmail(email)){alert('إيميل غير صحيح');return}
+  if(pw.length<4){alert('الباسورد لازم 4 حروف على الأقل');return}
+  const users=getUsers();
+  if(users.find(u=>u.email===email)){alert('الإيميل ده موجود بالفعل');return}
+  const h=await sha256(pw);
+  users.push({email,hash:h,name:name||email,isAdmin:false});
+  saveUsers(users);
+  document.getElementById('as-new-name').value='';
+  document.getElementById('as-new-email').value='';
+  document.getElementById('as-new-pw').value='';
   renderAccessSettings();
-  // update header button visibility
-  const curEmail=sessionStorage.getItem(SESSION_EMAIL_KEY)||'';
-  if(curEmail===v&&v)document.getElementById('access-settings-btn').style.display='flex';
-}
-function addAllowedEmail(){
-  const v=document.getElementById('as-new-email').value.trim().toLowerCase();
-  if(!v)return;
-  if(!/\S+@\S+\.\S+/.test(v)){alert('إيميل غير صحيح');return}
-  const arr=getAllowedEmails();
-  if(arr.includes(v)){alert('الإيميل ده موجود بالفعل');return}
-  arr.push(v);
-  localStorage.setItem(EMAILS_KEY,JSON.stringify(arr));
-  renderAccessSettings();
-}
-function removeAllowedEmail(i){
-  const arr=getAllowedEmails();
-  arr.splice(i,1);
-  localStorage.setItem(EMAILS_KEY,JSON.stringify(arr));
-  renderAccessSettings();
-}
-async function saveNewPassword(){
-  const nw=document.getElementById('as-pw-new').value;
-  const cf=document.getElementById('as-pw-confirm').value;
-  if(!nw||nw.length<4){alert('الباسورد لازم 4 حروف على الأقل');return}
-  if(nw!==cf){alert('❌ الباسوردين مش متطابقين');return}
-  const h=await sha256(nw);
-  localStorage.setItem(PW_KEY,h);
-  document.getElementById('as-pw-new').value='';
-  document.getElementById('as-pw-confirm').value='';
-  alert('✅ الباسورد اتغير بنجاح!');
 }
 
-// Check login on load
+function removeUser(email){
+  if(!confirm(`حذف ${email}؟`))return;
+  saveUsers(getUsers().filter(u=>u.email!==email));
+  renderAccessSettings();
+}
+
+async function changeUserPw(email,idx){
+  const inp=document.getElementById('pw-'+idx);
+  const pw=inp.value;
+  if(!pw||pw.length<4){alert('الباسورد لازم 4 حروف على الأقل');return}
+  const h=await sha256(pw);
+  const users=getUsers();
+  const u=users.find(u=>u.email===email);
+  if(u){u.hash=h;saveUsers(users);inp.value='';alert(`✅ باسورد ${u.name||email} اتغير`)}
+}
+
+// Init check
 if(!isLoggedIn()){
-  // gate visible by default
-  // Update subtitle based on whether emails are configured
-  const emails=getAllowedEmails();
-  const adminEmail=getAdminEmail();
-  if(emails.length===0&&!adminEmail){
-    document.getElementById('login-sub-txt').textContent='أدخل الباسورد عشان تكمل';
-    document.getElementById('login-email').style.display='none';
+  const users=getUsers();
+  if(users.length===0){
+    document.getElementById('login-sub-txt').textContent='أول مرة — أدخل إيميلك والباسورد الافتراضي: admin';
   }
 }else{
   document.getElementById('login-gate').classList.add('hidden');
-  const curEmail=sessionStorage.getItem(SESSION_EMAIL_KEY)||'';
-  const adminEmail=getAdminEmail();
-  if(curEmail&&curEmail===adminEmail.toLowerCase()&&adminEmail){
-    document.getElementById('access-settings-btn').style.display='flex';
-  }
+  if(currentUserIsAdmin())document.getElementById('access-settings-btn').style.display='flex';
 }
 
 // ── INIT ──
