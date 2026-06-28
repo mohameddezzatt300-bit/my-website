@@ -3694,7 +3694,54 @@ async function loginSubmit(){
   const h=await sha256(pw);
   if(h!==user.hash){showErr('❌ باسورد غلط');document.getElementById('login-pw').value='';return}
 
+  // OTP: consume immediately then force new password
+  if(user.isOTP){
+    user.hash='';user.isOTP=false;
+    saveUsers(users);
+    sessionStorage.setItem(SESSION_KEY,'1');
+    sessionStorage.setItem(SESSION_EMAIL_KEY,email);
+    document.getElementById('login-gate').classList.add('hidden');
+    showSetPasswordScreen(email);
+    return;
+  }
+
   grantAccess(email,user.isAdmin);
+}
+
+function showSetPasswordScreen(email){
+  const overlay=document.createElement('div');
+  overlay.id='set-pw-screen';
+  overlay.style.cssText='position:fixed;inset:0;z-index:9998;background:linear-gradient(135deg,#032b1c,#054930,#076644);display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML=`
+    <div style="background:#fff;border-radius:20px;padding:40px 44px;max-width:380px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,.4);text-align:center">
+      <div style="font-size:36px;margin-bottom:12px">🔑</div>
+      <div style="font-size:20px;font-weight:900;color:#054930;margin-bottom:6px">حدد باسوردك الخاص</div>
+      <div style="font-size:13px;color:#6b7280;margin-bottom:24px">الباسورد المؤقت اتاستهلك — اختار باسورد دائم</div>
+      <input id="sps-pw1" type="password" placeholder="الباسورد الجديد" style="width:100%;border:2px solid #e5e7eb;border-radius:12px;padding:12px 16px;font-size:14px;font-family:inherit;outline:none;margin-bottom:10px;box-sizing:border-box">
+      <input id="sps-pw2" type="password" placeholder="تأكيد الباسورد" style="width:100%;border:2px solid #e5e7eb;border-radius:12px;padding:12px 16px;font-size:14px;font-family:inherit;outline:none;margin-bottom:14px;box-sizing:border-box">
+      <div id="sps-err" style="color:#dc2626;font-size:12px;font-weight:600;margin-bottom:10px;min-height:16px"></div>
+      <button onclick="confirmSetPassword('${email}')" style="width:100%;padding:13px;background:linear-gradient(135deg,#054930,#0cb87d);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">حفظ الباسورد</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById('sps-pw1').focus();
+  document.getElementById('sps-pw1').onkeydown=document.getElementById('sps-pw2').onkeydown=e=>{
+    if(e.key==='Enter')confirmSetPassword(email);
+  };
+}
+
+async function confirmSetPassword(email){
+  const p1=document.getElementById('sps-pw1').value;
+  const p2=document.getElementById('sps-pw2').value;
+  const err=document.getElementById('sps-err');
+  if(!p1||p1.length<4){err.textContent='الباسورد لازم 4 حروف على الأقل';return}
+  if(p1!==p2){err.textContent='❌ الباسوردين مش متطابقين';return}
+  const h=await sha256(p1);
+  const users=getUsers();
+  const u=users.find(u=>u.email===email);
+  if(u){u.hash=h;u.isOTP=false;saveUsers(users)}
+  document.getElementById('set-pw-screen').remove();
+  const isAdmin=u?.isAdmin||false;
+  if(isAdmin)document.getElementById('access-settings-btn').style.display='flex';
 }
 
 function grantAccess(email,isAdmin){
@@ -3747,18 +3794,26 @@ function renderAccessSettings(){
       <div style="display:flex;flex-direction:column;gap:8px">
         ${users.length===0?`<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;background:#f9fafb;border-radius:8px;border:1px dashed var(--brd)">لا يوجد مستخدمين بعد</div>`:
         users.map((u,i)=>`
-          <div style="background:${u.isAdmin?'#f0fdf4':'#f9fafb'};border:1px solid ${u.isAdmin?'#c8e2d6':'#e5e7eb'};border-radius:10px;padding:12px 14px">
+          <div style="background:${u.isAdmin?'#f0fdf4':u.isOTP?'#fffbeb':'#f9fafb'};border:1px solid ${u.isAdmin?'#c8e2d6':u.isOTP?'#fcd34d':'#e5e7eb'};border-radius:10px;padding:12px 14px">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-              <span style="font-size:16px">${u.isAdmin?'👑':'👤'}</span>
+              <span style="font-size:16px">${u.isAdmin?'👑':u.isOTP?'🎟️':'👤'}</span>
               <div style="flex:1">
                 <div style="font-size:13px;font-weight:700;color:#111">${esc(u.name||u.email)}</div>
-                <div style="font-size:11px;color:var(--muted)">${esc(u.email)} ${u.isAdmin?'<span style="background:#054930;color:#fff;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700">Admin</span>':''}</div>
+                <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+                  ${esc(u.email)}
+                  ${u.isAdmin?'<span style="background:#054930;color:#fff;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700">Admin</span>':''}
+                  ${u.isOTP?'<span style="background:#f59e0b;color:#fff;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700">🎟️ OTP — لم يُستخدم</span>':''}
+                  ${!u.hash&&!u.isOTP?'<span style="background:#ef4444;color:#fff;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700">⚠️ بدون باسورد</span>':''}
+                </div>
               </div>
               ${!u.isAdmin?`<button onclick="removeUser('${u.email}')" style="background:#fee2e2;border:none;border-radius:7px;padding:4px 10px;color:#dc2626;font-size:12px;font-weight:700;cursor:pointer">حذف</button>`:''}
             </div>
             <div style="display:flex;gap:6px;align-items:center">
-              <input type="password" id="pw-${i}" placeholder="باسورد جديد..." style="flex:1;border:1px solid var(--brd);border-radius:7px;padding:6px 10px;font-size:12px;font-family:inherit;outline:none">
-              <button onclick="changeUserPw('${u.email}','${i}')" class="btn btn-xs" style="background:#054930;color:#fff;border:none;white-space:nowrap">تغيير الباسورد</button>
+              <input type="password" id="pw-${i}" placeholder="${u.isOTP?'OTP جديد أو باسورد دائم...':'باسورد جديد...'}" style="flex:1;border:1px solid var(--brd);border-radius:7px;padding:6px 10px;font-size:12px;font-family:inherit;outline:none">
+              <label style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap;cursor:pointer">
+                <input type="checkbox" id="otp-${i}" ${u.isOTP?'checked':''} style="accent-color:#f59e0b"> OTP
+              </label>
+              <button onclick="changeUserPw('${u.email}','${i}')" class="btn btn-xs" style="background:#054930;color:#fff;border:none;white-space:nowrap">حفظ</button>
             </div>
           </div>`).join('')}
       </div>
@@ -3772,8 +3827,14 @@ function renderAccessSettings(){
       <div style="display:flex;flex-direction:column;gap:8px">
         <input id="as-new-name" type="text" placeholder="الاسم (اختياري)" style="border:1.5px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none">
         <input id="as-new-email" type="email" placeholder="الإيميل *" style="border:1.5px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none">
-        <input id="as-new-pw" type="password" placeholder="الباسورد الخاص بيه *" style="border:1.5px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none">
-        <div style="font-size:11px;color:var(--muted)">⚠️ كل مستخدم بياسورد مختلف — لو حد شير credentials بتاعته، إنت بتغير باسورده بس</div>
+        <input id="as-new-pw" type="password" placeholder="الباسورد *" style="border:1.5px solid var(--brd);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:10px 12px">
+          <input type="checkbox" id="as-new-otp" style="accent-color:#f59e0b;width:16px;height:16px">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#92400e">🎟️ باسورد مرة واحدة (OTP)</div>
+            <div style="font-size:11px;color:#a16207">بعد أول دخول هيتطلب منه يحط باسورد دائم خاص بيه</div>
+          </div>
+        </label>
         <button onclick="addUser()" class="btn btn-p btn-xs">＋ إضافة</button>
       </div>
     </div>`;
@@ -3783,17 +3844,19 @@ async function addUser(){
   const name=document.getElementById('as-new-name').value.trim();
   const email=document.getElementById('as-new-email').value.trim().toLowerCase();
   const pw=document.getElementById('as-new-pw').value;
+  const isOTP=document.getElementById('as-new-otp').checked;
   if(!email||!pw){alert('الإيميل والباسورد مطلوبين');return}
   if(!isValidEmail(email)){alert('إيميل غير صحيح');return}
   if(pw.length<4){alert('الباسورد لازم 4 حروف على الأقل');return}
   const users=getUsers();
   if(users.find(u=>u.email===email)){alert('الإيميل ده موجود بالفعل');return}
   const h=await sha256(pw);
-  users.push({email,hash:h,name:name||email,isAdmin:false});
+  users.push({email,hash:h,name:name||email,isAdmin:false,isOTP});
   saveUsers(users);
   document.getElementById('as-new-name').value='';
   document.getElementById('as-new-email').value='';
   document.getElementById('as-new-pw').value='';
+  document.getElementById('as-new-otp').checked=false;
   renderAccessSettings();
 }
 
@@ -3805,12 +3868,19 @@ function removeUser(email){
 
 async function changeUserPw(email,idx){
   const inp=document.getElementById('pw-'+idx);
+  const otpChk=document.getElementById('otp-'+idx);
   const pw=inp.value;
   if(!pw||pw.length<4){alert('الباسورد لازم 4 حروف على الأقل');return}
   const h=await sha256(pw);
+  const isOTP=otpChk?otpChk.checked:false;
   const users=getUsers();
   const u=users.find(u=>u.email===email);
-  if(u){u.hash=h;saveUsers(users);inp.value='';alert(`✅ باسورد ${u.name||email} اتغير`)}
+  if(u){
+    u.hash=h;u.isOTP=isOTP;
+    saveUsers(users);inp.value='';
+    alert(`✅ باسورد ${u.name||email} اتغير${isOTP?' (OTP — مرة واحدة)':''}`);
+    renderAccessSettings();
+  }
 }
 
 // Init check
