@@ -404,7 +404,6 @@ td input:focus,td select:focus{outline:none;border-color:var(--s)}
     </div>
     <button class="login-btn" onclick="loginSubmit()">دخول</button>
     <div class="login-err" id="login-err"></div>
-    <div class="login-change">صاحب الداشبورد؟ <a onclick="openAccessSettings()">إعدادات الوصول</a></div>
   </div>
 </div>
 
@@ -3709,14 +3708,7 @@ function shakeLogin(){
 
 // ── ACCESS SETTINGS ──
 function openAccessSettings(){
-  if(!isLoggedIn()){
-    // ask for admin code
-    const raw=(prompt('أدخل كود الـ Admin:')||'').trim().toUpperCase();
-    if(!raw)return;
-    const codes=getCodes();
-    const entry=codes.find(c=>c.code===raw&&c.isAdmin);
-    if(!entry){alert('❌ الكود غلط أو مش Admin');return}
-  }else if(!currentUserIsAdmin()){alert('⛔ بس الـ Admin يقدر يفتح الإعدادات');return}
+  if(!isLoggedIn()||!currentUserIsAdmin())return;
   renderAccessSettings();
   document.getElementById('access-settings-overlay').classList.remove('hidden');
 }
