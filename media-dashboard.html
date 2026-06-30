@@ -3797,16 +3797,9 @@ function generateCode(){
   renderAccessSettings();
 }
 
-// Init
-if(!isLoggedIn()){
-  const codes=getCodes();
-  if(codes.length===0){
-    document.getElementById('login-sub-txt').textContent='أول مرة — اختار كودك كـ Admin (مثال: MYCODE123)';
-  }
-}else{
-  document.getElementById('login-gate').classList.add('hidden');
-  if(currentUserIsAdmin())document.getElementById('access-settings-btn').style.display='flex';
-}
+// Init — no login required
+document.getElementById('login-gate').classList.add('hidden');
+document.getElementById('access-settings-btn').style.display='flex';
 
 // ── INIT ──
 load();
