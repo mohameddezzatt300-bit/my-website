@@ -742,7 +742,12 @@ function onObjCh(){
 function setCF(i,field,val){camps()[i][field]=val;save();recalc()}
 
 function addCamp(){
-  camps().push({name:'New campaign',platform:'Meta',stage:'consideration',pct:5,goal:'',audience:'',targeting:'',placement:'',notes:''});
+  camps().push({name:'New campaign',platform:'Meta',stage:'consideration',budget:0,goal:'',audience:'',targeting:'',placement:'',notes:''});
+  save();recalc();
+}
+
+function setCampBudget(i,val){
+  camps()[i].budget=parseFloat(val)||0;
   save();recalc();
 }
 
@@ -783,20 +788,26 @@ function recalc(){
   const dur=parseInt(document.getElementById('mp-dur').value)||1;
   const cs=camps();
 
+  // migrate old pct-only records
+  cs.forEach(c=>{if(c.budget===undefined)c.budget=total*(c.pct||0)/100;});
+
+  const allocd=cs.reduce((s,c)=>s+(c.budget||0),0);
+  const remaining=total-allocd;
+
   document.getElementById('mp-met').innerHTML=
     `<div class="mc"><div class="lbl">Total Budget</div><div class="val">${fmt(total)}</div></div>`+
-    `<div class="mc"><div class="lbl">Monthly</div><div class="val">${fmt(total/dur)}</div></div>`+
-    `<div class="mc"><div class="lbl">Daily</div><div class="val">${fmt(total/(dur*30))}</div></div>`+
-    `<div class="mc"><div class="lbl">Campaigns</div><div class="val">${cs.length}</div></div>`;
+    `<div class="mc"><div class="lbl">Allocated</div><div class="val" style="color:${Math.abs(remaining)<0.5?'#054930':remaining<0?'#ef4444':'#f59e0b'}">${fmt(allocd)}</div></div>`+
+    `<div class="mc"><div class="lbl">${remaining<0?'Over':'Remaining'}</div><div class="val" style="color:${remaining<0?'#ef4444':remaining===0?'#054930':'#f59e0b'}">${fmt(Math.abs(remaining))}</div></div>`+
+    `<div class="mc"><div class="lbl">Daily</div><div class="val">${fmt(total/(dur*30))}</div></div>`;
 
   const stages={awareness:0,consideration:0,conversion:0,retention:0};
-  cs.forEach(c=>stages[c.stage]=(stages[c.stage]||0)+c.pct);
-  const totPct=cs.reduce((s,c)=>s+c.pct,0);
+  cs.forEach(c=>stages[c.stage]=(stages[c.stage]||0)+(c.budget||0));
 
   let bH='',lH='';
-  for(const s in stages){const p=stages[s];if(p>0){
-    bH+=`<div style="width:${totPct?Math.round(p/totPct*100):0}%;background:${FC[s]}">${Math.round(p)}%</div>`;
-    lH+=`<span><span class="dot" style="background:${FC[s]}"></span>${SL[s]} — ${Math.round(p)}% — ${fmt(total*p/100)}</span>`;
+  for(const s in stages){const b=stages[s];if(b>0){
+    const pct=allocd?Math.round(b/allocd*100):0;
+    bH+=`<div style="width:${pct}%;background:${FC[s]}">${pct}%</div>`;
+    lH+=`<span><span class="dot" style="background:${FC[s]}"></span>${SL[s]} — ${pct}% — ${fmt(b)}</span>`;
   }}
   document.getElementById('mp-fbar').innerHTML=bH;
   document.getElementById('mp-flbl').innerHTML=lH;
@@ -817,19 +828,20 @@ function renderTbl(total){
   const cs=camps();
   const head=document.getElementById('mp-thead');
   const tbody=document.getElementById('mp-tbody');
-  let hh='<th>Campaign</th><th>Platform</th><th>Stage</th><th>%</th><th>Budget</th>';
+  let hh='<th>Campaign</th><th>Platform</th><th>Stage</th><th>Budget</th><th>%</th>';
   OCOLS.forEach(c=>{if(VC[c.key])hh+=`<th>${c.label}</th>`});
   hh+='<th></th>';
   head.innerHTML=hh;
   let h='';
   cs.forEach((c,i)=>{
-    const amt=total*c.pct/100;
+    const bud=c.budget||0;
+    const pct=total>0?(bud/total*100).toFixed(1):0;
     h+='<tr>';
     h+=`<td><input value="${esc(c.name)}" onchange="setCF(${i},'name',this.value)"></td>`;
     h+=`<td><select onchange="setCF(${i},'platform',this.value)">${PLATS.map(p=>`<option value="${p}"${c.platform===p?' selected':''}>${p}</option>`).join('')}</select></td>`;
     h+=`<td><select onchange="setCF(${i},'stage',this.value)">${['awareness','consideration','conversion','retention'].map(s=>`<option value="${s}"${c.stage===s?' selected':''}>${SL[s]}</option>`).join('')}</select></td>`;
-    h+=`<td><input type="number" value="${c.pct}" min="0" max="100" step="1" style="width:70px" onchange="setCF(${i},'pct',parseFloat(this.value)||0)"></td>`;
-    h+=`<td style="font-weight:600;white-space:nowrap">${fmt(amt)}</td>`;
+    h+=`<td><input type="number" value="${bud}" min="0" step="any" style="width:110px;font-weight:600" onchange="setCampBudget(${i},this.value)"></td>`;
+    h+=`<td style="color:var(--muted);font-size:12px;white-space:nowrap">${pct}%</td>`;
     OCOLS.forEach(col=>{
       if(VC[col.key]){
         if(col.type==='select'){
@@ -842,11 +854,13 @@ function renderTbl(total){
     h+=`<td style="text-align:center"><button class="del-btn" onclick="delCamp(${i})" title="Delete"><i class="ti ti-trash"></i></button></td>`;
     h+='</tr>';
   });
-  const tPct=cs.reduce((s,c)=>s+c.pct,0);
+  const tBud=cs.reduce((s,c)=>s+(c.budget||0),0);
+  const tPct=total>0?(tBud/total*100).toFixed(1):0;
+  const over=tBud>total+0.5;
   const visCnt=OCOLS.filter(c=>VC[c.key]).length;
   h+=`<tr class="total-row"><td>Total</td><td></td><td></td>`;
-  h+=`<td style="color:${Math.round(tPct)===100?'#054930':'#ef4444'}">${Math.round(tPct)}%</td>`;
-  h+=`<td>${fmt(total*tPct/100)}</td>`;
+  h+=`<td style="color:${over?'#ef4444':'#054930'};font-weight:800">${fmt(tBud)}</td>`;
+  h+=`<td style="color:${over?'#ef4444':'#054930'};font-weight:800">${tPct}%</td>`;
   for(let x=0;x<visCnt;x++)h+='<td></td>';
   h+='<td></td></tr>';
   tbody.innerHTML=h;
@@ -856,7 +870,7 @@ function renderChart(total){
   const cs=camps();
   const ctx=document.getElementById('mp-chart');if(!ctx)return;
   const labels=cs.map(c=>c.name);
-  const data=cs.map(c=>Math.round(total*c.pct/100));
+  const data=cs.map(c=>Math.round(c.budget||0));
   const bg=cs.map(c=>PC[c.platform]||'#888');
   const used={};cs.forEach(c=>used[c.platform]=true);
   let leg='';
@@ -894,11 +908,13 @@ function renderKPIs(){
 function expCSV(){
   const total=parseFloat(document.getElementById('mp-bud').value)||0;
   const cur=document.getElementById('mp-cur').value;
-  const hdr=['Campaign','Platform','Stage','%','Budget ('+cur+')'];
+  const hdr=['Campaign','Platform','Stage','Budget ('+cur+')','%'];
   OCOLS.forEach(c=>{if(VC[c.key])hdr.push(c.label)});
   const lines=[hdr.join(',')];
   camps().forEach(c=>{
-    const row=['"'+c.name+'"',c.platform,c.stage,c.pct,Math.round(total*c.pct/100)];
+    const bud=c.budget||0;
+    const pct=total>0?(bud/total*100).toFixed(1):0;
+    const row=['"'+c.name+'"',c.platform,c.stage,Math.round(bud),pct];
     OCOLS.forEach(col=>{if(VC[col.key])row.push('"'+(c[col.key]||'')+'"')});
     lines.push(row.join(','));
   });
@@ -915,7 +931,7 @@ function expTXT(){
   let t='MEDIA PLAN\n==========\n\n';
   t+=`Budget: ${fmt(total)} | Duration: ${dur} months | Objective: ${obj}\n`;
   t+=`Monthly: ${fmt(total/parseInt(dur))} | Daily: ${fmt(total/(parseInt(dur)*30))}\n\nCAMPAIGNS\n`;
-  camps().forEach(c=>{t+=`- ${c.name} [${c.platform}] | ${c.stage} | ${c.pct}% | ${fmt(total*c.pct/100)}\n`});
+  camps().forEach(c=>{const b=c.budget||0;const p=total>0?(b/total*100).toFixed(1):0;t+=`- ${c.name} [${c.platform}] | ${c.stage} | ${p}% | ${fmt(b)}\n`});
   t+='\nEXPECTED RESULTS\n';
   kpis().forEach(k=>{t+=`- ${k.label}: ${k.value}${k.suffix}\n`});
   const b=new Blob([t],{type:'text/plain;charset=utf-8'});
@@ -943,7 +959,7 @@ function expMPPDF(){
   // Platform colors for budget bar
   const platColors={'Meta':'#1877f2','Google Ads':'#34a853','TikTok':'#010101','Snapchat':'#fffc00','Twitter/X':'#000','LinkedIn':'#0a66c2','YouTube':'#ff0000'};
   const platMap={};
-  camps().forEach(c=>{platMap[c.platform]=(platMap[c.platform]||0)+total*c.pct/100});
+  camps().forEach(c=>{platMap[c.platform]=(platMap[c.platform]||0)+(c.budget||0)});
   const platEntries=Object.entries(platMap).sort((a,b)=>b[1]-a[1]);
   const platTotal=platEntries.reduce((s,[,v])=>s+v,0);
 
@@ -1016,7 +1032,7 @@ tr:hover td{background:#fafcfb}
     <div class="sec-hd">📋 Campaign Budget Breakdown</div>
     <table>
       <thead><tr>
-        <th>Campaign</th><th>Platform</th><th>Stage</th><th style="text-align:right">%</th><th style="text-align:right">Budget</th>
+        <th>Campaign</th><th>Platform</th><th>Stage</th><th style="text-align:right">Budget</th><th style="text-align:right">%</th>
         ${OCOLS.filter(c=>VC[c.key]).map(c=>`<th>${c.label}</th>`).join('')}
       </tr></thead>
       <tbody>
@@ -1024,14 +1040,14 @@ tr:hover td{background:#fafcfb}
           <td style="font-weight:600">${esc(c.name)}</td>
           <td>${esc(c.platform)}</td>
           <td><span class="badge" style="background:${stageBg[c.stage]||'#f3f4f6'};color:${stageColor[c.stage]||'#374151'}">${c.stage}</span></td>
-          <td style="text-align:right;font-weight:700">${c.pct}%</td>
-          <td style="text-align:right;font-weight:700;color:#054930">${fmtN(total*c.pct/100)}</td>
+          <td style="text-align:right;font-weight:700;color:#054930">${fmtN(c.budget||0)}</td>
+          <td style="text-align:right;font-weight:700">${total>0?((c.budget||0)/total*100).toFixed(1):0}%</td>
           ${OCOLS.filter(col=>VC[col.key]).map(col=>`<td style="color:#6b7280">${esc(c[col.key]||'—')}</td>`).join('')}
         </tr>`).join('')}
         <tr style="background:#f0f4f2;font-weight:800">
           <td colspan="3">TOTAL</td>
-          <td style="text-align:right">${camps().reduce((s,c)=>s+c.pct,0)}%</td>
-          <td style="text-align:right;color:#054930">${fmtN(camps().reduce((s,c)=>s+total*c.pct/100,0))}</td>
+          <td style="text-align:right;color:#054930">${fmtN(camps().reduce((s,c)=>s+(c.budget||0),0))}</td>
+          <td style="text-align:right">${total>0?(camps().reduce((s,c)=>s+(c.budget||0),0)/total*100).toFixed(1):0}%</td>
           ${OCOLS.filter(c=>VC[c.key]).map(()=>'<td></td>').join('')}
         </tr>
       </tbody>
