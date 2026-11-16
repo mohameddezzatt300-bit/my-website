@@ -106,6 +106,7 @@
   let lenis = null;
   if (typeof window.Lenis !== 'undefined' && hoverable) {
     lenis = new window.Lenis({ duration: 1.1, easing: t => 1 - Math.pow(1 - t, 4), smoothWheel: true });
+    window.__lenis = lenis;
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add(t => lenis.raf(t * 1000));
     gsap.ticker.lagSmoothing(0);

@@ -1,0 +1,140 @@
+/* =========================================================
+   v4 shared shell — header, full-screen menu, transitions
+   Used by every page. Home adds home-v4.css on top.
+   ========================================================= */
+:root {
+  --v4-bg: #0b0c0b;
+  --v4-bg-1: #131614;
+  --v4-bg-2: #1a1e1b;
+  --v4-line: #262b28;
+  --v4-fg: #f3efe6;
+  --v4-dim: #a8aea9;
+  --v4-faint: #6c736e;
+  --v4-em: #2ee89a;
+  --v4-em-2: #7cf3c0;
+  --v4-gold: #d9c39a;
+  --v4-display: "Bricolage Grotesque", "Plus Jakarta Sans", system-ui, sans-serif;
+  --v4-serif: "Instrument Serif", "Times New Roman", serif;
+  --v4-body: "Inter", system-ui, -apple-system, sans-serif;
+  --v4-ease: cubic-bezier(.16, 1, .3, 1);
+}
+
+/* ---------- Header bar ---------- */
+.v4-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px clamp(16px, 3vw, 40px);
+  pointer-events: none;
+  transition: transform 500ms var(--v4-ease);
+}
+.v4-bar > * { pointer-events: auto; }
+.v4-bar.is-hidden { transform: translateY(-120%); }
+.v4-logo {
+  display: inline-flex; align-items: center; gap: 10px;
+  font: 700 21px/1 var(--v4-display); letter-spacing: -0.02em;
+  color: var(--v4-fg); text-decoration: none;
+  mix-blend-mode: difference;
+}
+.v4-logo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--v4-em); box-shadow: 0 0 14px var(--v4-em); }
+.v4-bar-right { display: flex; gap: 10px; align-items: center; }
+.v4-pill {
+  display: inline-flex; align-items: center; gap: 12px;
+  height: 44px; padding: 0 18px; border-radius: 999px;
+  font: 600 14px/1 var(--v4-body); letter-spacing: 0;
+  color: var(--v4-fg); text-decoration: none;
+  background: color-mix(in srgb, var(--v4-bg) 70%, transparent);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--v4-line);
+  cursor: pointer;
+  transition: background 250ms, border-color 250ms, color 250ms, transform 300ms var(--v4-ease);
+}
+.v4-pill:hover { border-color: var(--v4-fg); }
+.v4-pill-solid { background: var(--v4-fg); border-color: var(--v4-fg); color: var(--v4-bg); }
+.v4-pill-solid:hover { background: var(--v4-em); border-color: var(--v4-em); color: #03140c; }
+.v4-burger { display: grid; gap: 4px; width: 18px; }
+.v4-burger i { display: block; height: 2px; border-radius: 2px; background: currentColor; transition: transform 400ms var(--v4-ease), opacity 200ms; }
+.v4-open .v4-burger i:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.v4-open .v4-burger i:nth-child(2) { opacity: 0; }
+.v4-open .v4-burger i:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+.v4-open .v4-pill-solid { opacity: 0; pointer-events: none; }
+
+/* ---------- Full-screen menu ---------- */
+.v4-menu {
+  position: fixed; inset: 0; z-index: 190;
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 110px clamp(16px, 4vw, 56px) 36px;
+  background: radial-gradient(120% 90% at 100% 0%, #10402c, #07130d 70%);
+  color: var(--v4-fg);
+  clip-path: circle(0% at calc(100% - 60px) 44px);
+  visibility: hidden;
+  transition: clip-path 800ms var(--v4-ease), visibility 0s 800ms;
+}
+.v4-open .v4-menu { clip-path: circle(150% at calc(100% - 60px) 44px); visibility: visible; transition: clip-path 900ms var(--v4-ease), visibility 0s; }
+.v4-open .v4-bar .v4-logo, .v4-open .v4-menu-btn { color: var(--v4-fg); mix-blend-mode: normal; }
+.v4-open .v4-menu-btn { background: transparent; border-color: rgba(217,195,154,.5); }
+
+.v4-menu-links { display: flex; flex-direction: column; }
+.v4-menu-links a {
+  display: flex; align-items: baseline; gap: 18px;
+  font: 500 clamp(44px, 8.5vw, 116px)/1.04 var(--v4-display); letter-spacing: -0.04em;
+  color: inherit; text-decoration: none;
+  overflow: hidden;
+  transform: translateY(60%); opacity: 0;
+  transition: transform 700ms var(--v4-ease), opacity 500ms, letter-spacing 400ms var(--v4-ease);
+}
+.v4-menu-links a small { font: italic 400 22px var(--v4-serif); color: var(--v4-em-2); }
+.v4-menu-links a:hover { color: var(--v4-em-2); }
+.v4-menu-links a:hover { letter-spacing: -0.02em; font-family: var(--v4-serif); font-style: italic; font-weight: 400; }
+.v4-open .v4-menu-links a { transform: none; opacity: 1; }
+.v4-open .v4-menu-links a:nth-child(1) { transition-delay: 150ms; }
+.v4-open .v4-menu-links a:nth-child(2) { transition-delay: 210ms; }
+.v4-open .v4-menu-links a:nth-child(3) { transition-delay: 270ms; }
+.v4-open .v4-menu-links a:nth-child(4) { transition-delay: 330ms; }
+.v4-menu-foot { display: flex; flex-wrap: wrap; gap: 14px 28px; font: 600 15px var(--v4-body); }
+.v4-menu-foot a { color: inherit; text-decoration: none; border-bottom: 2px solid transparent; }
+.v4-menu-foot a:hover { border-color: currentColor; }
+.v4-menu-foot span { opacity: .65; margin-left: auto; }
+html.v4-lock, html.v4-lock body { overflow: hidden; }
+
+/* ---------- Skip link + focus ---------- */
+.v4-skip {
+  position: fixed; top: 10px; left: 10px; z-index: 10000;
+  padding: 10px 16px; border-radius: 999px;
+  background: var(--v4-em); color: #04130c; font: 600 13px var(--v4-body);
+  transform: translateY(-160%); transition: transform 200ms;
+}
+.v4-skip:focus { transform: none; }
+.v4 :focus-visible { outline: 2px solid var(--v4-gold); outline-offset: 3px; border-radius: 8px; }
+
+/* ---------- Page transition curtain ---------- */
+html::after {
+  content: "M·EZZAT";
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  font: italic 400 clamp(36px, 7vw, 88px)/1 var(--v4-serif); letter-spacing: -0.01em;
+  color: var(--v4-em-2); background: #07130d;
+  transform: translateY(101%);
+  pointer-events: none;
+}
+html.pt-in::after { transform: none; }
+html.pt-in.pt-done::after { transform: translateY(-101%); transition: transform 800ms cubic-bezier(.7,0,.2,1) 60ms; }
+html.pt-out::after { transform: none; transition: transform 520ms cubic-bezier(.7,0,.2,1); pointer-events: all; }
+
+/* ---------- Inner pages: swap the old pill nav for the v4 header ---------- */
+body:not(.v4) .nav,
+body:not(.v4) .mobile-nav-toggle,
+body:not(.v4) .mobile-drawer { display: none !important; }
+body:not(.v4) .v4-logo { mix-blend-mode: normal; }
+
+@media (max-width: 720px) {
+  .v4-bar { padding: 16px; }
+  .v4-bar .v4-pill-solid { display: none; }
+  .v4-menu-label { display: none; }
+  .v4-menu-btn { width: 44px; padding: 0; justify-content: center; }
+  .v4-menu-foot span { margin-left: 0; width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html::after { display: none; }
+  .v4-menu, .v4-menu-links a { transition: none !important; }
+}
